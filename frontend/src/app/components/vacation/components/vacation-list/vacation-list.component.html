@@ -1,0 +1,52 @@
+<!-- Recent Requests -->
+<div class="card bg-white border-0 shadow-lg p-0 overflow-hidden">
+    <div class="p-6 bg-gray-50 border-b flex justify-between items-center">
+        <h2 class="text-xl font-black text-gray-800 uppercase tracking-tighter">Últimas
+            Solicitudes</h2>
+        <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-black">{{
+            requests().length }}
+            TOTAL</span>
+    </div>
+    <div class="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
+        @for (request of requests(); track request.id) {
+        <div (click)="openRequestDetails(request)"
+            class="p-4 hover:bg-blue-50 transition-colors flex justify-between items-center cursor-pointer group">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-xl">
+                    {{ getIcon(request.request_type) }}
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-800 capitalize leading-none mb-1 text-sm">
+                        {{
+                        request.request_type.replace('_', ' ') }}</h4>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase">
+                        {{ request.start_date | date:'dd MMM HH:mm' }}
+                        @if (request.end_date) {
+                        - {{ request.end_date | date:'dd MMM HH:mm' }}
+                        } @else {
+                        <span class="text-blue-400 ml-1">→ Indefinido / RRHH</span>
+                        }
+                    </p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div [class]="getStatusClass(request.status)"
+                    class="text-[10px] px-2 py-1 rounded-full uppercase font-black mb-1">
+                    {{ request.status === 'approved_rrhh' ? 'Aprobado' : request.status
+                    }}
+                </div>
+                <p class="text-xs font-black text-gray-700">
+                    @if (request.days_requested > 0) {
+                    {{ convertToTime(request.days_requested) }}
+                    } @else {
+                    --
+                    }
+                </p>
+            </div>
+        </div>
+        } @empty {
+        <div class="py-20 text-center text-gray-300 font-black uppercase tracking-widest">
+            Sin actividad</div>
+        }
+    </div>
+</div>

@@ -1,0 +1,61 @@
+<div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+    <div class="flex items-center gap-3 mb-6 pb-3 border-b border-gray-50">
+        <span class="text-xl">💼</span>
+        <h3 class="font-bold text-gray-800 tracking-tight">Vinculación Laboral</h3>
+    </div>
+
+    <div class="space-y-4">
+        <div>
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Rol de
+                Sistema</label>
+            @if (form().role === 'superadmin') {
+            <div class="bg-gray-100 text-gray-500 p-3 rounded-xl text-sm font-bold border border-gray-200">
+                SUPERADMIN (Protegido)</div>
+            } @else {
+            <select class="input-field-new" [ngModel]="form().role" (ngModelChange)="updateField('role', $event)"
+                name="role" required>
+                @for (r of roles(); track r) {
+                <option [value]="r">{{ r | uppercase }}</option>
+                }
+            </select>
+            }
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <div>
+                <label
+                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Departamento</label>
+                <input class="input-field-new" [ngModel]="form().department"
+                    (ngModelChange)="updateField('department', $event)" name="department" placeholder="Ej. IT" />
+            </div>
+            <div>
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Cargo /
+                    Puesto</label>
+                <input class="input-field-new" [ngModel]="form().position"
+                    (ngModelChange)="updateField('position', $event)" name="position" placeholder="Ej. Operario" />
+            </div>
+        </div>
+
+        <div class="pt-2">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Modalidad de
+                Contrato</label>
+            <div class="flex p-1 bg-gray-50 rounded-xl border border-gray-100">
+                <button type="button" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all"
+                    [class]="contractType() === 'indefinite' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'"
+                    (click)="onContractTypeChange('indefinite')">Permanente</button>
+                <button type="button" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all"
+                    [class]="contractType() === 'temporary' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'"
+                    (click)="onContractTypeChange('temporary')">Temporal</button>
+            </div>
+        </div>
+
+        @if (contractType() === 'temporary') {
+        <div class="animate-in fade-in slide-in-from-top-2 duration-300">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Finalización de
+                Contrato</label>
+            <input type="date" class="input-field-new" [ngModel]="form().contract_expiration_date"
+                (ngModelChange)="onExpirationDateChange($event)" name="contract_expiration_date" required>
+        </div>
+        }
+    </div>
+</div>

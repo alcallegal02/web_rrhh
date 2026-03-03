@@ -1,0 +1,72 @@
+<div class="space-y-8 pb-10">
+    <!-- Corporate Hero Section -->
+    <div
+        class="relative overflow-hidden rounded-2xl bg-inespasa-dark min-h-[280px] flex items-center shadow-xl shadow-blue-900/20">
+        <!-- Background Pattern/Image -->
+        <div class="absolute inset-0 z-0 opacity-40 mix-blend-overlay">
+            <img src="assets/hero-bg.png" alt="Aeronautical background" class="w-full h-full object-cover">
+        </div>
+
+        <!-- Gradient Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-inespasa-dark via-inespasa-dark/80 to-transparent z-10">
+        </div>
+
+        <!-- Content -->
+        <div class="relative z-20 px-8 py-10 md:px-12 w-full max-w-2xl">
+            <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
+                Hola, {{ authService.user()?.full_name?.split(' ')?.at(0) }}.
+            </h1>
+            <p class="text-white/80 text-lg md:text-xl font-medium max-w-lg leading-relaxed">
+                Bienvenido a tu centro de gestión integral. Aquí encontrarás todo lo que necesitas para tu día a día.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Content Grid: Top Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Quick Action Widgets -->
+        <div class="lg:col-span-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+                <app-vacation-balance-widget [balance]="vacationBalance()"></app-vacation-balance-widget>
+                <app-ethical-channel-widget></app-ethical-channel-widget>
+            </div>
+        </div>
+
+        <!-- Sidebar Widget -->
+        <div class="lg:col-span-4">
+            <app-my-requests-status-widget [requests]="myRequests()"></app-my-requests-status-widget>
+        </div>
+    </div>
+
+    <!-- News Carousel Section (Full Width) -->
+    @if (allNews().length > 0) {
+    <div class="animate-fadeIn" style="animation-delay: 100ms;">
+        <app-news-carousel-widget [news]="allNews()"></app-news-carousel-widget>
+    </div>
+    }
+
+    <!-- Lower Content: Management Sections -->
+    @if (pendingRequests().length > 0) {
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="lg:col-span-8 space-y-8 animate-fadeIn" style="animation-delay: 200ms;">
+            <div class="relative">
+                <div class="flex items-center gap-2 mb-4 px-2">
+                    <span class="text-xl">👥</span>
+                    <h2 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Gestión de Equipo</h2>
+                    <span class="ml-2 bg-inespasa-dark text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{{
+                        pendingRequests().length }} pendientes</span>
+                </div>
+                <app-pending-requests-widget [requests]="pendingRequests()" [processingId]="processingRequestId()"
+                    (approve)="handleApprove($event)" (reject)="handleReject($event)">
+                </app-pending-requests-widget>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Latest News Popup -->
+    @if (showNewsPopup() && latestNews()) {
+    <app-news-popup [news]="latestNews()!" (close)="closeNewsPopup()" (readMore)="navigateToNews()">
+    </app-news-popup>
+    }
+</div>

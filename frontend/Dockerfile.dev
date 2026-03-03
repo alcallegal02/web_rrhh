@@ -1,0 +1,26 @@
+# Development Dockerfile for Angular frontend
+ARG NODE_VERSION=24-alpine3.22
+FROM node:${NODE_VERSION}
+
+# Set working directory and ownership
+WORKDIR /app
+RUN chown -R node:node /app
+
+# Switch to non-root user
+USER node
+
+# Copy package files
+COPY --chown=node:node package*.json ./
+
+# Install dependencies with suppression of warnings
+RUN npm install --legacy-peer-deps
+
+# Copy source code
+COPY --chown=node:node . .
+
+# Expose port
+EXPOSE 4200
+
+# Start development server (bind to 0.0.0.0 to be accessible from host)
+CMD ["npm", "start", "--", "--host", "0.0.0.0", "--poll", "2000"]
+

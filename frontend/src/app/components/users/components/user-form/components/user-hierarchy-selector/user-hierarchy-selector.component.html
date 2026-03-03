@@ -1,0 +1,158 @@
+<div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
+    <div class="flex items-center gap-3 pb-2 border-b border-gray-100">
+        <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+            <span class="material-symbols-rounded">account_tree</span>
+        </div>
+        <div>
+            <h3 class="text-lg font-bold text-gray-900 leading-tight">Jerarquía y Responsables</h3>
+            <p class="text-xs text-gray-500">Define la estructura del organigrama y los flujos de gestión</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- 1. RESPONSABLE JERÁRQUICO (ORGANIGRAMA) -->
+        <div class="space-y-3">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Responsable Jerárquico
+                (Organigrama)</label>
+
+            <div class="relative">
+                @if (selectedParent(); as parent) {
+                <div
+                    class="flex items-center gap-3 p-2 bg-purple-50/50 border-2 border-purple-100 rounded-xl group hover:border-purple-200 transition-all">
+                    <div class="w-9 h-9 rounded-full overflow-hidden bg-white border border-purple-100 shrink-0">
+                        @if (parent.photo_url) {
+                        <img [src]="getFileUrl(parent.photo_url)" class="w-full h-full object-cover">
+                        } @else {
+                        <div
+                            class="w-full h-full flex items-center justify-center text-[10px] font-bold text-purple-500 uppercase">
+                            {{parent.first_name[0]}}{{parent.last_name[0]}}
+                        </div>
+                        }
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-bold text-gray-900 truncate">{{parent.full_name}}</p>
+                    </div>
+                    <button type="button" (click)="removeParent()"
+                        class="text-gray-400 hover:text-red-500 transition-colors mr-1">
+                        <span class="material-symbols-rounded text-sm">close</span>
+                    </button>
+                </div>
+                } @else {
+                <div class="relative" (focusout)="closeParentDropdown()">
+                    <input type="text" [ngModel]="parentSearch()" (ngModelChange)="parentSearch.set($event)"
+                        (focus)="openParentDropdown()" placeholder="Buscar jefe..." class="input-field-new pl-9 text-xs"
+                        autocomplete="off" [ngModelOptions]="{standalone: true}">
+                    <span
+                        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-rounded text-lg">search</span>
+
+                    @if (parentDropdownOpen() && filteredParents().length > 0) {
+                    <div
+                        class="absolute z-50 w-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-1 max-h-48 overflow-y-auto animate-in fade-in zoom-in-95">
+                        @for (u of filteredParents(); track u.id) {
+                        <button type="button" (mousedown)="setParent(u)"
+                            class="w-full flex items-center gap-3 px-3 py-2 hover:bg-purple-50 text-left transition-colors">
+                            <div class="w-7 h-7 rounded-full overflow-hidden bg-gray-100 shrink-0">
+                                @if (u.photo_url) {
+                                <img [src]="getFileUrl(u.photo_url)" class="w-full h-full object-cover">
+                                } @else {
+                                <div
+                                    class="w-full h-full flex items-center justify-center text-[9px] font-bold text-gray-400 uppercase">
+                                    {{u.first_name[0]}}{{u.last_name[0]}}
+                                </div>
+                                }
+                            </div>
+                            <span class="text-xs font-bold text-gray-700 truncate">{{u.full_name}}</span>
+                        </button>
+                        }
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+            <p class="text-[9px] text-gray-400 italic">Persona de la que cuelga directamente en la empresa.</p>
+        </div>
+
+        <!-- 2. ENCARGADOS PERSONALES (GESTIÓN) -->
+        <div class="space-y-3">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Encargados Personales
+                (Gestión)</label>
+
+            <div class="relative" (focusout)="closeManagerDropdown()">
+                <input type="text" class="input-field-new pl-9 text-xs" [ngModel]="managerSearch()"
+                    (ngModelChange)="managerSearch.set($event)" (focus)="openManagerDropdown()"
+                    placeholder="Añadir gestor..." autocomplete="off" [ngModelOptions]="{standalone: true}">
+                <span
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-rounded text-lg">search</span>
+                @if (managerDropdownOpen() && filteredManagers().length > 0) {
+                <div
+                    class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto py-1 animate-in fade-in zoom-in-95">
+                    @for (m of filteredManagers(); track m.id) {
+                    <button type="button"
+                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-blue-50 text-left transition-colors"
+                        (mousedown)="addManager(m)">
+                        <div
+                            class="w-7 h-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold shrink-0">
+                            {{ m.full_name[0] }}
+                        </div>
+                        <span class="text-xs font-bold text-gray-700 truncate">{{ m.full_name }}</span>
+                    </button>
+                    }
+                </div>
+                }
+            </div>
+
+            <div class="flex flex-wrap gap-1.5 mt-2">
+                @for (m of selectedManagers(); track m.id; let i = $index) {
+                <div
+                    class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-100 text-[11px] font-bold flex items-center gap-2 group">
+                    {{ m.full_name }}
+                    <button type="button" (click)="removeManager(i)"
+                        class="text-blue-300 hover:text-red-500 transition-colors">✕</button>
+                </div>
+                }
+            </div>
+            <p class="text-[9px] text-gray-400 italic">Aprueban sus vacaciones y gestionan sus permisos.</p>
+        </div>
+
+        <!-- 3. SEGUIMIENTO RRHH -->
+        <div class="space-y-3">
+            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Seguimiento RRHH</label>
+
+            <div class="relative" (focusout)="closeRrhhDropdown()">
+                <input type="text" class="input-field-new pl-9 text-xs" [ngModel]="rrhhSearch()"
+                    (ngModelChange)="rrhhSearch.set($event)" (focus)="openRrhhDropdown()" placeholder="Asignar RRHH..."
+                    autocomplete="off" [ngModelOptions]="{standalone: true}">
+                <span
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-rounded text-lg">search</span>
+                @if (rrhhDropdownOpen() && filteredRrhh().length > 0) {
+                <div
+                    class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto py-1 animate-in fade-in zoom-in-95">
+                    @for (u of filteredRrhh(); track u.id) {
+                    <button type="button"
+                        class="w-full flex items-center gap-3 px-3 py-2 hover:bg-indigo-50 text-left transition-colors"
+                        (mousedown)="addRrhh(u)">
+                        <div
+                            class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[10px] font-bold shrink-0">
+                            {{ u.full_name[0] }}
+                        </div>
+                        <span class="text-xs font-bold text-gray-700 truncate">{{ u.full_name }}</span>
+                    </button>
+                    }
+                </div>
+                }
+            </div>
+
+            <div class="flex flex-wrap gap-1.5 mt-2">
+                @for (r of selectedRrhh(); track r.id; let i = $index) {
+                <div
+                    class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-100 text-[11px] font-bold flex items-center gap-2 group">
+                    {{ r.full_name }}
+                    <button type="button" (click)="removeRrhh(i)"
+                        class="text-indigo-300 hover:text-red-500 transition-colors">✕</button>
+                </div>
+                }
+            </div>
+            <p class="text-[9px] text-gray-400 italic">Personal de recursos humanos responsable de su ficha.</p>
+        </div>
+    </div>
+</div>

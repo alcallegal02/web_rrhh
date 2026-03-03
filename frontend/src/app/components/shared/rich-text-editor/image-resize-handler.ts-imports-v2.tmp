@@ -1,0 +1,68 @@
+import { ImageStyleManager, ImageStyle } from './services/image-style-manager.service';
+import {
+  applyImageStyles,
+  getImageDimensions,
+  applyResizeStyles,
+  getCurrentImageDimensions,
+  normalizeDimension,
+  buildImageStyle,
+  applyStylesToAllImagesWithSrc,
+  restoreStylesAfterQuillUpdate,
+  hasValidImageStyle
+} from './utils/image-utils';
+import { calculateResizeDimensions, formatDimension } from './utils/image-resize-utils';
+import {
+  getElementIndexInQuill,
+  findResizableElementBySrc,
+  getQuillIndexFromPoint,
+  isPointInRect,
+  moveImageInQuill
+} from './utils/quill-utils';
+import { EventListenerManager } from './utils/event-listener-manager';
+import { MutationObserverManager } from './utils/mutation-observer-manager';
+import { 
+  HANDLE_POSITIONS, 
+  HANDLE_CURSORS, 
+  IMAGE_RESIZABLE_CLASS, 
+  DRAGGING_IMAGE_CLASS, 
+  RESIZE_HANDLES_CLASS, 
+  STYLE_UPDATE_DELAY, 
+  IMAGE_SELECTION_DELAY 
+} from './utils/constants';
+import {
+  isResizeHandle,
+  isResizeHandles,
+  isInDOM,
+  isElementContained,
+  disableUserSelect,
+  enableUserSelect,
+  setDocumentCursor,
+  resetDocumentCursor,
+  isValidQuillIndex,
+  getAllResizableElements,
+  isValidResizableElement,
+  addClasses,
+  removeClasses,
+  getRectCenter
+} from './utils/dom-utils';
+import {
+  markElementAsResizable,
+  unmarkElementAsResizable,
+  findResizableElements,
+  removeImageSelection,
+  preserveElementSelectionAfterQuillUpdate,
+  ensureHandlesVisible,
+  restoreCompleteElementSelection
+} from './utils/image-selection-utils';
+import {
+  prepareImageForDrag,
+  finalizeImageDrag,
+  calculateAdjustedIndex,
+  preventDragDefault,
+  isDragInsideEditor,
+  getDragCoordinates,
+  createDropIndicator,
+  updateDropIndicatorPosition
+} from './utils/drag-drop-utils';
+import { RAFThrottle, executeAfterDelay, isResizeOperationActive } from './utils/helpers';
+import { CustomObserverManager } from './utils/observer-manager';

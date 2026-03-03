@@ -1,0 +1,106 @@
+<div class="flex flex-col h-[calc(100vh-120px)] lg:flex-row gap-6 overflow-hidden">
+
+    <!-- Sidebar: Unified Directory -->
+    <div
+        class="w-full lg:w-80 flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden shrink-0">
+        <!-- Sidebar Header -->
+        <div class="p-4 bg-gray-50/50 border-b border-gray-100">
+            <h2
+                class="text-sm font-black text-[#002855] uppercase tracking-widest mb-3 flex items-center justify-between">
+                <span>Directorio</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px]">{{ users().length
+                    }}</span>
+            </h2>
+            <div class="relative">
+                <input type="text"
+                    class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
+                    placeholder="Buscar empleado..." [ngModel]="sidebarSearch()"
+                    (ngModelChange)="sidebarSearch.set($event)">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">�</span>
+            </div>
+        </div>
+
+        <!-- Sidebar List -->
+        <div class="flex-1 overflow-y-auto p-2 space-y-1">
+            <button (click)="onEdit(null!)"
+                class="w-full p-3 rounded-xl border-2 border-dashed border-gray-100 text-gray-400 hover:border-blue-200 hover:text-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 text-xs font-bold mb-2">
+                <span>+</span> Nuevo Registro
+            </button>
+
+            @for (u of filteredUsersBySidebar(); track u.id) {
+            <div (click)="onEdit(u)"
+                class="w-full p-3 rounded-xl cursor-pointer transition-all flex items-center gap-3 group"
+                [class]="activeUser()?.id === u.id ? 'bg-[#002855] text-white shadow-md' : 'hover:bg-gray-50 text-gray-700'">
+
+                <div class="w-10 h-10 rounded-full shrink-0 overflow-hidden border-2"
+                    [class]="activeUser()?.id === u.id ? 'border-white/20' : 'border-gray-100'">
+                    @if (u.photo_url) {
+                    <img [src]="getFileUrl(u.photo_url)" class="w-full h-full object-cover">
+                    } @else {
+                    <div class="w-full h-full flex items-center justify-center text-xs font-bold"
+                        [class]="activeUser()?.id === u.id ? 'bg-white/10 text-white' : 'bg-blue-50 text-blue-500'">
+                        {{ u.full_name[0] }}
+                    </div>
+                    }
+                </div>
+
+                <div class="flex flex-col min-w-0 flex-1">
+                    <span class="text-xs font-bold truncate">{{ u.full_name }}</span>
+                    <span class="text-[10px] truncate opacity-60 uppercase font-medium">{{ u.position || u.role
+                        }}</span>
+                </div>
+
+                @if (u.is_active === false) {
+                <span class="w-1.5 h-1.5 rounded-full bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.6)]"></span>
+                } @else {
+                <span class="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]"></span>
+                }
+            </div>
+            } @empty {
+            <div class="p-8 text-center text-gray-400">
+                <span class="text-2xl block mb-2">🔘</span>
+                <p class="text-[10px] font-bold uppercase tracking-widest">Sin resultados</p>
+            </div>
+            }
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 overflow-y-auto bg-gray-50/30 rounded-2xl border border-dashed border-gray-200 p-2 lg:p-4">
+        @if (activeUser()) {
+        <div class="animate-in fade-in zoom-in duration-300">
+            <app-user-form [initialForm]="activeUser()!" [roles]="allowedRoles()" [availableUsers]="users() || []"
+                [concepts]="concepts" [convenioConfig]="convenioConfig()" [isLoading]="loading()"
+                [uploadingPhoto]="uploadingPhoto()" [uploadingAttachments]="uploadingAttachments()"
+                (save)="onSave($event)" (cancel)="onCancel()" (uploadPhoto)="onUploadPhoto($event)"
+                (uploadAttachments)="onUploadAttachments($event)" (removeAttachment)="onRemoveAttachment($event)"
+                (activate)="onActivate()" (deactivate)="onDeactivate()" (delete)="onDelete(activeUser()!)">
+            </app-user-form>
+        </div>
+        } @else {
+        <div class="h-full flex flex-col items-center justify-center text-center p-12">
+            <div
+                class="w-24 h-24 bg-white rounded-3xl shadow-xl border border-gray-100 flex items-center justify-center text-4xl mb-6 animate-bounce duration-[3s]">
+                📁
+            </div>
+            <h2 class="text-2xl font-black text-[#002855] mb-2 tracking-tight">Gestión de Expedientes</h2>
+            <p class="text-gray-400 max-w-sm mb-8 text-sm leading-relaxed">
+                Seleccione un empleado del directorio lateral para visualizar o modificar su expediente, o cree uno
+                nuevo para incorporarlo a la plantilla.
+            </p>
+            <div class="flex gap-4">
+                <div class="flex flex-col items-center gap-1 opacity-40">
+                    <span class="text-lg">👥</span>
+                    <span class="text-[9px] font-black uppercase tracking-widest">{{ users().length }}
+                        Empleados</span>
+                </div>
+                <div class="w-px h-8 bg-gray-200"></div>
+                <div class="flex flex-col items-center gap-1 opacity-40">
+                    <span class="text-lg">🏢</span>
+                    <span class="text-[9px] font-black uppercase tracking-widest">INESPASA RRHH</span>
+                </div>
+            </div>
+        </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,23 @@
+<div class="max-w-3xl mx-auto pb-8">
+    <div class="card bg-gradient-to-br from-orange-50 to-red-50 border-2 border-orange-100">
+        <div class="text-center mb-8">
+            <div
+                class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-full mb-4 shadow-lg">
+                <span class="text-4xl">📢</span>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">Canal de Denuncias</h1>
+            <p class="text-gray-700 text-lg leading-relaxed max-w-2xl mx-auto">
+                Este es un canal <strong>completamente anónimo</strong>. No se requiere autenticación.
+                <br>
+                <span class="text-orange-600 font-semibold">⚠️ IMPORTANTE:</span> Guarda el código que recibirás para
+                consultar el estado de tu denuncia.
+            </p>
+        </div>
+
+        <app-complaint-form (onSuccessNavigation)="onSuccessNavigation($event)">
+        </app-complaint-form>
+
+        <app-complaint-lookup (lookup)="onLookup($event)">
+        </app-complaint-lookup>
+    </div>
+</div>

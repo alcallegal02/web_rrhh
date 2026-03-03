@@ -1,0 +1,48 @@
+<div class="bg-[#f0f4f8] p-6 rounded-2xl border border-blue-100 shadow-sm">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+        <div class="flex items-center gap-3">
+            <span class="text-xl">📎</span>
+            <h3 class="font-bold text-gray-800 tracking-tight">Expediente Digital (Adjuntos)</h3>
+        </div>
+        <label
+            class="bg-[#002855] text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md cursor-pointer hover:bg-blue-900 transition-all flex items-center gap-2">
+            <span>📤</span> Subir Documentos
+            <input type="file" (change)="onUploadAttachments($event)" multiple accept=".pdf,.doc,.docx,.txt"
+                class="hidden" [disabled]="isLoading() || uploadingAttachments()">
+        </label>
+    </div>
+
+    @if (uploadingAttachments()) {
+    <div class="flex items-center gap-2 text-blue-600 mb-4 animate-pulse">
+        <div class="w-2 h-2 rounded-full bg-blue-600 animate-bounce"></div>
+        <span class="text-xs font-bold">Transmitiendo archivos al servidor...</span>
+    </div>
+    }
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        @for (att of attachments(); track i; let i = $index) {
+        <div
+            class="bg-white p-3 rounded-xl border border-gray-200 flex items-center justify-between group hover:border-blue-300 transition-all shadow-sm">
+            <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
+                class="flex items-center gap-3 overflow-hidden">
+                <div
+                    class="w-10 h-10 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-bold text-xs shrink-0">
+                    PDF</div>
+                <div class="flex flex-col min-w-0">
+                    <span class="text-[11px] font-bold text-gray-700 truncate block">{{
+                        att.file_original_name || 'Expediente' }}</span>
+                    <span class="text-[9px] text-gray-400 uppercase font-black">Documento Oficial</span>
+                </div>
+            </a>
+            <button type="button" (click)="onRemoveAttachment(i)"
+                class="text-gray-300 hover:text-red-500 p-2 font-bold transition-colors">✕</button>
+        </div>
+        }
+    </div>
+    @if (!attachments() || attachments().length === 0) {
+    <div class="bg-blue-100/30 border-2 border-dashed border-blue-200 rounded-2xl p-8 text-center">
+        <span class="text-3xl block mb-2 opacity-50">📁</span>
+        <p class="text-xs text-blue-600 font-bold">No hay documentos cargados en el expediente.</p>
+    </div>
+    }
+</div>

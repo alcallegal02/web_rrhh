@@ -1,0 +1,145 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    server_tokens off;
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # Logging
+    access_log /var/log/nginx/access.log;
+    error_log /var/log/nginx/error.log;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/json application/javascript application/xml+rss;
+
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+    limit_req_zone $binary_remote_addr zone=ws_limit:10m rate=5r/s;
+
+    # HTTP Server (HTTPS managed by external proxy)
+    server {
+        listen 80;
+        server_name _;
+
+        # Global body size limit
+        client_max_body_size 10M;
+
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: http: https:; font-src 'self' data:; connect-src 'self' data: ws: wss:; frame-src 'self' https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com;" always;
+        
+        # Custom Error Pages
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+            internal;
+            root /usr/share/nginx/error_pages;
+            add_header X-Frame-Options "SAMEORIGIN" always;
+        }
+
+        location /error_assets/ {
+            alias /usr/share/nginx/error_pages/;
+        }
+
+        # Frontend - Angular App (proxy to development server)
+        location / {
+            proxy_intercept_errors on;
+            proxy_pass http://${NGINX_FRONTEND_HOST}:${NGINX_FRONTEND_PORT};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_cache_bypass $http_upgrade;
+            proxy_read_timeout 300s;
+            proxy_connect_timeout 75s;
+        }
+
+        # Prevent 502/404 noise for common assets
+        location = /favicon.ico {
+            log_not_found off;
+            access_log off;
+            root /usr/share/nginx/html;
+            try_files /favicon.ico =204;
+        }
+
+        location = /robots.txt {
+            log_not_found off;
+            access_log off;
+            root /usr/share/nginx/html;
+            try_files /robots.txt =204;
+        }
+
+        # Serve uploads securely
+        location /uploads/ {
+            alias /uploads/;
+            expires 30d;
+            add_header Cache-Control "public, no-transform";
+            add_header X-Content-Type-Options "nosniff" always;
+            
+            # Disable script execution in this directory
+            # (In Nginx, this is done by not having any fastcgi/uwsgi/proxy_pass inside)
+            # Also prevent access to hidden files
+            location ~ /\. {
+                deny all;
+            }
+            
+            # Explicitly set headers to prevent sniffing and execution
+            types {
+                image/jpeg jpg jpeg;
+                image/png png;
+                image/gif gif;
+                image/webp webp;
+                application/pdf pdf;
+                application/msword doc;
+                application/vnd.openxmlformats-officedocument.wordprocessingml.document docx;
+                text/plain txt;
+                application/rtf rtf;
+            }
+        }
+
+        # Backend API - Rate limited
+        location /api {
+            proxy_intercept_errors on;
+            limit_req zone=api_limit burst=20 nodelay;
+            proxy_pass http://${NGINX_BACKEND_HOST}:${NGINX_BACKEND_PORT};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_cache_bypass $http_upgrade;
+            proxy_read_timeout 300s;
+            proxy_connect_timeout 75s;
+        }
+
+        # WebSocket endpoint - Rate limited
+        location /ws/ {
+            limit_req zone=ws_limit burst=10 nodelay;
+            proxy_pass http://${NGINX_BACKEND_HOST}:${NGINX_BACKEND_PORT}/ws/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_read_timeout 3600s;
+            proxy_send_timeout 3600s;
+        }
+    }
+}
+

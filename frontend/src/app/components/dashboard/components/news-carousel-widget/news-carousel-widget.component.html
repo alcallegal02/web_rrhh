@@ -1,0 +1,40 @@
+<div class="space-y-4">
+    <div class="flex items-center justify-between px-2">
+        <div class="flex items-center gap-2">
+            <span class="text-xl">📰</span>
+            <h2 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Últimas Noticias</h2>
+        </div>
+        <a routerLink="/news" class="text-xs font-bold text-inespasa-dark hover:underline">Ver todas</a>
+    </div>
+
+    <div class="relative group">
+        <!-- Grid Container (Wrapping) -->
+        <div class="flex flex-wrap gap-6 justify-start">
+            @for (item of news(); track item.id) {
+            <div class="flex-none w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)] card p-0 group/card overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 bg-white border border-gray-100"
+                [routerLink]="['/news', item.id]">
+                @if (item.cover_image_url) {
+                <div class="h-40 overflow-hidden">
+                    <img [src]="item.cover_image_url | fileUrl"
+                        class="w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500">
+                </div>
+                }
+                <div class="p-5">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-[10px] font-bold text-inespasa-light uppercase tracking-wider">{{
+                            item.publish_date | date:'dd MMM, yyyy' }}</span>
+                    </div>
+                    <h3
+                        class="font-bold text-gray-800 text-base mb-2 line-clamp-2 leading-tight group-hover/card:text-inespasa-dark transition-colors">
+                        {{ item.title }}</h3>
+                    @if (item.summary) {
+                    <p class="text-xs text-gray-500 line-clamp-3 leading-relaxed">
+                        {{ item.summary }}
+                    </p>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</div>

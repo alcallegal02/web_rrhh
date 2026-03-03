@@ -1,0 +1,24 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="mb-6 flex justify-between items-center">
+            <h2 class="text-2xl font-bold text-gray-800">Auditoría del Sistema</h2>
+            <button (click)="loadLogs()"
+                class="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
+                <i class="fas fa-sync-alt mr-1"></i> Recargar
+            </button>
+        </div>
+
+        <app-audit-filters (filtersChanged)="onFiltersChanged($event)">
+        </app-audit-filters>
+
+        <app-audit-list [logs]="logs()" [loading]="loading()" [currentPage]="currentPage()" [pageSize]="pageSize"
+            (itemSelected)="onItemSelected($event)" (pageChange)="onPageChange($event)">
+        </app-audit-list>
+    </div>
+</div>
+
+@if (selectedLog()) {
+<app-audit-details [log]="selectedLog()!" (close)="selectedLog.set(null)">
+</app-audit-details>
+}

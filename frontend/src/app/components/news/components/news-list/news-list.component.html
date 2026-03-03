@@ -1,0 +1,125 @@
+<div [class]="layout() === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8' : 'flex flex-col gap-6'">
+    @if (newsList().length === 0) {
+    <div class="col-span-full card text-center py-12">
+        <div class="text-6xl mb-4">📭</div>
+        <p class="text-gray-500 text-lg font-medium">No hay noticias disponibles</p>
+        <p class="text-gray-400 text-sm mt-2">Las noticias aparecerán aquí cuando sean publicadas</p>
+    </div>
+    }
+
+    @for (news of newsList(); track news.id) {
+    <div class="card hover:shadow-xl transition-all border-l-4 group"
+        [class.border-inespasa-dark]="news.status === 'publicada'" [class.border-gray-400]="news.status === 'borrador'"
+        [class.border-yellow-400]="news.status === 'archivada'" [class.flex-col]="layout() === 'grid'"
+        [class.border-t-4]="layout() === 'grid'" [class.border-l-4]="layout() === 'list'">
+
+        <div [class]="layout() === 'grid' ? 'flex flex-col h-full' : 'flex flex-col md:flex-row gap-6'">
+            <!-- Cover Image -->
+            <div
+                [class]="layout() === 'grid' ? 'relative h-48 w-full overflow-hidden rounded-xl mb-4 flex-none bg-gray-50 border border-gray-100 shadow-sm' : 'w-full md:w-48 h-48 flex-shrink-0 rounded-xl overflow-hidden shadow-md border border-gray-100 bg-gray-50'">
+                @if (news.cover_image_url) {
+                <img [src]="news.cover_image_url | fileUrl"
+                    class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                } @else {
+                <div
+                    class="w-full h-full flex items-center justify-center text-gray-200 text-5xl font-black bg-gradient-to-br from-gray-50 to-gray-100">
+                    📰
+                </div>
+                }
+
+                @if (canManage() && layout() === 'grid') {
+                <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button (click)="edit.emit(news)"
+                        class="p-2 bg-white/90 backdrop-blur rounded-lg shadow-sm hover:bg-inespasa-dark hover:text-white transition-all text-xs">✏️</button>
+                    <button (click)="delete.emit(news.id)"
+                        class="p-2 bg-white/90 backdrop-blur rounded-lg shadow-sm hover:bg-red-600 hover:text-white transition-all text-xs">🗑️</button>
+                </div>
+                }
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 flex flex-col px-1">
+                <div class="flex items-start justify-between mb-3 min-h-[3rem]">
+                    <h3 (click)="goToDetail(news.id)" [class.text-xl]="layout() === 'grid'"
+                        [class.text-2xl]="layout() === 'list'"
+                        class="font-bold text-gray-800 hover:text-inespasa-dark cursor-pointer transition-colors line-clamp-2 leading-tight">
+                        {{ news.title }}
+                    </h3>
+
+                    @if (canManage() && layout() === 'list') {
+                    <div class="flex items-center gap-2">
+                        <button (click)="edit.emit(news)" class="btn-secondary text-sm px-3 py-1">✏️</button>
+                        <button (click)="delete.emit(news.id)"
+                            class="btn-secondary text-sm px-3 py-1 text-red-600 border-red-200 hover:bg-red-50">🗑️</button>
+                        <select [value]="news.status" (change)="onStatusChange(news.id, $event)"
+                            class="text-xs px-2 py-1 rounded border border-gray-300 bg-white">
+                            <option value="borrador">📝 Borrador</option>
+                            <option value="publicada">📢 Pública</option>
+                            <option value="archivada">📦 Archivo</option>
+                        </select>
+                    </div>
+                    }
+                </div>
+
+                @if (news.summary) {
+                <p class="text-gray-500 line-clamp-3 mb-6 italic leading-relaxed" [class.text-sm]="layout() === 'grid'"
+                    [class.text-base]="layout() === 'list'">
+                    {{ news.summary }}
+                </p>
+                }
+
+                <div class="mt-auto space-y-4">
+                    <a [routerLink]="['/news', news.id]"
+                        class="inline-flex items-center gap-2 text-inespasa-dark hover:text-blue-800 text-xs font-black uppercase tracking-widest transition-all group/link no-underline">
+                        {{ layout() === 'grid' ? 'Leer noticia' : 'Ver noticia completa' }}
+                        <span class="group-hover/link:translate-x-1 transition-transform">→</span>
+                    </a>
+
+                    <div class="pt-4 border-t border-gray-50 flex flex-col gap-3">
+                        <div class="flex items-center justify-between gap-2 overflow-hidden">
+                            @if (news.publish_date) {
+                            <span class="flex items-center gap-1.5 text-xs text-gray-400 font-medium whitespace-nowrap">
+                                <span class="text-inespasa-dark/40">📅</span>
+                                Publicada: {{ news.publish_date | date:'dd/MM/yyyy' }}
+                            </span>
+                            }
+
+                            @if (canManage()) {
+                            <div class="flex items-center gap-2">
+                                @if (layout() === 'grid') {
+                                <select [value]="news.status" (change)="onStatusChange(news.id, $event)"
+                                    class="text-[9px] px-1 py-0.5 rounded border border-gray-200 bg-white group-hover:border-inespasa-dark/30 transition-colors">
+                                    <option value="borrador">📝 Borrador</option>
+                                    <option value="publicada">📢 Pública</option>
+                                    <option value="archivada">📦 Archivo</option>
+                                </select>
+                                } @else {
+                                <span [class]="getStatusClass(news.status)"
+                                    class="text-[10px] font-black uppercase tracking-tighter px-2 py-0.5 rounded-full border">
+                                    {{ getStatusLabel(news.status) }}
+                                </span>
+                                }
+                            </div>
+                            }
+                        </div>
+
+                        @if (news.attachments && news.attachments.length > 0) {
+                        <div class="flex flex-wrap gap-1.5">
+                            @for (att of news.attachments; track $index) {
+                            @if (!isImage(att.file_url)) {
+                            <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
+                                title="{{ att.file_original_name }}"
+                                class="flex items-center gap-1 text-[10px] text-inespasa-dark hover:text-blue-800 font-bold transition-colors bg-blue-50/50 px-2 py-1 rounded-lg border border-transparent hover:border-inespasa-dark/20 max-w-full">
+                                <span class="truncate">📎 {{ att.file_original_name || 'Doc' }}</span>
+                            </a>
+                            }
+                            }
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    }
+</div>

@@ -1,0 +1,27 @@
+<div class="card bg-white mt-8 border-2 border-blue-100">
+    <div class="flex items-center mb-4">
+        <span class="text-3xl mr-3">🔍</span>
+        <h2 class="text-xl font-bold text-gray-800">¿Ya tienes una denuncia?</h2>
+    </div>
+    <p class="text-gray-600 mb-6">Si ya has enviado una denuncia anteriormente, puedes consultar su estado aquí
+        utilizando tu código de seguimiento y clave de seguridad.</p>
+
+    <div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-6 rounded">
+        <p class="text-xs text-blue-800">
+            🛡️ <strong>Seguridad activa:</strong> Este sistema detecta y bloquea automáticamente intentos de
+            acceso no autorizados mediante fuerza bruta.
+        </p>
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-3">
+        <input type="text" [ngModel]="code()" (ngModelChange)="code.set($event)"
+            placeholder="Código (Ej: HJK2-8L92-K1M5-P7Z2)"
+            class="flex-1 input-field font-mono text-center tracking-wider text-sm" />
+        <input type="text" [ngModel]="token()" (ngModelChange)="token.set($event)"
+            placeholder="Clave (Ej: M9J2L7H8K3P1)"
+            class="flex-1 input-field font-mono text-center tracking-wider text-sm" (keyup.enter)="onLookup()" />
+        <button (click)="onLookup()" [disabled]="!code() || !token()" class="btn-secondary px-8">
+            Consultar
+        </button>
+    </div>
+</div>

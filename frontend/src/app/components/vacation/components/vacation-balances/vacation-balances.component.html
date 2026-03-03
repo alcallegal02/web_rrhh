@@ -1,0 +1,69 @@
+@if (balance()) {
+<div class="card p-0 overflow-hidden border-gray-100 shadow-sm transition-all hover:shadow-md">
+    <div class="p-6 border-b border-gray-50 bg-gray-50/30 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-2 h-6 bg-inespasa-dark rounded-full"></div>
+            <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Balance de Ausencias</h3>
+        </div>
+        <div
+            class="text-[10px] font-bold text-inespasa-dark bg-inespasa-dark/5 px-2 py-1 rounded-lg uppercase tracking-tight">
+            Año 2026
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <div class="min-w-max p-6">
+            <div class="flex flex-col gap-3">
+                <!-- Header Row -->
+                <div class="flex gap-3 mb-2">
+                    <div class="w-24 shrink-0"></div>
+                    @for (policy of publicBalances(); track policy.slug) {
+                    <div
+                        class="w-32 bg-inespasa-dark text-white text-[10px] font-black uppercase tracking-widest p-4 rounded-xl text-center shadow-lg shadow-blue-900/10 h-16 flex items-center justify-center leading-tight shrink-0">
+                        {{ policy.name }}
+                    </div>
+                    }
+                </div>
+
+                <!-- Days Row -->
+                <div class="flex gap-3 items-center group/row">
+                    <div
+                        class="w-24 shrink-0 px-4 py-3 bg-gray-50 rounded-xl text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border border-gray-100 group-hover/row:border-inespasa-dark/20 transition-colors">
+                        Días
+                    </div>
+                    @for (policy of publicBalances(); track policy.slug) {
+                    <div
+                        class="w-32 bg-white border border-gray-100 rounded-xl p-4 text-center text-gray-800 font-black text-lg shadow-inner shrink-0 group-hover/row:border-inespasa-dark/10 transition-colors">
+                        @if (policy.unit === 'hours') {
+                        <span class="text-gray-200">-</span>
+                        } @else {
+                        {{ policy.available_days | number:'1.1-2' }}
+                        }
+                    </div>
+                    }
+                </div>
+
+                <!-- Hours Row -->
+                <div class="flex gap-3 items-center group/row">
+                    <div
+                        class="w-24 shrink-0 px-4 py-3 bg-gray-50 rounded-xl text-center text-[10px] font-black text-gray-400 uppercase tracking-widest border border-gray-100 group-hover/row:border-inespasa-dark/20 transition-colors">
+                        Horas
+                    </div>
+                    @for (policy of publicBalances(); track policy.slug) {
+                    <div
+                        class="w-32 bg-white border border-gray-100 rounded-xl p-4 text-center text-gray-800 font-black text-lg shadow-inner shrink-0 group-hover/row:border-inespasa-dark/10 transition-colors">
+                        {{ (policy.available_days * (balance()!.daily_work_hours || 8)) | number:'1.1-1' }}
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer / Disclaimer -->
+    <div class="px-6 py-4 bg-gray-50/50 border-t border-gray-50 flex items-center gap-3">
+        <span class="text-[10px] text-gray-400 italic">Los balances se actualizan en base a tu jornada establecida de {{
+            balance()!.daily_work_hours || 8 }}h/día.</span>
+    </div>
+</div>
+}

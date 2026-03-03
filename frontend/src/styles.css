@@ -1,0 +1,906 @@
+/* Quill Editor Styles */
+@import 'quill/dist/quill.snow.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* SOBRESCRIBIR ESTILOS DE SELECCIÓN DE QUILL ANTES DE CUALQUIER OTRA REGLA */
+/* Esto debe estar inmediatamente después del import para tener máxima prioridad */
+.ql-editor p.ql-selected:has(.image-resizable),
+.ql-editor div.ql-selected:has(.image-resizable) {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Eliminar el pseudo-elemento ::selection de Quill para imágenes seleccionadas */
+.ql-editor p:has(.image-resizable)::selection,
+.ql-editor div:has(.image-resizable)::selection,
+.ql-editor p:has(.image-resizable) *::selection,
+.ql-editor div:has(.image-resizable) *::selection,
+.ql-editor .image-resizable::selection {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+/* Eliminar también ::-moz-selection para Firefox */
+.ql-editor p:has(img.image-resizable)::-moz-selection,
+.ql-editor div:has(img.image-resizable)::-moz-selection,
+.ql-editor p:has(img.image-resizable) *::-moz-selection,
+.ql-editor div:has(img.image-resizable) *::-moz-selection,
+.ql-editor img.image-resizable::-moz-selection {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+
+
+/* Corporate Theme Variables */
+:root {
+  --color-inespasa-dark: #3C65AB;
+  --color-inespasa-light: #5A9AD5;
+}
+
+@layer base {
+  :root {
+    /* Fluid Typography Scale */
+    --font-xs: clamp(0.75rem, 0.70rem + 0.25vw, 0.875rem);
+    --font-sm: clamp(0.875rem, 0.83rem + 0.23vw, 1rem);
+    --font-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    --font-lg: clamp(1.125rem, 1.08rem + 0.23vw, 1.25rem);
+    --font-xl: clamp(1.25rem, 1.20rem + 0.25vw, 1.5rem);
+    --font-2xl: clamp(1.5rem, 1.41rem + 0.45vw, 1.875rem);
+    --font-3xl: clamp(1.875rem, 1.76rem + 0.57vw, 2.25rem);
+    --font-4xl: clamp(2.25rem, 2.12rem + 0.65vw, 3rem);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  /* Image Reset */
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Touch Target Size */
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  body {
+    @apply antialiased text-gray-900;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8fafc;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 transition-all duration-300 hover:shadow-md;
+  }
+
+  .btn-primary {
+    @apply px-6 py-2.5 bg-inespasa-dark text-white font-semibold rounded-lg shadow-sm hover:bg-inespasa-dark/90 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 hover:border-inespasa-light transition-all duration-200 flex items-center justify-center gap-2;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-inespasa-dark focus:ring-4 focus:ring-inespasa-dark/10 transition-all duration-200 bg-white;
+  }
+
+  .input-field-new {
+    @apply w-full px-4 py-3 bg-gray-50 border border-transparent rounded-xl focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-300 text-sm font-medium text-gray-700 placeholder:text-gray-400;
+  }
+
+  .input-field-compact {
+    @apply w-full px-3 py-1.5 bg-gray-50 border border-transparent rounded-lg focus:outline-none focus:bg-white focus:border-blue-500 transition-all duration-200 text-xs font-bold text-gray-700;
+  }
+
+  .badge {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+  }
+
+  .news-content {
+    @apply max-w-none;
+  }
+
+  /* Animations */
+  .animate-in {
+    animation-duration: 0.3s;
+    animation-fill-mode: both;
+  }
+
+  .fade-in {
+    animation-name: fadeIn;
+  }
+
+  .zoom-in {
+    animation-name: zoomIn;
+  }
+
+  .slide-in-from-top-2 {
+    animation-name: slideInTop;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes zoomIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slideInTop {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Quill Editor Styles - Outside @layer to ensure proper priority */
+.ql-editor {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Asegurar que el cursor de inserción de Quill sea visible durante el drag nativo */
+/* Quill usa un elemento dinámico para el cursor, no una clase específica */
+.ql-editor .ql-cursor,
+.ql-editor .ql-cursor *,
+.ql-editor[contenteditable="true"]:focus {
+  caret-color: #000 !important;
+}
+
+/* Asegurar que el cursor sea visible cuando hay una selección de longitud 0 (cursor de inserción) */
+.ql-editor .ql-editor {
+  caret-color: #000 !important;
+}
+
+/* Asegurar que el editor muestre el cursor durante el drag */
+.ql-editor:focus {
+  outline: none;
+}
+
+/* Forzar que el cursor de texto sea visible durante el drag */
+.ql-editor[contenteditable="true"] {
+  caret-color: #000 !important;
+}
+
+/* Asegurar que el cursor de inserción de Quill sea visible */
+.ql-editor .ql-editor[contenteditable="true"] {
+  caret-color: #000 !important;
+}
+
+/* Estilo específico para cuando hay una selección de longitud 0 (cursor de inserción) */
+.ql-editor .ql-editor[contenteditable="true"]:focus {
+  caret-color: #000 !important;
+}
+
+/* Enable scrolling inside the editor container */
+.ql-container {
+  position: relative;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Eliminar completamente el overlay azul de Quill para imágenes seleccionadas */
+/* Reglas muy específicas con !important para sobrescribir estilos de Quill */
+.ql-editor .image-resizable,
+.ql-editor .image-resizable *,
+.ql-editor p:has(.image-resizable),
+.ql-editor div:has(.image-resizable),
+.ql-editor p:has(.image-resizable) *,
+.ql-editor div:has(.image-resizable) * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Eliminar pseudo-elementos de selección de Quill (PERO NO el ::before que usamos para el borde) */
+/* NO incluir img.image-resizable::before aquí - lo necesitamos para el borde azul */
+.ql-editor img.image-resizable::after,
+.ql-editor p:has(img.image-resizable)::before,
+.ql-editor p:has(img.image-resizable)::after,
+.ql-editor div:has(img.image-resizable)::before,
+.ql-editor div:has(img.image-resizable)::after {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Asegurar que el borde ::before se muestre correctamente */
+/* Esta regla complementa la regla principal del borde más abajo */
+
+/* Eliminar el estilo de selección de Quill cuando hay imagen seleccionada */
+.ql-editor:has(img.image-resizable) .ql-selection,
+.ql-editor:has(img.image-resizable) .ql-selected,
+.ql-editor:has(img.image-resizable) [class*="ql-selection"],
+.ql-editor:has(img.image-resizable) .ql-selection *,
+.ql-editor:has(img.image-resizable) .ql-selected * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Reglas adicionales para imágenes con clases de selección de Quill */
+.ql-editor img.ql-selected,
+.ql-editor img[class*="ql-selected"],
+.ql-editor p.ql-selected img,
+.ql-editor div.ql-selected img {
+  background: transparent !important;
+  background-color: transparent !important;
+  opacity: 1 !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Eliminar overlay de selección de Quill en contenedores con imágenes seleccionadas */
+.ql-editor p.ql-selected:has(img.image-resizable),
+.ql-editor div.ql-selected:has(img.image-resizable),
+.ql-editor p.ql-selected img.image-resizable,
+.ql-editor div.ql-selected img.image-resizable {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Eliminar pseudo-elementos de selección de Quill en contenedores con imágenes */
+.ql-editor p.ql-selected:has(img.image-resizable)::before,
+.ql-editor p.ql-selected:has(img.image-resizable)::after,
+.ql-editor div.ql-selected:has(img.image-resizable)::before,
+.ql-editor div.ql-selected:has(img.image-resizable)::after {
+  display: none !important;
+  content: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Regla ULTRA específica para eliminar cualquier overlay azul de Quill cuando hay imagen seleccionada */
+/* Esta regla debe tener máxima especificidad y estar después de todas las demás */
+.ql-editor p.ql-selected:has(img.image-resizable),
+.ql-editor div.ql-selected:has(img.image-resizable),
+.ql-editor p.ql-selected img.image-resizable,
+.ql-editor div.ql-selected img.image-resizable,
+.ql-editor p.ql-selected:has(img.image-resizable) *,
+.ql-editor div.ql-selected:has(img.image-resizable) * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Eliminar cualquier elemento hijo que Quill pueda crear para la selección */
+.ql-editor p.ql-selected:has(img.image-resizable)>*,
+.ql-editor div.ql-selected:has(img.image-resizable)>*,
+.ql-editor p.ql-selected:has(img.image-resizable)>*::before,
+.ql-editor p.ql-selected:has(img.image-resizable)>*::after,
+.ql-editor div.ql-selected:has(img.image-resizable)>*::before,
+.ql-editor div.ql-selected:has(img.image-resizable)>*::after {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Regla ULTRA específica para eliminar cualquier overlay azul de Quill cuando hay imagen seleccionada */
+/* Esta regla debe tener máxima especificidad y estar después de todas las demás */
+.ql-editor p.ql-selected:has(img.image-resizable),
+.ql-editor div.ql-selected:has(img.image-resizable),
+.ql-editor p.ql-selected img.image-resizable,
+.ql-editor div.ql-selected img.image-resizable,
+.ql-editor p.ql-selected:has(img.image-resizable) *,
+.ql-editor div.ql-selected:has(img.image-resizable) * {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* Eliminar cualquier elemento hijo que Quill pueda crear para la selección */
+.ql-editor p.ql-selected:has(img.image-resizable)>*,
+.ql-editor div.ql-selected:has(img.image-resizable)>*,
+.ql-editor p.ql-selected:has(img.image-resizable)>*::before,
+.ql-editor p.ql-selected:has(img.image-resizable)>*::after,
+.ql-editor div.ql-selected:has(img.image-resizable)>*::before,
+.ql-editor div.ql-selected:has(img.image-resizable)>*::after {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.ql-editor img {
+  max-width: 100%;
+  height: auto;
+  display: inline-block !important;
+  vertical-align: middle;
+  cursor: grab;
+  user-select: none;
+  /* NO prevenir drag nativo - permitir drag para imágenes seleccionadas */
+  /* -webkit-user-drag: none; */
+}
+
+.ql-editor img:active {
+  cursor: grabbing;
+}
+
+.ql-editor .image-resizable {
+  cursor: grab;
+  /* Permitir drag nativo para elementos seleccionados */
+  -webkit-user-drag: element !important;
+  user-drag: element !important;
+}
+
+.ql-editor img.image-resizable:active {
+  cursor: grabbing;
+}
+
+/* Image alignment styles - High specificity to override Quill defaults */
+.ql-editor .ql-align-center {
+  text-align: center !important;
+}
+
+.ql-editor .ql-align-center img,
+.ql-editor p.ql-align-center img,
+.ql-editor div.ql-align-center img {
+  display: inline-block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  vertical-align: middle;
+}
+
+.ql-editor .ql-align-right {
+  text-align: right !important;
+}
+
+.ql-editor .ql-align-right img,
+.ql-editor p.ql-align-right img,
+.ql-editor div.ql-align-right img {
+  display: inline-block !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  vertical-align: middle;
+}
+
+.ql-editor .ql-align-left {
+  text-align: left !important;
+}
+
+.ql-editor .ql-align-left img,
+.ql-editor p.ql-align-left img,
+.ql-editor div.ql-align-left img {
+  display: inline-block !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  vertical-align: middle;
+}
+
+/* Líneas que conectan los handles - borde alrededor de la imagen */
+/* Esta regla DEBE estar fuera de @layer para tener mayor prioridad */
+/* Usar máxima especificidad para asegurar que se aplique */
+/* El borde está a -2px con grosor de 2px, su centro está en -1px desde el borde de la imagen */
+/* Los handles están posicionados en -9px para que su centro (a 8px desde su borde) coincida con el centro del borde (-1px) */
+.ql-editor .image-resizable.is-selected::before,
+.ql-editor img.image-resizable.is-selected::before,
+.ql-editor div.image-resizable.is-selected::before,
+.ql-editor iframe.image-resizable.is-selected::before,
+.ql-editor p .image-resizable.is-selected::before,
+.ql-editor div .image-resizable.is-selected::before,
+.ql-editor .ql-editor .image-resizable.is-selected::before {
+  content: '' !important;
+  position: absolute !important;
+  top: -2px !important;
+  left: -2px !important;
+  right: -2px !important;
+  bottom: -2px !important;
+  border: 2px solid #3b82f6 !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  border-color: #3b82f6 !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Ocultar el borde ::before cuando la imagen está siendo arrastrada */
+.ql-editor img.image-resizable.dragging-image::before,
+.ql-editor img.image-resizable.dragging-image.image-resizable::before,
+.ql-editor p img.image-resizable.dragging-image::before,
+.ql-editor div img.image-resizable.dragging-image::before {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Asegurar que las imágenes tengan position relative para que el borde ::before funcione */
+.ql-editor .image-resizable,
+.ql-editor p .image-resizable,
+.ql-editor div .image-resizable,
+.ql-editor .ql-video-wrapper {
+  position: relative !important;
+  overflow: visible !important;
+  display: inline-block !important;
+}
+
+/* Estilos de alineación para Video */
+.ql-editor .ql-video-wrapper[data-align="center"] {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.ql-editor .ql-video-wrapper[data-align="right"] {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+
+.ql-editor .ql-video-wrapper[data-align="left"] {
+  display: block !important;
+  margin-left: 0 !important;
+  margin-right: auto !important;
+}
+
+@layer components {
+
+  /* Image Resize Handles Styles */
+  .ql-editor img.image-resizable {
+    cursor: pointer;
+    /* Eliminar cualquier overlay azul de Quill */
+    background: transparent !important;
+  }
+
+  .image-resize-handles {
+    position: absolute;
+    pointer-events: none;
+    z-index: 2;
+    box-sizing: border-box;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Asegurar que el contenedor del editor tenga position relative para el posicionamiento absoluto */
+  .ql-container {
+    position: relative !important;
+  }
+
+  .image-resize-handle {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #3b82f6;
+    border: 2px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    pointer-events: all;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s ease;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    box-sizing: border-box;
+  }
+
+  .image-resize-handle:hover {
+    transform: scale(1.2);
+    background: #2563eb;
+  }
+
+  /* Corner handles */
+  /* El borde del marco está a -2px con grosor de 2px, su centro está en -1px desde el borde de la imagen */
+  /* Los handles tienen width: 12px con box-sizing: border-box (incluye border de 2px), tamaño total 12px */
+  /* El centro del handle está a 6px desde cualquier borde del handle */
+  /* Para centrar el handle sobre el centro del borde: borde del handle debe estar en -1px - 6px = -7px */
+  .image-resize-handle.nw {
+    top: -7px;
+    left: -7px;
+    cursor: nw-resize;
+  }
+
+  .image-resize-handle.ne {
+    top: -7px;
+    right: -7px;
+    cursor: ne-resize;
+  }
+
+  .image-resize-handle.sw {
+    bottom: -7px;
+    left: -7px;
+    cursor: sw-resize;
+  }
+
+  .image-resize-handle.se {
+    bottom: -7px;
+    right: -7px;
+    cursor: se-resize;
+  }
+
+  /* Side handles */
+  /* Centrados en la línea del borde: centro del borde en -1px, centro del handle debe estar en -1px */
+  /* Para centrar: borde del handle debe estar en -1px - 6px = -7px */
+  .image-resize-handle.n {
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: n-resize;
+  }
+
+  .image-resize-handle.s {
+    bottom: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    cursor: s-resize;
+  }
+
+  .image-resize-handle.w {
+    left: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: w-resize;
+  }
+
+  .image-resize-handle.e {
+    right: -7px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: e-resize;
+  }
+
+  .image-resize-handle.n:hover,
+  .image-resize-handle.s:hover,
+  .image-resize-handle.w:hover,
+  .image-resize-handle.e:hover {
+    transform: scale(1.2);
+  }
+
+  .image-resize-handle.n:hover {
+    transform: translateX(-50%) scale(1.2);
+  }
+
+  .image-resize-handle.s:hover {
+    transform: translateX(-50%) scale(1.2);
+  }
+
+  .image-resize-handle.w:hover {
+    transform: translateY(-50%) scale(1.2);
+  }
+
+  .image-resize-handle.e:hover {
+    transform: translateY(-50%) scale(1.2);
+  }
+
+  /* News Content Styles */
+  /* Por defecto, las imágenes dentro de párrafos deben ser inline para mantener el flujo del texto */
+  /* IMPORTANTE: Usar !important para sobrescribir estilos inline y clases como image-resizable */
+  .news-content p img,
+  .news-content div img,
+  .news-content p img.image-resizable,
+  .news-content div img.image-resizable {
+    @apply rounded-lg shadow-md max-w-full h-auto;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 0.25rem !important;
+  }
+
+  /* Las imágenes que están solas (no dentro de p o div) pueden ser block */
+  .news-content>img {
+    @apply rounded-lg shadow-md my-4 max-w-full h-auto;
+    display: block;
+    margin: 1rem auto;
+  }
+
+  /* Alineamiento de contenido - aplicar a p, div y otros contenedores */
+  .news-content .ql-align-center,
+  .news-content p.ql-align-center,
+  .news-content div.ql-align-center {
+    text-align: center !important;
+  }
+
+  /* Imágenes centradas: pueden ser block si están en su propia línea */
+  .news-content .ql-align-center img,
+  .news-content p.ql-align-center img,
+  .news-content div.ql-align-center img,
+  .news-content p.ql-align-center img.image-resizable,
+  .news-content div.ql-align-center img.image-resizable {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 0.25rem !important;
+  }
+
+  /* Si el párrafo centrado solo contiene la imagen, hacerla block */
+  .news-content p.ql-align-center:has(> img:only-child) img,
+  .news-content div.ql-align-center:has(> img:only-child) img {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .news-content .ql-align-right,
+  .news-content p.ql-align-right,
+  .news-content div.ql-align-right {
+    text-align: right !important;
+  }
+
+  .news-content .ql-align-right img,
+  .news-content p.ql-align-right img,
+  .news-content div.ql-align-right img,
+  .news-content p.ql-align-right img.image-resizable,
+  .news-content div.ql-align-right img.image-resizable {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 0.25rem !important;
+  }
+
+  /* Si el párrafo alineado a la derecha solo contiene la imagen, hacerla block */
+  .news-content p.ql-align-right:has(> img:only-child) img,
+  .news-content div.ql-align-right:has(> img:only-child) img {
+    display: block !important;
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .news-content .ql-align-left,
+  .news-content p.ql-align-left,
+  .news-content div.ql-align-left {
+    text-align: left !important;
+  }
+
+  .news-content .ql-align-left img,
+  .news-content p.ql-align-left img,
+  .news-content div.ql-align-left img,
+  .news-content p.ql-align-left img.image-resizable,
+  .news-content div.ql-align-left img.image-resizable {
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 0.25rem !important;
+  }
+
+  /* Si el párrafo alineado a la izquierda solo contiene la imagen, hacerla block */
+  .news-content p.ql-align-left:has(> img:only-child) img,
+  .news-content div.ql-align-left:has(> img:only-child) img {
+    display: block !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Estilos para imágenes dentro del editor Quill o con rutas específicas */
+  /* Mantener inline-block si están dentro de párrafos */
+  .news-content .ql-editor p img,
+  .news-content .ql-editor div img,
+  .news-content p img[src^="/uploads/"],
+  .news-content div img[src^="/uploads/"],
+  .news-content p img.image-resizable[src^="/uploads/"],
+  .news-content div img.image-resizable[src^="/uploads/"] {
+    @apply rounded-lg shadow-md max-w-full h-auto;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin: 0 0.25rem !important;
+  }
+
+  /* Imágenes solas (no dentro de párrafos) */
+  .news-content .ql-editor>img,
+  .news-content>img[src^="/uploads/"] {
+    @apply rounded-lg shadow-md my-4 max-w-full h-auto;
+    display: block;
+    margin: 1rem auto;
+  }
+
+  .news-content a {
+    @apply text-blue-600 hover:text-blue-800 underline;
+  }
+
+  .news-content h1,
+  .news-content h2,
+  .news-content h3 {
+    @apply font-bold mt-4 mb-2;
+  }
+
+  .news-content p {
+    @apply mb-4;
+  }
+
+  .news-content ul,
+  .news-content ol {
+    @apply ml-6 mb-4;
+  }
+
+  .news-content blockquote {
+    @apply border-l-4 border-gray-300 pl-4 italic my-4;
+  }
+}
+
+/* REGLAS CRÍTICAS FUERA DE @layer PARA MÁXIMA ESPECIFICIDAD */
+/* Estas reglas DEBEN estar fuera de @layer para sobrescribir cualquier estilo de Quill */
+/* Asegurar que imágenes dentro de párrafos con texto sean inline-block */
+/* Usar máxima especificidad posible para sobrescribir estilos de Quill */
+.news-content p img,
+.news-content div img,
+.news-content p img.image-resizable,
+.news-content div img.image-resizable,
+.news-content p.ql-align-center img,
+.news-content div.ql-align-center img,
+.news-content p.ql-align-center img.image-resizable,
+.news-content div.ql-align-center img.image-resizable,
+.news-content p.ql-align-right img,
+.news-content div.ql-align-right img,
+.news-content p.ql-align-right img.image-resizable,
+.news-content div.ql-align-right img.image-resizable,
+.news-content p.ql-align-left img,
+.news-content div.ql-align-left img,
+.news-content p.ql-align-left img.image-resizable,
+.news-content div.ql-align-left img.image-resizable,
+.news-content p.ql-align-center img[src],
+.news-content div.ql-align-center img[src],
+.news-content p.ql-align-center img.image-resizable[src],
+.news-content div.ql-align-center img.image-resizable[src] {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  margin: 0 0.25rem !important;
+}
+
+/* Solo hacer block las imágenes que están solas en su párrafo (sin texto antes ni después) */
+.news-content p.ql-align-center:has(> img:only-child) img,
+.news-content p.ql-align-center:has(> img:only-child) img.image-resizable,
+.news-content p.ql-align-right:has(> img:only-child) img,
+.news-content p.ql-align-right:has(> img:only-child) img.image-resizable,
+.news-content p.ql-align-left:has(> img:only-child) img,
+.news-content p.ql-align-left:has(> img:only-child) img.image-resizable,
+.news-content div:has(> img:only-child) img,
+.news-content div:has(> img:only-child) img.image-resizable {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+/* Drop indicator styles for drag and drop - cursor delgado visible */
+/* CRÍTICO: El indicador ahora está en el body, no en el editor, para evitar que Quill lo remueva */
+.drop-indicator {
+  position: fixed !important;
+  width: 4px !important;
+  min-height: 24px !important;
+  height: auto !important;
+  background: #3b82f6 !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
+  border-radius: 2px !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 1), 0 0 16px rgba(59, 130, 246, 0.8), inset 0 0 4px rgba(59, 130, 246, 0.5) !important;
+  animation: dropIndicatorPulse 1s ease-in-out infinite !important;
+  transition: none !important;
+  /* Sin transición para movimiento inmediato */
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  /* NO forzar left: 0 - se establecerá dinámicamente */
+  top: 0 !important;
+}
+
+@keyframes dropIndicatorPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 1), 0 0 16px rgba(59, 130, 246, 0.8), inset 0 0 4px rgba(59, 130, 246, 0.5);
+    transform: scaleY(1);
+  }
+
+  50% {
+    opacity: 0.9;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 1.2), 0 0 20px rgba(59, 130, 246, 1), inset 0 0 6px rgba(59, 130, 246, 0.7);
+    transform: scaleY(1.05);
+  }
+}
+
+/* Quill Size Picker - Modern Aesthetic */
+.ql-snow .ql-picker.ql-size {
+  width: 60px;
+}
+
+/* Mostrar los números en la etiqueta del picker */
+.ql-snow .ql-picker.ql-size .ql-picker-label::before,
+.ql-snow .ql-picker.ql-size .ql-picker-item::before {
+  content: attr(data-value) !important;
+}
+
+/* Ajuste para el valor por defecto (si no tiene data-value) */
+.ql-snow .ql-picker.ql-size .ql-picker-label:not([data-value])::before {
+  content: '14' !important;
+  /* Asumimos 14px como base visual del editor si no hay selección */
+}
+
+/* Mejorar el estilo de los items del dropdown */
+.ql-snow .ql-picker.ql-size .ql-picker-options {
+  min-width: 60px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 4px;
+}
+
+.ql-snow .ql-picker.ql-size .ql-picker-item {
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.ql-snow .ql-picker.ql-size .ql-picker-item:hover {
+  background-color: #f3f4f6;
+  color: #3b82f6 !important;
+}
+
+.ql-snow .ql-picker.ql-size .ql-picker-item.ql-selected {
+  background-color: #eff6ff;
+  color: #3b82f6 !important;
+  font-weight: bold;
+}

@@ -1,0 +1,206 @@
+<div class="space-y-8 pb-8">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🏖️ Gestión de Derechos Laborales</h1>
+            <p class="text-gray-600">Saldos, calendario y solicitudes de permisos</p>
+        </div>
+    </div>
+
+    <!-- Balances Table View -->
+    <app-vacation-balances [balance]="balance()" [isMaternityVisible]="isMaternityVisible()">
+    </app-vacation-balances>
+
+    <!-- Annual Calendar Section -->
+    <app-vacation-calendar [currentYear]="currentYear()" [calendarMonths]="calendarMonths()"
+        (yearChange)="changeYear($event)" (daySelected)="openDayModal($event)">
+    </app-vacation-calendar>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- New Request Form (Persistent at bottom) -->
+        <div class="card bg-gray-900 text-white border-0 shadow-2xl">
+            <h2 class="text-2xl font-bold mb-6 flex items-center">
+                <span class="mr-3">⚡</span> Nueva Solicitud
+            </h2>
+            <div class="p-1">
+                <div class="mb-6">
+                    <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">1. Selecciona
+                        el Tipo de Permiso</label>
+                    <select [ngModel]="selectedPolicyId()" (ngModelChange)="setPolicy($event)"
+                        class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all font-bold">
+                        <option [value]="null">Selecciona una política...</option>
+                        @for (p of balance()?.balances; track p.policy_id) {
+                        <option [value]="p.policy_id">{{ p.name }} ({{ p.available_days | number:'1.0-2' }} disp.)
+                        </option>
+                        }
+                    </select>
+                </div>
+
+                @if (selectedPolicyId()) {
+                <div class="border-t border-gray-800 pt-6">
+                    <app-vacation-dynamic-form [policyId]="selectedPolicyId()!" [managers]="managers()"
+                        [balance]="balance()" [loading]="loading()" (formSubmit)="submitRequest($event)">
+                    </app-vacation-dynamic-form>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Requests -->
+        <app-vacation-list [requests]="requests()" (requestSelected)="openRequestDetails($event)">
+        </app-vacation-list>
+    </div>
+
+    <!-- Day Info Modal / Edit Modal -->
+    @if (isModalOpen) {
+    <div
+        class="fixed inset-0 bg-black/80 overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-md animate-fadeIn p-4">
+        <div
+            class="relative bg-gray-900 text-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full border border-gray-800 scale-100 animate-scaleIn">
+
+            <div class="flex justify-between items-start mb-8">
+                <div>
+                    <h3 class="text-3xl font-black uppercase tracking-tighter flex items-center gap-3">
+                        <span class="text-blue-500 italic">⚡</span>
+                        {{ newRequest().id ? 'Editar Solicitud' : 'Nueva Solicitud' }}
+                    </h3>
+                    <p class="text-gray-400 text-sm mt-1">Completa los detalles para tramitar tu permiso</p>
+                </div>
+                <button (click)="closeDayModal()" class="text-gray-500 hover:text-white transition-colors">
+                    <span class="text-3xl">×</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
+                <!-- Info contextual si se abrió desde el calendario -->
+                @if (selectedDay()?.holiday || selectedDay()?.request) {
+                <div class="bg-gray-800/50 rounded-2xl p-4 border border-gray-700/50 flex flex-wrap gap-4">
+                    @if (selectedDay()?.holiday; as h) {
+                    <div
+                        class="flex items-center gap-2 px-3 py-1 bg-red-900/30 text-red-400 rounded-full border border-red-800/30 text-xs font-bold">
+                        <span>🚩 Festivo: {{ h.name }}</span>
+                    </div>
+                    }
+                    @if (selectedDay()?.request; as r) {
+                    <div
+                        class="flex items-center gap-2 px-3 py-1 bg-blue-900/30 text-blue-400 rounded-full border border-blue-800/30 text-xs font-bold">
+                        <span>📋 Ya tienes una solicitud: {{ r.status }}</span>
+                    </div>
+                    }
+                </div>
+                }
+
+                <div class="mb-6">
+                    <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">1. Selecciona
+                        el Tipo de Permiso</label>
+                    <select [ngModel]="selectedPolicyId()" (ngModelChange)="setPolicy($event)"
+                        class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all font-bold">
+                        <option [value]="null">Selecciona una política...</option>
+                        @for (p of balance()?.balances; track p.policy_id) {
+                        <option [value]="p.policy_id">{{ p.name }} ({{ p.available_days | number:'1.0-2' }} disp.)
+                        </option>
+                        }
+                    </select>
+                </div>
+
+                @if (selectedPolicyId()) {
+                <div class="border-t border-gray-800 pt-6">
+                    <app-vacation-dynamic-form [policyId]="selectedPolicyId()!" [managers]="managers()"
+                        [balance]="balance()" [loading]="loading()" (formSubmit)="submitRequest($event)">
+                    </app-vacation-dynamic-form>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- Request Details Modal -->
+    @if (selectedRequest(); as req) {
+    <div class="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center backdrop-blur-md animate-fadeIn p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scaleIn">
+            <div class="p-6 border-b flex justify-between items-center bg-gray-50">
+                <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <span>📄</span> Detalle de Solicitud
+                </h3>
+                <button (click)="closeRequestDetails()"
+                    class="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors">
+                    ✕
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <span
+                        class="px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider {{ req.status === 'approved_rrhh' ? 'bg-green-100 text-green-700' : (req.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600') }}">
+                        {{ req.status }}
+                    </span>
+                    <span class="text-xs font-bold text-gray-400">ID: {{ req.id.substring(0,8) }}</span>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Tipo</h4>
+                    <p class="text-lg font-bold text-gray-800 capitalize">{{ req.request_type.replace('_', ' ') }}</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Desde</h4>
+                        <p class="font-bold text-gray-700">{{ req.start_date | date:'dd MMM yyyy HH:mm' }}</p>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Hasta</h4>
+                        <p class="font-bold text-gray-700">{{ req.end_date | date:'dd MMM yyyy HH:mm' }}</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Duración</h4>
+                    <p class="font-bold text-gray-700">{{ req.days_requested }} días</p>
+                </div>
+
+                @if (req.description) {
+                <div>
+                    <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Motivo</h4>
+                    <p class="text-gray-600 italic border-l-4 border-gray-200 pl-3">{{ req.description }}</p>
+                </div>
+                }
+
+                @if (req.attachments && req.attachments.length > 0) {
+                <div>
+                    <h4 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-1">Adjuntos</h4>
+                    <div class="flex flex-col gap-2">
+                        @for (att of req.attachments; track $index) {
+                        <a [href]="att.file_url" target="_blank"
+                            class="flex items-center gap-2 p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-bold">
+                            <span>📎</span> {{ att.file_original_name || 'Documento' }}
+                        </a>
+                        }
+                    </div>
+                </div>
+                }
+
+            </div>
+            <div class="p-4 bg-gray-50 border-t flex gap-3">
+                @if (req.status === 'borrador') {
+                <button (click)="sendRequestNow(req)"
+                    class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all">
+                    Enviar Solicitud
+                </button>
+                <button (click)="editRequest(req)"
+                    class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all">
+                    Editar
+                </button>
+                <button (click)="deleteRequest(req)"
+                    class="px-4 py-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl font-bold transition-colors">
+                    🗑️
+                </button>
+                } @else {
+                <button (click)="closeRequestDetails()"
+                    class="w-full bg-white border-2 border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 font-bold py-3 rounded-xl transition-all">
+                    Cerrar
+                </button>
+                }
+            </div>
+        </div>
+    </div>
+    }
+</div>

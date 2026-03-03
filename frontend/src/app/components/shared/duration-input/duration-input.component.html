@@ -1,0 +1,16 @@
+<div class="relative w-full">
+    <!-- Native Time Picker (for <24h durations) -->
+    @if (useNative) {
+    <input type="time" [(ngModel)]="displayValue" (input)="onInput($event)" (blur)="onBlur()" [disabled]="disabled"
+        class="w-full text-center border rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-gray-700 bg-white shadow-sm"
+        [class.bg-gray-100]="disabled">
+    }
+
+    <!-- Custom Text Input (for >24h durations or specific format) -->
+    @if (!useNative) {
+    <input type="text" [(ngModel)]="displayValue" (input)="onInput($event)" (blur)="onBlur()"
+        (keydown)="onKeyDown($event)" [disabled]="disabled" [class.border-red-500]="hasError || invalidFormat"
+        [class.border-gray-300]="!hasError && !invalidFormat" [class.bg-gray-100]="disabled" placeholder="HH:mm"
+        class="w-full text-center font-mono text-sm font-bold tracking-wider rounded border p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-gray-700 placeholder-gray-300 shadow-sm">
+    }
+</div>

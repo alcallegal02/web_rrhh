@@ -1,0 +1,103 @@
+.copy-field-container {
+    position: relative;
+    margin-bottom: 1rem;
+}
+
+.copy-field-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.05em;
+}
+
+.copy-field-input-wrapper {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.copy-field-input-wrapper:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.copy-field-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e3a8a;
+    border: none;
+    background: transparent;
+    outline: none;
+    cursor: default;
+}
+
+.copy-field-input.sensitive {
+    letter-spacing: 0.25em;
+    font-size: 1.5rem;
+}
+
+.action-btn {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn:hover {
+    background-color: #f3f4f6;
+    color: #3b82f6;
+    transform: scale(1.1);
+}
+
+.copy-btn.copied {
+    color: #10b981;
+}
+
+.copy-toast {
+    position: absolute;
+    top: -2.5rem;
+    right: 0;
+    background: #10b981;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 1.2s forwards;
+    pointer-events: none;
+}
+
+@keyframes toastIn {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes toastOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateY(-10px);
+        opacity: 0;
+    }
+}

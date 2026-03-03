@@ -1,0 +1,10 @@
+// Styles for UsersComponent
+:host {
+    display: block;
+}
+
+:host ::ng-deep .ql-editor-mini img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}

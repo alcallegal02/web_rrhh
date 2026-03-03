@@ -1,0 +1,161 @@
+<div class="space-y-6 pb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">⚖️ Gestión de Denuncias</h1>
+        <p class="text-gray-600 font-medium">Panel de administración para el cumplimiento de la Ley 2/2023</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Complaint List -->
+        <div class="lg:col-span-1 space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-2 custom-scrollbar">
+            @if (loading()) {
+            <div class="text-center py-10">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                <p class="mt-2 text-sm text-gray-500">Cargando denuncias...</p>
+            </div>
+            } @else if (complaints().length === 0) {
+            <div class="card text-center py-10 bg-gray-50 border-dashed border-2">
+                <p class="text-gray-500">No hay denuncias registradas</p>
+            </div>
+            } @else {
+            @for (c of complaints(); track c.id) {
+            <div (click)="selectComplaint(c)"
+                [class]="'card cursor-pointer transition-all hover:shadow-md border-l-4 ' + (selectedComplaint()?.id === c.id ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-300')">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{{ c.code
+                        }}</span>
+                    <span [class]="getStatusClass(c.status)">{{ getStatusLabel(c.status) }}</span>
+                </div>
+                <h3 class="font-bold text-gray-800 truncate">{{ c.title }}</h3>
+                <p class="text-xs text-gray-500 mt-2">{{ c.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            }
+            }
+        </div>
+
+        <!-- Complaint Details & Action -->
+        <div class="lg:col-span-2">
+            @if (selectedComplaint(); as selected) {
+            <div class="space-y-6">
+                <div class="card bg-white shadow-lg border-2 border-orange-100">
+                    <div class="flex justify-between items-start mb-6 border-b pb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">{{ selected.title }}</h2>
+                            <p class="text-sm text-blue-600 font-mono mt-1">Código de seguimiento: {{ selected.code }}
+                            </p>
+                        </div>
+                        <span [class]="getStatusClass(selected.status)" class="text-base px-4 py-1.5">
+                            {{ getStatusLabel(selected.status) }}
+                        </span>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Descripción de la
+                                Denuncia</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg border text-gray-700 leading-relaxed news-content"
+                                [innerHTML]="getSafeHtml(selected.description)">
+                            </div>
+                        </div>
+
+                        <!-- Attachments -->
+                        @if (selected.attachments && selected.attachments.length > 0) {
+                        <div>
+                            <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Archivos Adjuntos
+                            </h4>
+                            <div class="flex flex-wrap gap-2">
+                                @for (att of selected.attachments; track att.id) {
+                                <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
+                                    class="inline-flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors">
+                                    <span>📎 {{ att.file_original_name || 'Ver archivo' }}</span>
+                                </a>
+                                }
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Admin Actions Form -->
+                <div class="card bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-100">
+                    <h3 class="text-xl font-bold text-indigo-900 mb-6 flex items-center">
+                        <span class="mr-2">🔧</span> Acciones de Gestión
+                    </h3>
+
+                    <form (ngSubmit)="updateStatus()" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Nuevo Estado</label>
+                                <select [(ngModel)]="editData.new_status" name="status" class="input-field bg-white">
+                                    <option value="pendiente">🕒 Pendiente</option>
+                                    <option value="en_analisis">🔍 En Análisis</option>
+                                    <option value="en_investigacion">⚖️ En Investigación</option>
+                                    <option value="informacion_requerida">ℹ️ Información Requerida</option>
+                                    <option value="resuelta">✅ Resuelta</option>
+                                    <option value="desestimada">❌ Desestimada</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">
+                                Información Pública para el Denunciante
+                                <span class="font-normal text-xs text-blue-600 ml-2">(Transparencia Ley 2/2023)</span>
+                            </label>
+                            <textarea [(ngModel)]="editData.status_public_description" name="public_desc" rows="3"
+                                placeholder="Ej: Se ha procedido a la apertura de una investigación interna..."
+                                class="input-field bg-white"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Notas Resolución / Respuesta
+                                Interna</label>
+                            <app-rich-text-editor [(ngModel)]="editData.admin_notes" name="admin_notes"
+                                [height]="'250px'"
+                                [placeholder]="'Indique aquí los detalles de la resolución o respuesta...'"></app-rich-text-editor>
+                        </div>
+
+                        <button type="submit" [disabled]="submitting()"
+                            class="btn-primary w-full bg-indigo-600 hover:bg-indigo-700 shadow-lg">
+                            @if (submitting()) {
+                            <span class="flex items-center justify-center">
+                                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                    </path>
+                                </svg>
+                                Actualizando...
+                            </span>
+                            } @else {
+                            <span>💾 Guardar Cambios y Notificar Estado</span>
+                            }
+                        </button>
+                    </form>
+
+                    <div class="mt-8 pt-6 border-t border-indigo-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-bold text-red-600 uppercase tracking-wider">Zona de Peligro</h4>
+                                <p class="text-xs text-gray-500">Eliminar permanentemente esta denuncia y sus archivos
+                                </p>
+                            </div>
+                            <button (click)="deleteComplaint()" [disabled]="submitting()"
+                                class="flex items-center gap-2 text-red-600 hover:text-red-700 font-bold px-4 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition-all shadow-sm">
+                                <span>🗑️</span>
+                                {{ submitting() ? 'Eliminando...' : 'Eliminar Denuncia' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            } @else {
+            <div class="card h-full flex flex-col items-center justify-center py-20 bg-gray-50 border-dashed border-2">
+                <span class="text-6xl mb-4">👈</span>
+                <p class="text-xl font-bold text-gray-400">Selecciona una denuncia para empezar</p>
+                <p class="text-gray-400 mt-2">Podrás ver los detalles y actualizar su estado</p>
+            </div>
+            }
+        </div>
+    </div>
+</div>

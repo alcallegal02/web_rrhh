@@ -1,0 +1,92 @@
+<div class="space-y-6">
+    <!-- Corporate Header -->
+    <div
+        class="bg-[#002855] text-white p-6 rounded-xl shadow-lg mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#e31e24]">
+        <div>
+            <div class="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-1">
+                <span class="bg-blue-900/50 px-2 py-0.5 rounded">Administración</span>
+                <span>/</span>
+                <span>Usuarios</span>
+            </div>
+            <h2 class="text-2xl font-black flex items-center gap-2">
+                @if (form().id) {
+                <span class="bg-white/10 p-2 rounded-lg">👤</span> Editar Perfil de Empleado
+                } @else {
+                <span class="bg-white/10 p-2 rounded-lg">🆕</span> Nuevo Registro de Usuario
+                }
+            </h2>
+            @if (form().id) {
+            <p class="text-blue-100/70 text-sm mt-1">ID: {{ form().id }} | {{ form().full_name }}</p>
+            }
+        </div>
+        <div class="flex gap-2 w-full md:w-auto">
+            <button
+                class="flex-1 md:flex-none bg-white text-[#002855] hover:bg-blue-50 px-6 py-2.5 rounded-lg font-bold transition-all shadow-md flex items-center justify-center gap-2"
+                (click)="onSubmit()" [disabled]="isLoading() || uploadingPhoto() || uploadingAttachments()">
+                <span class="text-lg">💾</span> Guardar Cambios
+            </button>
+            <button
+                class="flex-1 md:flex-none bg-[#002855] text-white border border-white/20 hover:bg-white/10 px-6 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                (click)="cancel.emit()">
+                <span class="text-lg">✖️</span> Cancelar
+            </button>
+        </div>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
+        <!-- ROW 1: Personal Data & Contract Info (50/50) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- COL 1: Personal Data & Danger Zone -->
+            <div class="space-y-6">
+                <app-user-personal-data [form]="form()" [uploadingPhoto]="uploadingPhoto()"
+                    [previewProfilePicUrl]="previewProfilePicUrl()"
+                    (fieldChange)="updateField($event.field, $event.value)" (photoUpload)="onUploadPhoto($event)">
+                </app-user-personal-data>
+
+                <app-user-danger-zone [userId]="form().id ? +(form().id!) : undefined"
+                    [isActive]="form().is_active !== false" [role]="form().role" (activate)="activate.emit()"
+                    (deactivate)="deactivate.emit()" (delete)="delete.emit()">
+                </app-user-danger-zone>
+            </div>
+
+            <!-- COL 2: Contract Info -->
+            <div class="space-y-6">
+                <app-user-contract-info [form]="form()" [roles]="roles()" [contractType]="contractType()"
+                    (fieldChange)="updateField($event.field, $event.value)"
+                    (contractTypeChange)="onContractTypeChange($event)"
+                    (expirationDateChange)="onExpirationDateChange($event)">
+                </app-user-contract-info>
+            </div>
+        </div>
+
+        <!-- ROW 2: Hierarchy (Full Width) -->
+        <app-user-hierarchy-selector [allUsers]="availableUsersSummary()"
+            [currentUserId]="form().id ? +(form().id!) : undefined" [selectedParent]="selectedParent()"
+            [selectedManagers]="selectedManagers()" [selectedRrhh]="selectedRrhh()"
+            (parentChange)="onParentChange($event)" (managersChange)="onManagersChange($event)"
+            (rrhhChange)="onRrhhChange($event)">
+        </app-user-hierarchy-selector>
+
+        <!-- ROW 3: Allowances & Rights -->
+        @if (form().role !== 'superadmin') {
+        <app-user-allowances-table [form]="form()" [concepts]="concepts()"
+            (fieldChange)="updateField($event.field, $event.value)">
+        </app-user-allowances-table>
+        }
+
+        <!-- ROW 4: Attachments -->
+        @if (form().role !== 'superadmin') {
+        <app-user-attachments [attachments]="form().attachments" [uploadingAttachments]="uploadingAttachments()"
+            [isLoading]="isLoading()" (attachmentsUpload)="onUploadAttachments($event)"
+            (attachmentRemove)="onRemoveAttachment($event)">
+        </app-user-attachments>
+        }
+    </form>
+
+    <!-- Footer Action Bar (Mobile only or extra reminder) -->
+    <div class="lg:hidden bg-white p-4 rounded-xl shadow-xl flex gap-2 border border-gray-100">
+        <button class="flex-1 btn-primary py-3" (click)="onSubmit()">💾 Guardar</button>
+        <button class="flex-1 btn-secondary py-3" (click)="cancel.emit()">✖️ Salir</button>
+    </div>
+</div>

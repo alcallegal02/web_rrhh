@@ -1,0 +1,179 @@
+<div class="bg-inespasa-dark rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-blue-900/40 border border-blue-800/20 mb-12 animate-fadeIn"
+    id="newsForm">
+    <div class="flex items-center justify-between mb-10 pb-6 border-b border-white/10">
+        <h2 class="text-3xl font-black text-white flex items-center gap-3">
+            <span class="text-4xl">✍️</span>
+            @if (initialData()) { Editar Noticia } @else { Publicar Noticia }
+        </h2>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #newsForm="ngForm" class="space-y-10">
+        <!-- Title and Cover -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div class="space-y-3">
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Título de la
+                    Noticia</label>
+                <input type="text" [ngModel]="form().title" (ngModelChange)="updateField('title', $event)" name="title"
+                    required placeholder="Escribe un título impactante..."
+                    class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all text-lg font-bold text-gray-800 placeholder:text-gray-300">
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Imagen de
+                    Portada</label>
+                <div
+                    class="flex items-center gap-6 p-2 bg-blue-900/20 rounded-2xl border border-dashed border-white/20">
+                    <div class="flex-1">
+                        <input type="file" (change)="onCoverSelected($event)" accept="image/*"
+                            class="file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-white file:text-inespasa-dark hover:file:bg-blue-50 transition-all text-xs text-white/40 w-full cursor-pointer">
+                    </div>
+                    @if (coverImagePreview() || form().cover_image_url) {
+                    <div
+                        class="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg border-2 border-white/20 flex-none">
+                        <img [src]="coverImagePreview() || getFileUrl(form().cover_image_url)"
+                            class="w-full h-full object-cover">
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="space-y-3">
+            <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Entradilla (Breve
+                resumen)</label>
+            <textarea [ngModel]="form().summary" (ngModelChange)="updateField('summary', $event)" name="summary"
+                rows="2" placeholder="Describe brevemente de qué trata esta noticia..."
+                class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all italic text-gray-600 placeholder:text-gray-300"></textarea>
+        </div>
+
+        <!-- content -->
+        <div class="space-y-3">
+            <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Contenido de la
+                Noticia</label>
+            <div class="rounded-2xl overflow-hidden border border-white/10 shadow-inner bg-white">
+                <app-rich-text-editor [ngModel]="form().content" (ngModelChange)="updateField('content', $event)"
+                    name="content" [quillModules]="quillModules" [height]="'450px'"
+                    [placeholder]="'Empieza a escribir aquí...'" (contentChange)="onEditorContentChange($event)"
+                    [module]="'news'" required></app-rich-text-editor>
+            </div>
+        </div>
+
+        <!-- Status and Date -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="space-y-3">
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Estado de
+                    Publicación</label>
+                <div class="relative group">
+                    <select [ngModel]="form().status" (ngModelChange)="updateField('status', $event)" name="status"
+                        required
+                        class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all font-bold appearance-none text-gray-800">
+                        <option value="borrador">📝 Borrador (Solo tú lo verás)</option>
+                        <option value="publicada">📢 Publicada (Visible para todos)</option>
+                        <option value="archivada">📦 Archivada (Oculta del tablón)</option>
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        ▼
+                    </div>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Programar
+                    publicación</label>
+                <input type="datetime-local" [ngModel]="form().publish_date"
+                    (ngModelChange)="updateField('publish_date', $event)" name="publish_date"
+                    class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all text-gray-800">
+                <p class="text-[10px] text-white/40 italic">Si no seleccionas nada, se publicará al momento de guardar
+                </p>
+            </div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="bg-blue-900/20 rounded-3xl p-8 border border-white/5 space-y-6">
+            <div class="flex items-center justify-between">
+                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">📁 Documentos
+                    Adjuntos</label>
+                @if (uploading()) {
+                <span class="flex items-center gap-2 text-xs font-bold text-white animate-pulse">
+                    <span class="w-2 h-2 bg-white rounded-full"></span>
+                    Procesando archivos...
+                </span>
+                }
+            </div>
+
+            <div class="flex flex-col gap-6">
+                <div class="relative group">
+                    <input type="file" multiple (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.txt,.rtf"
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" [disabled]="uploading()">
+                    <div
+                        class="w-full py-10 border-2 border-dashed border-white/10 rounded-[1.5rem] bg-white/5 group-hover:bg-white/10 transition-all flex flex-col items-center justify-center gap-3">
+                        <span class="text-3xl">📎</span>
+                        <span class="text-xs font-black uppercase tracking-widest text-white">Haz clic o arrastra
+                            documentos aquí</span>
+                        <span class="text-[10px] text-white/40 tracking-tight">PDF, DOC, DOCX, TXT o RTF (Máx.
+                            20MB)</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-4">
+                    <!-- Existing -->
+                    @for (att of form().attachments; track $index) {
+                    @if (!isImage(att.file_url)) {
+                    <div
+                        class="group flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl shadow-sm border border-white/5 hover:border-white/20 transition-all">
+                        <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
+                            class="text-xs text-white/80 font-bold hover:text-white transition-colors truncate max-w-[200px]">
+                            📎 {{ att.file_original_name || 'documento' }}
+                        </a>
+                        <button type="button" (click)="removeExistingFile($index)"
+                            class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs"
+                            title="Eliminar archivo">✕</button>
+                    </div>
+                    }
+                    }
+
+                    <!-- Pending -->
+                    @for (item of pendingAttachments(); track $index) {
+                    <div
+                        class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-white ring-2 ring-white/20 ring-offset-2 ring-offset-inespasa-dark animate-bounceIn">
+                        <button type="button" (click)="downloadLocalFile(item.file)"
+                            class="text-xs text-inespasa-dark font-black truncate max-w-[200px]">
+                            📁 {{ item.file.name }}
+                        </button>
+                        <button type="button" (click)="removePendingFile($index)"
+                            class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all text-xs"
+                            title="Quitar archivo">✕</button>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            @if (uploadError()) {
+            <div
+                class="bg-red-500/10 text-red-400 p-4 rounded-xl text-xs font-bold flex items-center gap-2 animate-shake">
+                <span>⚠️</span> {{ uploadError() }}
+            </div>
+            }
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center gap-4 pt-6">
+            <button type="submit"
+                [disabled]="uploading() || !newsForm.valid || (totalUploadSize() + embeddedImagesSize()) > configService.maxNewsPayloadBytes"
+                class="group relative flex-1 md:flex-none flex items-center justify-center gap-3 bg-white text-inespasa-dark px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-black/20 hover:bg-blue-50 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100">
+                @if (!uploading()) {
+                <span class="text-lg">💾</span>
+                <span>@if (initialData()) { Actualizar } @else { Publicar Noticia }</span>
+                } @else {
+                <span
+                    class="w-5 h-5 border-2 border-inespasa-dark/30 border-t-inespasa-dark rounded-full animate-spin"></span>
+                <span>Guardando...</span>
+                }
+            </button>
+            <button type="button" (click)="cancel.emit()" [disabled]="uploading()"
+                class="flex items-center gap-2 px-8 py-5 border-2 border-white/10 text-white/40 font-bold uppercase tracking-widest text-xs rounded-2xl hover:bg-white/5 hover:text-white transition-all active:scale-95">
+                Cancelar
+            </button>
+        </div>
+    </form>
+</div>

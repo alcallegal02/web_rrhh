@@ -1,0 +1,22 @@
+<div class="flex h-screen bg-gray-50 overflow-hidden">
+    <!-- Sidebar (Desktop: Static, Mobile: Drawer) -->
+    @if (isAuthenticated() && !isLoginPage()) {
+    <app-sidebar [isOpen]="isSidebarOpen" [isCollapsed]="isSidebarCollapsed" (closeSidebar)="isSidebarOpen = false"
+        class="flex-none"></app-sidebar>
+    }
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        <!-- Header (Sticky/Absolute) -->
+        <app-header [isCollapsed]="isSidebarCollapsed" (toggleSidebar)="isSidebarOpen = !isSidebarOpen"
+            (toggleSidebarCollapse)="toggleSidebarCollapse()"></app-header>
+
+        <!-- Main Scrollable Area -->
+        <main class="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth" [class.p-4]="!isLoginPage()"
+            [class.md:p-6]="!isLoginPage()" [class.lg:p-8]="!isLoginPage()">
+            <div [class.max-w-7xl]="!isLoginPage()" [class.mx-auto]="!isLoginPage()" [class.w-full]="!isLoginPage()">
+                <router-outlet></router-outlet>
+            </div>
+        </main>
+    </div>
+</div>

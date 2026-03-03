@@ -1,0 +1,17 @@
+<div class="space-y-8 pb-8">
+
+    <!-- Create/Edit News Form (RRHH/Admin/Superadmin only) -->
+    <!-- Always show form if managing, but maybe we only want to show it when needed? 
+         Original showed it always if authorized. 
+         But typically "New" is always available. Edit populates it. -->
+    @if (authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()) {
+    <app-news-form [initialData]="initialFormData()" (save)="onSave($event)" (cancel)="onCancel()">
+    </app-news-form>
+    }
+
+    <!-- News List -->
+    <app-news-list [newsList]="newsList()"
+        [canManage]="authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()" layout="list"
+        (edit)="onEdit($event)" (delete)="onDelete($event)" (statusChange)="onStatusChange($event)">
+    </app-news-list>
+</div>

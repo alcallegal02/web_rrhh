@@ -1,0 +1,44 @@
+<div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+    <div class="flex items-center justify-between mb-6 pb-3 border-b border-gray-50">
+        <div class="flex items-center gap-3">
+            <span class="text-xl">⚖️</span>
+            <h3 class="font-bold text-gray-800 tracking-tight">Derechos, Permisos y Bolsas</h3>
+        </div>
+        <span
+            class="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">Cómputo
+            Anual</span>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-left">
+            <thead>
+                <tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
+                    <th class="pb-4 pl-2">Concepto Retributivo / Permiso</th>
+                    <th class="pb-4 w-32">Días</th>
+                    <th class="pb-4 w-40">Horas</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @for (c of concepts(); track c.label) {
+                <tr class="group">
+                    <td class="py-4 pl-2">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-gray-700 group-hover:text-blue-700 transition-colors">{{
+                                c.label }}</span>
+                            <span class="text-[10px] text-gray-400 uppercase font-medium">Bolsa de Devengo</span>
+                        </div>
+                    </td>
+                    <td class="py-4">
+                        <input class="input-field-compact mr-4" type="number" [ngModel]="form()[c.days]"
+                            (ngModelChange)="updateField(c.days, $event)" [name]="c.days" placeholder="0" />
+                    </td>
+                    <td class="py-4">
+                        <app-duration-input [ngModel]="form()[c.hours]" (ngModelChange)="updateField(c.hours, $event)"
+                            [name]="c.hours"></app-duration-input>
+                    </td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

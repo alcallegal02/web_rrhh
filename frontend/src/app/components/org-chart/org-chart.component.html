@@ -1,0 +1,31 @@
+<div class="min-h-screen bg-slate-50 p-8 overflow-auto">
+    <div class="mb-12 text-center animate-fadeIn">
+        <h1 class="text-4xl font-black text-inespasa-dark uppercase tracking-tighter mb-4">Nuestra Organización</h1>
+        <div class="w-20 h-1.5 bg-inespasa-dark/10 mx-auto rounded-full mb-6"></div>
+        <p class="text-gray-500 font-medium max-w-xl mx-auto leading-relaxed text-sm">
+            Explora la estructura jerárquica y el talento humano que define el motor de <span
+                class="text-inespasa-dark font-black">INESPASA</span>.
+            Una visión compartida para alcanzar la excelencia.
+        </p>
+    </div>
+
+    <!-- Controls -->
+    <app-org-chart-controls (expandAll)="expandAll()" (collapseAll)="collapseAll()">
+    </app-org-chart-controls>
+
+    <div class="w-full overflow-x-auto pb-20">
+        <div class="min-w-max flex justify-center p-10">
+            @if (tree().length === 0) {
+            <div class="text-center p-10 border-2 border-dashed border-gray-300 rounded-xl bg-white/50">
+                <p class="text-gray-500">No hay datos de estructura organizativa disponibles.</p>
+            </div>
+            } @else {
+            <div class="flex gap-16">
+                @for (node of tree(); track node.id) {
+                <app-org-node [node]="node"></app-org-node>
+                }
+            </div>
+            }
+        </div>
+    </div>
+</div>

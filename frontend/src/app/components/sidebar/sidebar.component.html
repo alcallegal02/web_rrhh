@@ -1,0 +1,138 @@
+<!-- Mobile Overlay -->
+<div *ngIf="isOpen()" class="fixed inset-0 bg-inespasa-dark/40 backdrop-blur-sm z-40 lg:hidden" (click)="close()"></div>
+
+<!-- Sidebar Container -->
+<aside [class.translate-x-0]="isOpen()" [class.-translate-x-full]="!isOpen()" [class.lg:w-64]="!isCollapsed()"
+    [class.lg:w-20]="isCollapsed()"
+    class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-all duration-300 ease-in-out lg:transform-none flex flex-col h-full border-r border-gray-100 overflow-hidden">
+
+    <!-- Logo Area -->
+    <div class="p-6 border-b border-gray-50 flex justify-between items-center bg-white">
+        <div class="flex items-center justify-center w-full">
+            <img [src]="isCollapsed() ? 'assets/logo-inespasa-icon.png' : 'assets/logo-inespasa.png'"
+                alt="INESPASA Logo" [class]="isCollapsed() ? 'h-10 w-10 min-w-[40px] p-0.5' : 'h-8 md:h-10 w-auto'"
+                class="object-contain transition-all duration-300">
+        </div>
+        <button class="lg:hidden p-2 text-gray-400 hover:text-inespasa-dark transition-colors" (click)="close()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 overflow-y-auto py-6 sidebar-scroll px-4 space-y-1.5">
+
+        @if (authService.isAuthenticated()) {
+        <a routerLink="/dashboard" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📊</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Dashboard</span>
+        </a>
+
+        <a routerLink="/vacation" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">🏖️</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Vacaciones</span>
+        </a>
+
+        <a routerLink="/requests-management" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📋</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Gestión de Solicitudes</span>
+        </a>
+
+        <a routerLink="/org-chart" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">🌳</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Organigrama</span>
+        </a>
+
+        <a routerLink="/news" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📰</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Noticias</span>
+        </a>
+
+        @if (authService.isRRHH() || authService.isSuperadmin()) {
+        <div *ngIf="!isCollapsed()"
+            class="pt-6 pb-2 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] whitespace-nowrap">
+            Administración</div>
+        <div *ngIf="isCollapsed()" class="h-px bg-gray-100 my-4 mx-2"></div>
+
+        <a routerLink="/users" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">👥</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Usuarios</span>
+        </a>
+
+        <a routerLink="/complaint/admin" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">⚖️</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Denuncias</span>
+        </a>
+
+        <a routerLink="/audit" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">🛡️</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Auditoría</span>
+        </a>
+
+        <a routerLink="/calendar-config" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📅</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Calendario</span>
+        </a>
+
+        <a routerLink="/news/manage" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📰</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Gestión Noticias</span>
+        </a>
+
+        <a routerLink="/config/absence-types"
+            routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg" (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">⚙️</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Configuración</span>
+        </a>
+        }
+        }
+
+        @if (!authService.isAuthenticated()) {
+        <a routerLink="/login" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-3 rounded-lg text-inespasa-dark hover:bg-inespasa-dark hover:text-white transition-all font-bold group mt-4 border border-inespasa-dark/10">
+            <span class="mr-3 flex-none">🔐</span>
+            <span *ngIf="!isCollapsed()" class="whitespace-nowrap">Iniciar Sesión</span>
+        </a>
+        <!-- Mobile Logo -->
+        <a [routerLink]="authService.isAuthenticated() ? '/dashboard' : '/login'" class="lg:hidden flex items-center">
+            <img src="assets/logo-inespasa.png" alt="INESPASA Logo" class="h-8 w-auto object-contain">
+        </a>
+        }
+    </nav>
+
+    <!-- Footer / Version -->
+    <div class="p-6 border-t border-gray-50">
+        <div class="bg-gray-50 rounded-lg p-3 text-center">
+            <p *ngIf="!isCollapsed()" class="text-[10px] text-gray-400 font-medium uppercase tracking-wider mb-1">
+                Versión
+                del Sistema</p>
+            <span *ngIf="!isCollapsed()" class="text-xl font-bold text-inespasa-dark tracking-tight whitespace-nowrap">
+                INESPASA
+            </span>
+        </div>
+    </div>
+</aside>

@@ -1,0 +1,53 @@
+import { ImageStyleManager, ImageStyle } from './services/image-style-manager.service';
+import {
+  applyImageStyles,
+  getImageDimensions,
+  applyResizeStyles,
+  getCurrentImageDimensions,
+  normalizeDimension,
+  buildImageStyle,
+  formatDimension,
+  parseStyleDimensions,
+  hasValidImageStyle,
+  extractImageStyle,
+  restoreImageStyleIfNeeded,
+  restoreStylesAfterQuillUpdate
+} from './utils/image-utils';
+import {
+  getAllResizableElements,
+  isValidResizableElement,
+  addClasses,
+  removeClasses,
+  getRectCenter,
+  isInDOM,
+  isElementContained,
+  enableUserSelect,
+  disableUserSelect,
+  resetDocumentCursor
+} from './utils/dom-utils';
+import {
+  markElementAsResizable,
+  unmarkElementAsResizable,
+  findResizableElements,
+  removeImageSelection,
+  preserveElementSelectionAfterQuillUpdate,
+  ensureHandlesVisible,
+  restoreCompleteElementSelection
+} from './utils/image-selection-utils';
+import {
+  prepareImageForDrag,
+  finalizeImageDrag,
+  calculateAdjustedIndex,
+  preventDragDefault,
+  isDragInsideEditor,
+  getDragCoordinates,
+  createDropIndicator,
+  updateDropIndicatorPosition
+} from './utils/drag-drop-utils';
+import { RAFThrottle, executeAfterDelay, isResizeOperationActive } from './utils/helpers';
+import {
+  DRAGGING_IMAGE_CLASS,
+  IMAGE_RESIZABLE_CLASS,
+  IMAGE_SELECTION_DELAY
+} from './utils/constants';
+import { CustomObserverManager } from './utils/observer-manager';

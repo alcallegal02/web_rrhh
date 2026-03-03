@@ -1,0 +1,243 @@
+from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form, Query, BackgroundTasks
+from typing import Optional, List
+from pathlib import Path
+from uuid import UUID
+import os
+import aiofiles
+import asyncio
+import uuid
+from app.utils.email import send_credentials_email
+from app.utils.brute_force import security_manager
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from sqlalchemy.ext.asyncio import AsyncSession
+import logging
+from app.utils.email import send_credentials_email
+from app.utils.brute_force import security_manager
+
+from app.database import get_session
+from app.config import settings
+from app.models.user import User, UserRole
+from app.routers.auth import get_current_user
+from app.models.complaint import Complaint, ComplaintCreate, ComplaintResponse, ComplaintStatus, ComplaintCreateResponse
+from app.services.complaint import create_complaint, get_complaint_by_code, get_all_complaints, update_complaint_status, delete_complaint, verify_complaint_access
+from app.services.complaint import create_complaint, get_complaint_by_code, get_all_complaints, update_complaint_status, delete_complaint, verify_complaint_access
+
+router = APIRouter(tags=["complaint"])
+
+# Rate limiter - will be set from app.state in main.py
+limiter = Limiter(key_func=get_remote_address)
+logger = logging.getLogger(__name__)
+
+
+@router.post("/", response_model=ComplaintCreateResponse)
+@limiter.limit("5/minute")
+async def create_complaint_endpoint(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    title: str = Form(...),
+    description: str = Form(...),
+    email: Optional[str] = Form(None),
+    files: List[UploadFile] = File(default=[]),
+    session: AsyncSession = Depends(get_session)
+):
+    """Create a new anonymous complaint (public endpoint)"""
+    from app.services.complaint import process_and_save_complaint_files
+
+    # Process files via service (this handles validation, quota, conversion, saving)
+    attachments = []
+    if files:
+         attachments = await process_and_save_complaint_files(files, session, request.client.host)
+            
+    complaint_data = ComplaintCreate(
+        title=title,
+        description=description,
+        attachments=attachments if attachments else None
+    )
+    
+    try:
+        complaint = await create_complaint(session, complaint_data)
+        # Service now handles full reload with attachments
+
+        # 4. If email is provided, send credentials (non-blocking)
+        if email:
+            background_tasks.add_task(send_credentials_email, email, complaint.code, complaint.access_token)
+
+        # Broadcast create event
+        from app.websocket.manager import websocket_manager
+        # Prepare public safe data (Admin view needs it all, public view limited)
+        # Broadcast full data to admins? WebSocket broadcast goes to ALL. 
+        # For security, we should filter or only send ID. 
+        # But for this MVP request, let's send minimal notification.
+        # "New Complaint Created"
+        await websocket_manager.broadcast({
+            "type": "COMPLAINT_CREATED",
+            "data": { "id": str(complaint.id), "title": complaint.title, "status": complaint.status }
+        })
+
+        # AUDIT LOG (Anonymous) - EXPLICITLY REMOVED TO PRESERVE ANONYMITY AND MATCH SERVICE
+
+        return complaint
+    except Exception as e:
+        logger.error(f"Error creating complaint: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error interno al procesar la denuncia: {str(e)}"
+        )
+
+
+@router.get("/{code}", response_model=ComplaintResponse)
+@limiter.limit("5/minute")
+async def get_complaint(
+    request: Request,
+    code: str,
+    background_tasks: BackgroundTasks,
+    token: str = Query(..., description="Access token/Security key"),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get complaint status by code and token (public endpoint)"""
+    client_ip = request.client.host
+    # Potential check for X-Forwarded-For if behind proxy
+    forwarded = request.headers.get("X-Forwarded-For")
+    if forwarded:
+        client_ip = forwarded.split(",")[0]
+
+    complaint = await verify_complaint_access(session, code, token)
+    if not complaint:
+        logger.info(f"Access denied for IP {client_ip} on code {code}")
+        # Artificial delay to prevent brute-force (kept as extra layer)
+        await asyncio.sleep(1)
+        
+        # Track failed attempt
+        if security_manager.track_failed_attempt(client_ip, code):
+            logger.info(f"IP {client_ip} just reached the threshold and is now BLOCKED.")
+            
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Demasiados intentos fallidos. Su IP ha sido bloqueada durante {settings.BRUTE_FORCE_BLOCK_MINUTES} minutos."
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Denuncia no encontrada o clave incorrecta."
+        )
+    
+    # Success: Reset attempts for this IP
+    security_manager.reset_attempts(client_ip)
+    
+    # Return filtered data for public view
+    # Informants shouldn't see internal admin notes if they are sensitive, 
+    # but the user asked for "admin_response" to be visible to them in the frontend before
+    # Ley 2/2023 requires transparency. We use status_public_description for specific steps.
+    return ComplaintResponse.model_validate(complaint)
+
+
+@router.get("/admin/all", response_model=list[ComplaintResponse])
+async def get_all_complaints_endpoint(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all complaints (RRHH/Superadmin only)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only RRHH/Superadmin can view all complaints"
+        )
+    
+    complaints = await get_all_complaints(session)
+    return [ComplaintResponse.model_validate(c) for c in complaints]
+
+
+@router.patch("/{complaint_id}/status", response_model=ComplaintResponse)
+async def update_status_endpoint(
+    request: Request,
+    complaint_id: UUID,
+    new_status: str = Form(...),
+    admin_notes: Optional[str] = Form(None),
+    status_public_description: Optional[str] = Form(None),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """Update complaint status (RRHH/Superadmin only)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only RRHH/Superadmin can update complaint status"
+        )
+    
+    # Validate status
+    allowed_statuses = [s.value for s in ComplaintStatus]
+    if new_status not in allowed_statuses:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status. Allowed: {', '.join(allowed_statuses)}"
+        )
+    
+    complaint = await update_complaint_status(
+        session=session,
+        complaint_id=complaint_id,
+        new_status=new_status,
+        admin_id=current_user.id,
+        admin_notes=admin_notes,
+        status_public_description=status_public_description,
+        ip_address=request.client.host
+    )
+    
+    if not complaint:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Complaint not found"
+        )
+    
+    # Broadcast update event
+    from app.websocket.manager import websocket_manager
+    # We should convert to Response model first to ensure no sensitive data leaks (though response model has public desc...)
+    # Actually, broadcasting the RESPONSE model is safer than raw DB model.
+    response_data = ComplaintResponse.model_validate(complaint).dict()
+    # Convert UUIDs
+    response_data['id'] = str(response_data['id'])
+
+    await websocket_manager.broadcast({
+        "type": "COMPLAINT_UPDATED",
+        "data": response_data
+    })
+    
+    return ComplaintResponse.model_validate(complaint)
+
+
+@router.delete("/admin/{complaint_id}")
+async def delete_complaint_endpoint(
+    request: Request,
+    complaint_id: UUID,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """Delete a complaint and all its files (RRHH/Superadmin only)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only RRHH/Superadmin can delete complaints"
+        )
+    
+    success = await delete_complaint(
+        session, 
+        complaint_id, 
+        user_id=current_user.id, 
+        ip_address=request.client.host
+    )
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Complaint not found"
+        )
+    
+    # Broadcast delete event
+    from app.websocket.manager import websocket_manager
+    await websocket_manager.broadcast({
+        "type": "COMPLAINT_DELETED",
+        "id": str(complaint_id)
+    })
+
+    return {"message": "Complaint and associated files deleted successfully"}
+

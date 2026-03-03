@@ -1,0 +1,139 @@
+@if (schema(); as s) {
+<form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6 animate-fadeIn">
+
+    <!-- Header Balance Info -->
+    <div class="bg-blue-900/40 border border-blue-500/30 p-4 rounded-2xl flex items-center justify-between">
+        <div>
+            <h3 class="text-blue-300 font-black uppercase text-xs tracking-widest mb-1">{{ s.name }}</h3>
+            <p class="text-white text-lg font-bold">Saldo: {{ s.available_balance | number:'1.0-2' }} {{ s.unit ===
+                'days_work' ? 'días' : s.unit }}</p>
+        </div>
+        @if (s.is_paid) {
+        <div
+            class="bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+            💰 Retribuido
+        </div>
+        }
+    </div>
+
+    @if (s.description) {
+    <p class="text-gray-400 text-xs italic px-2">{{ s.description }}</p>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Days/Hours Requested (Always present for calc) -->
+        <div>
+            <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">
+                {{ isHourly() ? 'Horas Solicitadas' : 'Días Solicitados' }}
+            </label>
+            <input type="number" formControlName="days_requested" [step]="isHourly() ? 1 : 0.5"
+                [class.border-red-500]="dailyLimitExceeded()"
+                class="w-full bg-gray-900 border-gray-700 text-blue-400 font-black text-xl rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all">
+
+            @if (dailyLimitExceeded()) {
+            <p class="mt-2 text-[10px] text-red-500 font-bold uppercase animate-pulse">
+                ⚠️ El límite diario para este permiso es de {{ schema()?.max_duration_per_day }} {{ isHourly() ? 'horas'
+                : 'días' }}.
+            </p>
+            } @else {
+            <p class="mt-1 text-[10px] text-gray-500 italic">
+                {{ isHourly() ? 'Indique el número de horas.' : 'Calculado automáticamente según fechas.' }}
+            </p>
+            }
+        </div>
+
+        <!-- Manager selection (Always present) -->
+        <div class="md:col-span-2">
+            <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Manager
+                Responsable</label>
+            <select formControlName="assigned_manager_id"
+                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all">
+                <option value="" disabled>Selecciona un manager...</option>
+                @for (m of managers(); track m.id) {
+                <option [value]="m.id">{{ m.full_name }}</option>
+                }
+            </select>
+        </div>
+
+        <!-- Dynamic Fields -->
+        @for (f of s.fields; track f.name) {
+        <div [class.md:col-span-2]="f.type === 'textarea' || f.type === 'file'">
+            <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">
+                {{ f.label }}
+                @if (f.required) { <span class="text-red-500">*</span> }
+            </label>
+
+            @switch (f.type) {
+            @case ('text') {
+            <input type="text" [formControlName]="f.name"
+                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all">
+            }
+            @case ('number') {
+            <input type="number" [formControlName]="f.name" [min]="f.min || 0" [max]="f.max || 1000"
+                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all">
+            }
+            @case ('date') {
+            <input type="date" [formControlName]="f.name"
+                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all">
+            }
+            @case ('datetime') {
+            <input type="datetime-local" [formControlName]="f.name"
+                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all">
+            }
+            @case ('textarea') {
+            <textarea [formControlName]="f.name" rows="3"
+                class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+                [placeholder]="f.helpText || ''"></textarea>
+            }
+            @case ('file') {
+            <div class="space-y-3">
+                <div class="relative group">
+                    <input type="file" (change)="onFileSelected($event)" multiple
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                    <div
+                        class="flex items-center gap-3 p-4 bg-gray-800 border-2 border-dashed border-gray-700 rounded-2xl group-hover:border-blue-500/50 transition-all">
+                        <div class="w-10 h-10 rounded-lg bg-gray-700 flex items-center justify-center text-xl">📥</div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-300">Cliquear o arrastrar archivos</p>
+                            <p class="text-[10px] text-gray-500">{{ f.helpText }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                @for (file of pendingAttachments(); track $index) {
+                <div
+                    class="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl animate-scaleIn">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">📄</span>
+                        <span class="text-xs font-bold text-blue-300 truncate max-w-[200px]">{{ file.file.name }}</span>
+                    </div>
+                    <button type="button" (click)="removePendingFile($index)"
+                        class="text-gray-500 hover:text-white transition-colors">✕</button>
+                </div>
+                }
+            </div>
+            }
+            }
+
+            @if (f.helpText && f.type !== 'file' && f.type !== 'textarea') {
+            <p class="mt-1 text-[10px] text-gray-500 italic">{{ f.helpText }}</p>
+            }
+        </div>
+        }
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" [disabled]="loading() || form.invalid || dailyLimitExceeded()"
+        class="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed py-4 rounded-2xl font-black uppercase tracking-widest shadow-2xl transition-all transform active:scale-95 mt-4">
+        {{ loading() ? 'Enviando...' : 'Enviar Solicitud' }}
+    </button>
+</form>
+} @else {
+<div
+    class="flex flex-col items-center justify-center py-20 bg-gray-800/20 rounded-3xl border-2 border-dashed border-gray-700">
+    <span class="text-4xl mb-4 animate-bounce">📋</span>
+    <p class="text-gray-500 font-bold uppercase tracking-widest text-xs">Selecciona un tipo de permiso para comenzar</p>
+</div>
+}

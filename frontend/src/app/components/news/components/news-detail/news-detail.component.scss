@@ -1,0 +1,92 @@
+.news-full-content {
+    ::ng-deep {
+        p {
+            margin-bottom: 2rem;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #1a1a1a;
+            margin-top: 3rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            &::before {
+                content: '';
+                display: block;
+                width: 0.25rem;
+                height: 1.25rem;
+                background: #3C65AB;
+                border-radius: 99px;
+            }
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        ul,
+        ol {
+            margin-bottom: 2rem;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.75rem;
+            position: relative;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            margin: 1.5rem 0;
+            display: inline-block;
+
+            &.align-center,
+            &[style*="display: block"] {
+                display: block;
+                margin: 2rem auto;
+            }
+
+            &.align-left,
+            &[style*="float: left"] {
+                float: left;
+                margin-right: 1.5rem;
+                margin-bottom: 1rem;
+            }
+
+            &.align-right,
+            &[style*="float: right"] {
+                float: right;
+                margin-left: 1.5rem;
+                margin-bottom: 1rem;
+            }
+        }
+
+        strong {
+            color: #3C65AB;
+            font-weight: 800;
+        }
+
+        blockquote {
+            background: #f8fafc;
+            border-left: 4px solid #3C65AB;
+            padding: 1.5rem 2rem;
+            border-radius: 0 1.5rem 1.5rem 0;
+            font-style: italic;
+            margin: 2.5rem 0;
+            font-size: 1.2rem;
+            color: #4b5563;
+        }
+    }
+}

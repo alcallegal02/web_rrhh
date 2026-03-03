@@ -1,0 +1,38 @@
+<div
+    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[100] animate-fadeIn backdrop-blur-sm">
+    <div
+        class="bg-white rounded-2xl max-w-2xl w-full mx-4 overflow-hidden shadow-2xl border border-purple-100 flex flex-col md:flex-row max-h-[90vh]">
+        <!-- Cover image if exists -->
+        @if (news().cover_image_url) {
+        <div class="w-full md:w-1/3 h-48 md:h-auto overflow-hidden bg-purple-50">
+            <img [src]="getFileUrl(news().cover_image_url!)" class="w-full h-full object-cover">
+        </div>
+        }
+
+        <div class="p-8 flex-1 flex flex-col">
+            <div class="flex items-center gap-2 mb-4">
+                <span
+                    class="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider">✨
+                    Novedad</span>
+                <span class="text-xs text-gray-500">{{ news().created_at | date:'dd/MM/yyyy' }}</span>
+            </div>
+
+            <h3 class="text-3xl font-black text-gray-900 mb-4 leading-tight">{{ news().title }}</h3>
+
+            @if (news().summary) {
+            <p class="text-gray-600 mb-6 italic border-l-4 border-purple-200 pl-4 text-lg">
+                "{{ news().summary }}"
+            </p>
+            }
+
+            <div class="mt-auto flex gap-3">
+                <button (click)="readMore.emit()" class="btn-primary flex-1 shadow-lg shadow-purple-200">
+                    📖 Leer noticia completa
+                </button>
+                <button (click)="close.emit()" class="btn-secondary">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

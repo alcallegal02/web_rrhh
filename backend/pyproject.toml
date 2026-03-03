@@ -1,0 +1,23 @@
+[project]
+name = "web-rrhh-backend"
+version = "0.1.0"
+description = "Backend for Web RRHH"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --asyncio-mode=auto"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    ".",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []

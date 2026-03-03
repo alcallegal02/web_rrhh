@@ -1,0 +1,17 @@
+:host {
+    display: block;
+}
+
+/* Custom scrollbar for sidebar if needed */
+.sidebar-scroll {
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: rgb(203 213 225);
+        border-radius: 9999px;
+    }
+}
