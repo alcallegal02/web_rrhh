@@ -2,6 +2,7 @@ import { Component, signal, inject, ChangeDetectionStrategy, computed, effect } 
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { WebSocketService } from '../../services/websocket.service';
 import { NewsService } from '../../services/news.service';
@@ -101,23 +102,23 @@ export class DashboardComponent {
     });
   }
 
-  checkLatestNews(): void {
+  async checkLatestNews(): Promise<void> {
     const hasBeenShown = sessionStorage.getItem('news_popup_shown');
     if (hasBeenShown) return;
 
-    this.newsService.getLatestNews().subscribe({
-      next: (news) => {
-        if (news) {
-          this.latestNews.set(news);
-          this.showNewsPopup.set(true);
-          sessionStorage.setItem('news_popup_shown', 'true');
-        }
-      },
-      error: (err) => console.error('Error fetching latest news:', err)
-    });
+    try {
+      const news = await firstValueFrom(this.newsService.getLatestNews());
+      if (news) {
+        this.latestNews.set(news);
+        this.showNewsPopup.set(true);
+        sessionStorage.setItem('news_popup_shown', 'true');
+      }
+    } catch (err) {
+      console.error('Error fetching latest news:', err);
+    }
   }
 
-  handleApprove(requestId: string): void {
+  async handleApprove(requestId: string): Promise<void> {
     this.processing.set(true);
     this.processingRequestId.set(requestId);
 
@@ -125,21 +126,18 @@ export class DashboardComponent {
       ? this.vacationService.approveRRHH(requestId)
       : this.vacationService.approveManager(requestId);
 
-    action$.subscribe({
-      next: () => {
-        this.pendingRequestsResource.reload();
-        this.processing.set(false);
-        this.processingRequestId.set(null);
-      },
-      error: (err) => {
-        console.error('Error approving request:', err);
-        this.processing.set(false);
-        this.processingRequestId.set(null);
-      }
-    });
+    try {
+      await firstValueFrom(action$);
+      this.pendingRequestsResource.reload();
+    } catch (err) {
+      console.error('Error approving request:', err);
+    } finally {
+      this.processing.set(false);
+      this.processingRequestId.set(null);
+    }
   }
 
-  handleReject(event: { id: string, reason: string }): void {
+  async handleReject(event: { id: string, reason: string }): Promise<void> {
     this.processing.set(true);
     this.processingRequestId.set(event.id);
 
@@ -147,18 +145,15 @@ export class DashboardComponent {
       ? this.vacationService.rejectRRHH(event.id, event.reason)
       : this.vacationService.rejectManager(event.id, event.reason);
 
-    action$.subscribe({
-      next: () => {
-        this.pendingRequestsResource.reload();
-        this.processing.set(false);
-        this.processingRequestId.set(null);
-      },
-      error: (err) => {
-        console.error('Error rejecting request:', err);
-        this.processing.set(false);
-        this.processingRequestId.set(null);
-      }
-    });
+    try {
+      await firstValueFrom(action$);
+      this.pendingRequestsResource.reload();
+    } catch (err) {
+      console.error('Error rejecting request:', err);
+    } finally {
+      this.processing.set(false);
+      this.processingRequestId.set(null);
+    }
   }
 
   // News Actions

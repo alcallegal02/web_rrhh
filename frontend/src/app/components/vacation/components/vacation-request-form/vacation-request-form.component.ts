@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, computed, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, signal, computed, effect, untracked, input, model, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { VacationRequest, Holiday } from '../../../../models/app.models';
@@ -28,22 +28,21 @@ export interface VacationRequestDraft {
     imports: [CommonModule, FormsModule, DurationInputComponent],
     templateUrl: './vacation-request-form.component.html',
 })
-export class VacationRequestFormComponent implements OnInit, OnChanges {
-    @Input() request: VacationRequestDraft = {
+export class VacationRequestFormComponent {
+    request = model<VacationRequestDraft>({
         id: '', request_type: 'vacaciones', leave_type_id: '', start_date: '', end_date: '',
         days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
-    };
-    @Input() managers: ResponsibleUser[] = [];
-    @Input() leaveTypes: LeaveType[] = [];
-    @Input() convenioConfig: ConvenioConfig | null = null;
-    @Input() balance: VacationBalance | null = null;
-    @Input() holidays: Holiday[] = [];
-    @Input() isModal: boolean = false;
-    @Input() loading: boolean = false;
-    @Input() uniqueIdPrefix: string = 'req-form';
+    });
+    managers = input<ResponsibleUser[]>([]);
+    leaveTypes = input<LeaveType[]>([]);
+    convenioConfig = input<ConvenioConfig | null>(null);
+    balance = input<VacationBalance | null>(null);
+    holidays = input<Holiday[]>([]);
+    isModal = input<boolean>(false);
+    loading = input<boolean>(false);
+    uniqueIdPrefix = input<string>('req-form');
 
-    @Output() requestChange = new EventEmitter<VacationRequestDraft>();
-    @Output() formSubmit = new EventEmitter<{ request: VacationRequestDraft, files: { file: File, url: string }[] }>();
+    formSubmit = output<{ request: VacationRequestDraft, files: { file: File, url: string }[] }>();
 
     // Local state
     maternityMode = signal<'full' | 'partial'>('full');
@@ -53,42 +52,33 @@ export class VacationRequestFormComponent implements OnInit, OnChanges {
 
     // Computed
     minMaternityWeeks = computed(() => {
-        const bal = this.balance?.balances.find(b => b.slug === 'maternidad_paternidad');
+        const bal = this.balance()?.balances.find(b => b.slug === 'maternidad_paternidad');
         const used = (bal?.used_days || 0) + (bal?.pending_days || 0);
         if (used <= 0.01) {
-            return this.convenioConfig?.maternity_weeks_mandatory || 6;
+            return this.convenioConfig()?.maternity_weeks_mandatory || 6;
         }
         return 1;
     });
 
     // Helpers
     isDuration = VacationUtils.isDuration;
-    convertToTime = (d: any) => VacationUtils.convertToTime(d, this.balance?.daily_work_hours || 8);
+    convertToTime = (d: any) => VacationUtils.convertToTime(d, this.balance()?.daily_work_hours || 8);
 
-    ngOnInit() {
-        this.checkSingleManager();
-    }
-
-    ngOnChanges(changes: SimpleChanges) {
-        if (changes['managers']) {
-            this.checkSingleManager();
-        }
-        if (changes['request']) {
-            // If request changes externally (e.g. from parent selecting a day), we might need to recalc things?
-            // For now assume parent handles the "reset" or "init" of the object.
-        }
-    }
-
-    checkSingleManager() {
-        if (this.managers.length === 1 && !this.request.assigned_manager_id) {
-            this.updateRequestField('assigned_manager_id', this.managers[0].id);
-        }
+    constructor() {
+        effect(() => {
+            const managersList = this.managers();
+            untracked(() => {
+                const currentReq = this.request();
+                if (managersList.length === 1 && !currentReq.assigned_manager_id) {
+                    this.updateRequestField('assigned_manager_id', managersList[0].id);
+                }
+            });
+        });
     }
 
     // Updates
     updateRequestField(field: keyof VacationRequestDraft, value: any) {
-        this.request = { ...this.request, [field]: value };
-        this.requestChange.emit(this.request);
+        this.request.update(req => ({ ...req, [field]: value }));
 
         // Side effects
         if (field === 'request_type') this.handleTypeChange(value);
@@ -104,7 +94,7 @@ export class VacationRequestFormComponent implements OnInit, OnChanges {
     }
 
     handleStartDateChange() {
-        if (this.request.request_type === 'maternidad_paternidad' && this.maternityMode() === 'full') {
+        if (this.request().request_type === 'maternidad_paternidad' && this.maternityMode() === 'full') {
             this.calculateMaternityEndDate();
         } else {
             this.recalculateDays();
@@ -112,7 +102,7 @@ export class VacationRequestFormComponent implements OnInit, OnChanges {
     }
 
     handleEndDateChange() {
-        if (this.request.request_type !== 'maternidad_paternidad') {
+        if (this.request().request_type !== 'maternidad_paternidad') {
             this.recalculateDays();
         }
     }
@@ -130,8 +120,8 @@ export class VacationRequestFormComponent implements OnInit, OnChanges {
     }
 
     calculateMaternityEndDate() {
-        const startStr = this.request.start_date;
-        const config = this.convenioConfig;
+        const startStr = this.request().start_date;
+        const config = this.convenioConfig();
         if (!startStr || !config) return;
 
         const weeks = config.maternity_weeks_total || 16;
@@ -145,16 +135,15 @@ export class VacationRequestFormComponent implements OnInit, OnChanges {
         const h = endDate.getHours().toString().padStart(2, '0');
         const min = endDate.getMinutes().toString().padStart(2, '0');
 
-        this.request = {
-            ...this.request,
+        this.request.update(req => ({
+            ...req,
             end_date: `${y}-${m}-${d}T${h}:${min}`,
             days_requested: weeks * 7
-        };
-        this.requestChange.emit(this.request);
+        }));
     }
 
     recalculateDays() {
-        const req = this.request;
+        const req = this.request();
         if (req.request_type === 'maternidad_paternidad') return;
         if (!req.start_date || !req.end_date || this.inputFormat() === 'time') return;
 
@@ -168,7 +157,7 @@ export class VacationRequestFormComponent implements OnInit, OnChanges {
         const endDate = new Date(end);
         endDate.setHours(0, 0, 0, 0);
 
-        const holidaySet = new Set(this.holidays.map(h => h.date.split('T')[0]));
+        const holidaySet = new Set(this.holidays().map(h => h.date.split('T')[0]));
 
         while (cur <= endDate) {
             const dayOfWeek = cur.getDay();
@@ -196,7 +185,7 @@ export class VacationRequestFormComponent implements OnInit, OnChanges {
     }
 
     isEndDateOptional(): boolean {
-        const type = this.request.request_type;
+        const type = this.request().request_type;
         return ['baja_enfermedad', 'baja_accidente', 'maternidad_paternidad', 'absentismo_no_retribuido'].includes(type);
     }
 
@@ -223,6 +212,6 @@ export class VacationRequestFormComponent implements OnInit, OnChanges {
     }
 
     submit() {
-        this.formSubmit.emit({ request: this.request, files: this.pendingAttachments() });
+        this.formSubmit.emit({ request: this.request(), files: this.pendingAttachments() });
     }
 }

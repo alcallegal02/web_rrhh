@@ -1,4 +1,4 @@
-import { Component, input, output, signal, inject, effect, ViewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, signal, inject, effect, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -35,7 +35,7 @@ export class NewsFormComponent {
     save = output<NewsFormModel>();
     cancel = output<void>();
 
-    @ViewChild(RichTextEditorComponent) editor!: RichTextEditorComponent;
+    editor = viewChild(RichTextEditorComponent);
 
     // Form State
     form = signal<NewsFormModel>({
@@ -225,8 +225,9 @@ export class NewsFormComponent {
         this.uploadError.set('');
 
         try {
-            if (this.editor) {
-                const processedContent = await this.editor.processImages();
+            const editorNode = this.editor();
+            if (editorNode) {
+                const processedContent = await editorNode.processImages();
                 this.updateField('content', processedContent);
             }
 

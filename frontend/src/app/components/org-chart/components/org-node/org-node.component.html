@@ -4,67 +4,67 @@
         (click)="toggleExpand($event)">
         <!-- Profile Photo -->
         <div class="mt-2 mb-3 relative">
-            @if (node.photo_url) {
-            <img [src]="node.photo_url" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm" />
+            @if (node().photo_url) {
+            <img [src]="node().photo_url" class="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm" />
             } @else {
             <div
                 class="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold border-2 border-white shadow-sm">
-                {{ (node.full_name || '?').charAt(0) }}
+                {{ (node().full_name || '?').charAt(0) }}
             </div>
             }
 
             <!-- Expand/Collapse Indicator (if has children) -->
-            @if (node.children && node.children.length > 0) {
+            @if (node().children && node().children!.length > 0) {
             <div class="absolute -bottom-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full text-white text-xs font-bold border-2 border-white shadow-sm transition-colors"
-                [ngClass]="node.expanded ? 'bg-red-400 hover:bg-red-500' : 'bg-green-500 hover:bg-green-600'">
-                {{ node.expanded ? '−' : '+' }}
+                [ngClass]="isExpanded() ? 'bg-red-400 hover:bg-red-500' : 'bg-green-500 hover:bg-green-600'">
+                {{ isExpanded() ? '−' : '+' }}
             </div>
             }
         </div>
 
         <!-- Info -->
         <div class="text-center w-full">
-            <h3 class="font-bold text-gray-800 text-sm truncate px-2">{{ node.full_name }}</h3>
+            <h3 class="font-bold text-gray-800 text-sm truncate px-2">{{ node().full_name }}</h3>
 
             <!-- Position & Dept -->
-            @if (node.position_name || node.department_name) {
+            @if (node().position_name || node().department_name) {
             <div class="mt-2 pt-2 border-t border-slate-100 w-full">
-                @if (node.position_name) {
-                <p class="text-xs font-semibold text-blue-600 mb-0.5 truncate">{{ node.position_name }}</p>
+                @if (node().position_name) {
+                <p class="text-xs font-semibold text-blue-600 mb-0.5 truncate">{{ node().position_name }}</p>
                 }
-                @if (node.department_name) {
-                <p class="text-xs text-gray-500 truncate">{{ node.department_name }}</p>
+                @if (node().department_name) {
+                <p class="text-xs text-gray-500 truncate">{{ node().department_name }}</p>
                 }
             </div>
             }
         </div>
 
         <!-- Connector Line Bottom (if expanded and has children) -->
-        @if (node.expanded && node.children.length > 0) {
+        @if (isExpanded() && node().children && node().children!.length > 0) {
         <div class="absolute -bottom-6 w-px h-6 bg-slate-300 left-1/2 -translate-x-1/2"></div>
         }
     </div>
 
     <!-- Children Container -->
-    @if (node.expanded && node.children && node.children.length > 0) {
+    @if (isExpanded() && node().children && node().children!.length > 0) {
     <div class="flex items-start justify-center pt-12 relative">
 
         <!-- Recursion -->
-        @for (child of node.children; track child.id; let first = $first; let last = $last) {
+        @for (child of node().children; track child.id; let first = $first; let last = $last) {
         <div class="flex flex-col items-center px-4 relative">
 
             <!-- Vertical Connector (Child Top) - Single Child Case (Overlap) -->
-            @if (node.children.length === 1) {
+            @if (node().children!.length === 1) {
             <div class="absolute -top-8 w-px h-8 bg-slate-300 left-1/2 -translate-x-1/2"></div>
             }
 
             <!-- Vertical Connector (Child Top) - Multiple Children Case (Meet Bar) -->
-            @if (node.children.length > 1) {
+            @if (node().children!.length > 1) {
             <div class="absolute -top-6 w-px h-6 bg-slate-300 left-1/2 -translate-x-1/2"></div>
             }
 
             <!-- Horizontal Lines for Multiple Children -->
-            @if (node.children.length > 1) {
+            @if (node().children!.length > 1) {
             <!-- Middle Children -->
             @if (!first && !last) {
             <div class="absolute -top-6 left-0 right-0 h-px bg-slate-300"></div>

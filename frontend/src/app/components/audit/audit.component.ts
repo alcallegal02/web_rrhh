@@ -1,5 +1,7 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { HttpClient } from '@angular/common/http';
 import { AuditService, AuditLog } from '../../services/audit.service';
 import { catchError, of } from 'rxjs';
 
@@ -17,50 +19,41 @@ export class AuditComponent {
     private auditService = inject(AuditService);
 
     // State
-    logs = signal<AuditLog[]>([]);
-    loading = signal<boolean>(false);
-    currentPage = signal<number>(0);
-    pageSize = 50;
-
     // Filters
     filterModule = signal<string>('');
     filterAction = signal<string>('');
 
+    // Pagination
+    currentPage = signal<number>(0);
+    pageSize = 50;
+
+    // Resource for data fetching
+    logsResource = rxResource({
+        stream: () => {
+            const page = this.currentPage();
+            const size = this.pageSize;
+            const module = this.filterModule() || undefined;
+            const action = this.filterAction() || undefined;
+            return this.auditService.getLogs(page, size, { module, action })
+                .pipe(catchError(() => of([])));
+        }
+    });
+
+    // Computed state
+    logs = computed(() => this.logsResource.value() || []);
+    loading = computed(() => this.logsResource.isLoading());
+
     // Selection
     selectedLog = signal<AuditLog | null>(null);
-
-    constructor() {
-        this.loadLogs();
-    }
-
-    loadLogs() {
-        this.loading.set(true);
-        const filters = {
-            module: this.filterModule() || undefined,
-            action: this.filterAction() || undefined
-        };
-
-        this.auditService.getLogs(this.currentPage(), this.pageSize, filters)
-            .pipe(catchError(() => {
-                this.loading.set(false);
-                return of([]);
-            }))
-            .subscribe(data => {
-                this.logs.set(data);
-                this.loading.set(false);
-            });
-    }
 
     onFiltersChanged(filters: { module: string, action: string }) {
         this.filterModule.set(filters.module);
         this.filterAction.set(filters.action);
         this.currentPage.set(0);
-        this.loadLogs();
     }
 
     onPageChange(page: number) {
         this.currentPage.set(page);
-        this.loadLogs();
     }
 
     onItemSelected(log: AuditLog) {

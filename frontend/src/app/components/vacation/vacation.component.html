@@ -74,13 +74,15 @@
                 <!-- Info contextual si se abrió desde el calendario -->
                 @if (selectedDay()?.holiday || selectedDay()?.request) {
                 <div class="bg-gray-800/50 rounded-2xl p-4 border border-gray-700/50 flex flex-wrap gap-4">
-                    @if (selectedDay()?.holiday; as h) {
+                    @let h = selectedDay()?.holiday;
+                    @if (h) {
                     <div
                         class="flex items-center gap-2 px-3 py-1 bg-red-900/30 text-red-400 rounded-full border border-red-800/30 text-xs font-bold">
                         <span>🚩 Festivo: {{ h.name }}</span>
                     </div>
                     }
-                    @if (selectedDay()?.request; as r) {
+                    @let r = selectedDay()?.request;
+                    @if (r) {
                     <div
                         class="flex items-center gap-2 px-3 py-1 bg-blue-900/30 text-blue-400 rounded-full border border-blue-800/30 text-xs font-bold">
                         <span>📋 Ya tienes una solicitud: {{ r.status }}</span>
@@ -115,7 +117,8 @@
     }
 
     <!-- Request Details Modal -->
-    @if (selectedRequest(); as req) {
+    @let req = selectedRequest();
+    @if (req) {
     <div class="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center backdrop-blur-md animate-fadeIn p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scaleIn">
             <div class="p-6 border-b flex justify-between items-center bg-gray-50">

@@ -115,7 +115,8 @@
                         </select>
                     </div>
 
-                    <div *ngIf="form.get('reset_type')?.value === 'anual_calendario'" class="flex gap-4">
+                    @if (form.get('reset_type')?.value === 'anual_calendario') {
+                    <div class="flex gap-4">
                         <div class="w-1/2">
                             <label class="block text-gray-700 text-sm font-bold mb-2">Día Reinicio</label>
                             <input formControlName="reset_day" type="number" min="1" max="31"
@@ -140,6 +141,7 @@
                             </select>
                         </div>
                     </div>
+                    }
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -183,9 +185,10 @@
                             class="mr-2 h-4 w-4">
                         <label for="is_accumulable" class="text-gray-700 text-sm font-bold">Acumulable</label>
 
-                        <input *ngIf="form.get('is_accumulable')?.value" formControlName="accumulable_years"
-                            type="number" class="ml-4 shadow border rounded w-20 py-1 px-2 text-gray-700"
-                            placeholder="Años">
+                        @if (form.get('is_accumulable')?.value) {
+                        <input formControlName="accumulable_years" type="number"
+                            class="ml-4 shadow border rounded w-20 py-1 px-2 text-gray-700" placeholder="Años">
+                        }
                     </div>
                 </div>
 

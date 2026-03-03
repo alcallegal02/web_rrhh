@@ -1,4 +1,4 @@
-import { Component, signal, inject, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, linkedSignal, inject, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
@@ -95,9 +95,30 @@ export class VacationComponent implements OnInit {
   private _modalForceOpen = false;
 
   // Form State
-  newRequest = signal<VacationRequestDraft>({
-    id: '', request_type: 'vacaciones', leave_type_id: '', start_date: '', end_date: '',
-    days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
+  newRequest = linkedSignal<CalendarDay | null, VacationRequestDraft>({
+    source: this.selectedDay,
+    computation: (day, previous) => {
+      // If we are editing an existing request (which manually sets newRequest),
+      // or if day is null, we return a default or keep the previous value if it has an id.
+      // But actually, when selectedDay changes, we want to start a new request for that day.
+      if (!day) {
+        return {
+          id: '', request_type: 'vacaciones', leave_type_id: '', start_date: '', end_date: '',
+          days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
+        };
+      }
+
+      const d = day.date;
+      const year = d.getFullYear();
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const date = d.getDate().toString().padStart(2, '0');
+      const dateStr = `${year}-${month}-${date}T08:00`;
+
+      return {
+        id: '', request_type: 'vacaciones', leave_type_id: '', start_date: dateStr, end_date: dateStr,
+        days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
+      };
+    }
   });
 
   // Computed for Child Components
@@ -175,7 +196,8 @@ export class VacationComponent implements OnInit {
   openDayModal(day: CalendarDay) {
     if (day.day === 0) return;
     this.selectedDay.set(day);
-    this.startRequestFromDay();
+    this.isModalOpen = true; // Wait it is automatically derived from selectedDay!
+    // But isModalOpen setter is used for force opening!
   }
 
   closeDayModal() {
@@ -186,20 +208,8 @@ export class VacationComponent implements OnInit {
   get isModalOpen() { return this.selectedDay() !== null || this._modalForceOpen; }
   set isModalOpen(v: boolean) { this._modalForceOpen = v; }
 
-  startRequestFromDay() {
-    const day = this.selectedDay();
-    if (!day) return;
-    const d = day.date;
-    const year = d.getFullYear();
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
-    const date = d.getDate().toString().padStart(2, '0');
-    const dateStr = `${year}-${month}-${date}T08:00`;
-
-    this.resetNewRequest();
-    this.newRequest.update(r => ({ ...r, start_date: dateStr, end_date: dateStr }));
-  }
-
   resetNewRequest() {
+    this.selectedDay.set(null); // Triggers linkedSignal reset
     this.newRequest.set({
       id: '', request_type: 'vacaciones', leave_type_id: '', start_date: '', end_date: '',
       days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []

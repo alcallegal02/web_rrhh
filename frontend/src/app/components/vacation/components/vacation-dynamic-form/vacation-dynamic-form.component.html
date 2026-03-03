@@ -1,4 +1,5 @@
-@if (schema(); as s) {
+@let s = schema();
+@if (s) {
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6 animate-fadeIn">
 
     <!-- Header Balance Info -->

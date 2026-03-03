@@ -1,4 +1,5 @@
-import { Component, signal, inject, OnInit, ChangeDetectionStrategy, TemplateRef, ViewChild } from '@angular/core';
+import { Component, signal, inject, ChangeDetectionStrategy, TemplateRef, ViewChild, computed } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HolidayService } from '../../services/holiday.service';
@@ -15,10 +16,16 @@ type ViewMode = 'calendar' | 'list';
     templateUrl: './calendar-config.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CalendarConfigComponent implements OnInit {
-    holidays = signal<Holiday[]>([]);
-    loading = signal(false);
+export class CalendarConfigComponent {
     selectedYear = signal(new Date().getFullYear());
+
+    // Resource
+    holidaysResource = rxResource({
+        stream: () => this.holidayService.getHolidays(this.selectedYear())
+    });
+
+    holidays = computed(() => this.holidaysResource.value() ?? []);
+    loading = computed(() => this.holidaysResource.isLoading());
     viewMode = signal<ViewMode>('calendar');
 
     // Selected state for Modal
@@ -28,27 +35,14 @@ export class CalendarConfigComponent implements OnInit {
 
     private holidayService = inject(HolidayService);
 
-    ngOnInit() {
-        this.loadHolidays();
-    }
+    constructor() { }
 
     changeYear(delta: number) {
         this.selectedYear.update(y => y + delta);
-        this.loadHolidays();
     }
 
     loadHolidays() {
-        this.loading.set(true);
-        this.holidayService.getHolidays(this.selectedYear()).subscribe({
-            next: (data) => {
-                this.holidays.set(data);
-                this.loading.set(false);
-            },
-            error: (err) => {
-                console.error('Error loading holidays', err);
-                this.loading.set(false);
-            }
-        });
+        this.holidaysResource.reload();
     }
 
     // Modal Logic
@@ -99,7 +93,6 @@ export class CalendarConfigComponent implements OnInit {
     }
 
     createHoliday(payload: HolidayCreate) {
-        this.loading.set(true);
         this.holidayService.createHoliday(payload).subscribe({
             next: () => {
                 this.loadHolidays();
@@ -107,13 +100,11 @@ export class CalendarConfigComponent implements OnInit {
             },
             error: () => {
                 alert('Error al guardar.');
-                this.loading.set(false);
             }
         });
     }
 
     updateHoliday(id: string, payload: HolidayUpdate) {
-        this.loading.set(true);
         this.holidayService.updateHoliday(id, payload).subscribe({
             next: () => {
                 this.loadHolidays();
@@ -121,21 +112,18 @@ export class CalendarConfigComponent implements OnInit {
             },
             error: () => {
                 alert('Error al actualizar.');
-                this.loading.set(false);
             }
         });
     }
 
     onDelete(holiday: Holiday) {
         if (!confirm(`¿Eliminar festivo "${holiday.name}"?`)) return;
-        this.loading.set(true);
         this.holidayService.deleteHoliday(holiday.id).subscribe({
             next: () => {
                 this.loadHolidays();
             },
             error: () => {
                 alert('Error al eliminar');
-                this.loading.set(false);
             }
         });
     }

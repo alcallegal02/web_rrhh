@@ -52,10 +52,15 @@
             <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Contenido de la
                 Noticia</label>
             <div class="rounded-2xl overflow-hidden border border-white/10 shadow-inner bg-white">
+                @defer (on viewport) {
                 <app-rich-text-editor [ngModel]="form().content" (ngModelChange)="updateField('content', $event)"
                     name="content" [quillModules]="quillModules" [height]="'450px'"
                     [placeholder]="'Empieza a escribir aquí...'" (contentChange)="onEditorContentChange($event)"
                     [module]="'news'" required></app-rich-text-editor>
+                } @placeholder {
+                <div class="h-[450px] flex items-center justify-center bg-white/5 text-white/40 italic">Cargando editor
+                    de texto...</div>
+                }
             </div>
         </div>
 

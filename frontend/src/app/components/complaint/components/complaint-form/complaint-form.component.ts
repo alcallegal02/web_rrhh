@@ -1,4 +1,4 @@
-import { Component, signal, inject, ViewChild, output, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, inject, viewChild, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -37,7 +37,7 @@ export class ComplaintFormComponent {
     complaintCode = signal('');
     complaintToken = signal('');
 
-    @ViewChild(RichTextEditorComponent) editor!: RichTextEditorComponent;
+    editor = viewChild(RichTextEditorComponent);
 
     quillModules = {
         toolbar: [
@@ -131,8 +131,9 @@ export class ComplaintFormComponent {
         this.loading.set(true);
         this.error.set('');
 
-        if (this.editor) {
-            const processedDescription = await this.editor.processImages();
+        const editorNode = this.editor();
+        if (editorNode) {
+            const processedDescription = await editorNode.processImages();
             this.description.set(processedDescription);
         }
 

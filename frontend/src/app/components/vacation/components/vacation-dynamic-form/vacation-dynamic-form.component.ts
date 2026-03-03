@@ -1,6 +1,7 @@
 import { Component, input, output, signal, inject, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { form, field } from '../../../../utils/signal-forms';
 import { PolicyService } from '../../../../services/policy.service';
 import { ResponsibleUser, VacationService, VacationBalance } from '../../../../services/vacation.service';
 import { VacationRequestDraft } from '../vacation-request-form/vacation-request-form.component';
@@ -32,7 +33,6 @@ export interface DynamicFormSchema {
     templateUrl: './vacation-dynamic-form.component.html',
 })
 export class VacationDynamicFormComponent {
-    private fb = inject(FormBuilder);
     private policyService = inject(PolicyService);
 
     policyId = input<string>('');
@@ -43,7 +43,7 @@ export class VacationDynamicFormComponent {
     formSubmit = output<any>();
 
     schema = signal<DynamicFormSchema | null>(null);
-    form: FormGroup = this.fb.group({});
+    form: FormGroup = form({});
     pendingAttachments = signal<{ file: File, url: string }[]>([]);
 
     isHourly = computed(() => this.schema()?.unit === 'hours');
@@ -89,25 +89,25 @@ export class VacationDynamicFormComponent {
     }
 
     buildForm(schema: DynamicFormSchema) {
-        const group: any = {
-            policy_id: [schema.policy_id, Validators.required],
-            assigned_manager_id: [this.managers().length === 1 ? this.managers()[0].id : '', Validators.required],
-            days_requested: [0, [Validators.required, Validators.min(0.1)]]
+        const groupDef: any = {
+            policy_id: field(schema.policy_id, [Validators.required]),
+            assigned_manager_id: field(this.managers().length === 1 ? this.managers()[0].id : '', [Validators.required]),
+            days_requested: field(0, [Validators.required, Validators.min(0.1)])
         };
 
-        schema.fields.forEach(field => {
-            if (field.type === 'file') return;
-            if (field.name === 'days_requested') return; // Handled explicitly
+        schema.fields.forEach(f => {
+            if (f.type === 'file') return;
+            if (f.name === 'days_requested') return; // Handled explicitly
 
             const validators = [];
-            if (field.required) validators.push(Validators.required);
-            if (field.min !== undefined) validators.push(Validators.min(field.min));
-            if (field.max !== undefined) validators.push(Validators.max(field.max));
+            if (f.required) validators.push(Validators.required);
+            if (f.min !== undefined) validators.push(Validators.min(f.min));
+            if (f.max !== undefined) validators.push(Validators.max(f.max));
 
-            group[field.name] = ['', validators];
+            groupDef[f.name] = field('', validators);
         });
 
-        this.form = this.fb.group(group);
+        this.form = form(groupDef);
         this.pendingAttachments.set([]);
 
         // Watch for date changes

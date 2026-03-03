@@ -1,4 +1,4 @@
-import { Component, signal, inject, ViewChild, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, signal, inject, viewChild, ChangeDetectionStrategy, computed } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DatePipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +27,7 @@ export class ComplaintManagementComponent {
   loading = signal(false);
   submitting = signal(false);
 
-  @ViewChild(RichTextEditorComponent) editor!: RichTextEditorComponent;
+  editor = viewChild(RichTextEditorComponent);
 
   editData = {
     new_status: '',
@@ -70,8 +70,9 @@ export class ComplaintManagementComponent {
     this.submitting.set(true);
 
     // Procesar imágenes del editor antes de actualizar
-    if (this.editor) {
-      const processedResponse = await this.editor.processImages();
+    const editorNode = this.editor();
+    if (editorNode) {
+      const processedResponse = await editorNode.processImages();
       this.editData.admin_notes = processedResponse;
     }
 

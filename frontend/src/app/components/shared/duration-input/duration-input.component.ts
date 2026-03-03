@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, forwardRef, ChangeDetectionStrategy, input, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';
 
@@ -17,26 +17,26 @@ import { FormsModule, NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/f
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DurationInputComponent implements ControlValueAccessor {
-    private cdr = inject(ChangeDetectorRef);
+    // Angular 19/21+ best practice for CVA Zoneless
+    disabledForm = signal(false);
+    disabled = input<boolean>(false);
+    hasError = input<boolean>(false);
+    useNative = input<boolean>(false);
 
-    @Input() disabled = false;
-    @Input() hasError = false;
-    @Input() useNative = false;
+    displayValue = signal('');
+    invalidFormat = signal(false);
 
-    displayValue = '';
-    invalidFormat = false;
+    isDisabled = computed(() => this.disabled() || this.disabledForm());
 
     private onChange: (value: number | null) => void = () => { };
     private onTouched: () => void = () => { };
 
     writeValue(value: number | null): void {
         if (value === null || value === undefined) {
-            this.displayValue = '';
-            this.cdr.markForCheck();
+            this.displayValue.set('');
             return;
         }
-        this.displayValue = this.formatDecimalToHHmm(value);
-        this.cdr.markForCheck();
+        this.displayValue.set(this.formatDecimalToHHmm(value));
     }
 
     registerOnChange(fn: any): void {
@@ -48,47 +48,48 @@ export class DurationInputComponent implements ControlValueAccessor {
     }
 
     setDisabledState(isDisabled: boolean): void {
-        this.disabled = isDisabled;
-        this.cdr.markForCheck();
+        this.disabledForm.set(isDisabled);
     }
 
     onInput(event: Event): void {
-        if (!this.useNative) {
-            this.invalidFormat = false;
+        if (!this.useNative()) {
+            this.invalidFormat.set(false);
         }
     }
 
     onBlur(): void {
         this.onTouched();
 
-        if (!this.displayValue) {
+        const currentVal = this.displayValue();
+        if (!currentVal) {
             this.onChange(null);
             return;
         }
 
-        if (this.useNative) {
-            const decimal = this.parseHHmmToDecimal(this.displayValue);
+        if (this.useNative()) {
+            const decimal = this.parseHHmmToDecimal(currentVal);
             this.onChange(decimal);
         } else {
-            if (/^-?\d+$/.test(this.displayValue)) {
-                this.displayValue += ':00';
+            let processedVal = currentVal;
+            if (/^-?\d+$/.test(processedVal)) {
+                processedVal += ':00';
+                this.displayValue.set(processedVal);
             }
 
-            if (!/^-?\d+:[0-5]\d$/.test(this.displayValue)) {
-                this.invalidFormat = true;
+            if (!/^-?\d+:[0-5]\d$/.test(processedVal)) {
+                this.invalidFormat.set(true);
                 this.onChange(null);
             } else {
-                this.invalidFormat = false;
-                const decimal = this.parseHHmmToDecimal(this.displayValue);
+                this.invalidFormat.set(false);
+                const decimal = this.parseHHmmToDecimal(processedVal);
                 this.onChange(decimal);
-                this.displayValue = this.formatDecimalToHHmm(decimal);
+                this.displayValue.set(this.formatDecimalToHHmm(decimal));
             }
         }
-        this.cdr.markForCheck();
     }
 
     onKeyDown(event: KeyboardEvent): void {
-        if (this.useNative) return;
+        if (this.useNative()) return;
 
         if (['Backspace', 'ArrowLeft', 'ArrowRight', 'Tab', 'Delete'].includes(event.key)) {
             return;

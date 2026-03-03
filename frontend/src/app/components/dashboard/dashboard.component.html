@@ -13,8 +13,9 @@
 
         <!-- Content -->
         <div class="relative z-20 px-8 py-10 md:px-12 w-full max-w-2xl">
+            @let firstName = authService.user()?.full_name?.split(' ')?.at(0);
             <h1 class="text-3xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
-                Hola, {{ authService.user()?.full_name?.split(' ')?.at(0) }}.
+                Hola, {{ firstName }}.
             </h1>
             <p class="text-white/80 text-lg md:text-xl font-medium max-w-lg leading-relaxed">
                 Bienvenido a tu centro de gestión integral. Aquí encontrarás todo lo que necesitas para tu día a día.
@@ -56,9 +57,13 @@
                     <span class="ml-2 bg-inespasa-dark text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{{
                         pendingRequests().length }} pendientes</span>
                 </div>
+                @defer (on viewport) {
                 <app-pending-requests-widget [requests]="pendingRequests()" [processingId]="processingRequestId()"
                     (approve)="handleApprove($event)" (reject)="handleReject($event)">
                 </app-pending-requests-widget>
+                } @placeholder {
+                <div class="h-40 bg-gray-100 animate-pulse rounded-xl"></div>
+                }
             </div>
         </div>
     </div>

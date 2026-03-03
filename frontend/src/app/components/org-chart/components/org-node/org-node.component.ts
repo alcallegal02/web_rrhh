@@ -1,4 +1,4 @@
-import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, linkedSignal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OrgNode } from '../../../../services/org-chart.service';
 
@@ -10,12 +10,19 @@ import { OrgNode } from '../../../../services/org-chart.service';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrgNodeComponent {
-    @Input({ required: true }) node!: OrgNode;
+    node = input.required<OrgNode>();
+
+    // Use linkedSignal for mutable state that depends on an input
+    isExpanded = linkedSignal(() => !!this.node().expanded);
 
     toggleExpand(event?: Event) {
         if (event) event.stopPropagation();
-        if (this.node.children && this.node.children.length > 0) {
-            this.node.expanded = !this.node.expanded;
+        const n = this.node();
+        if (n.children && n.children.length > 0) {
+            this.isExpanded.set(!this.isExpanded());
+
+            // Sync with underlying object just in case it's read by a parent
+            n.expanded = this.isExpanded();
         }
     }
 }

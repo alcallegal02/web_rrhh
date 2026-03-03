@@ -1,4 +1,5 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, computed } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../config/environment';
@@ -27,13 +28,22 @@ export interface LeaveTypeCreate {
 })
 export class LeaveTypeService {
     private http = inject(HttpClient);
-    private apiUrl = `${environment.apiUrl}/leave-types`;
+    private readonly apiUrl = `${environment.apiUrl}/leave-types`;
 
-    leaveTypes = signal<LeaveType[]>([]);
+    leaveTypesResource = rxResource({
+        stream: () => this.http.get<LeaveType[]>(this.apiUrl, { params: { active_only: true } })
+    });
 
+    leaveTypes = computed(() => this.leaveTypesResource.value() ?? []);
+
+    // For backwards compatibility or explicit refresh
     getLeaveTypes(activeOnly = true): Observable<LeaveType[]> {
+        if (activeOnly !== true) {
+            // Just doing a fast fetch for non-active
+            return this.http.get<LeaveType[]>(this.apiUrl, { params: { active_only: activeOnly } });
+        }
         return this.http.get<LeaveType[]>(this.apiUrl, { params: { active_only: activeOnly } }).pipe(
-            tap(types => this.leaveTypes.set(types))
+            tap(() => this.leaveTypesResource.reload())
         );
     }
 

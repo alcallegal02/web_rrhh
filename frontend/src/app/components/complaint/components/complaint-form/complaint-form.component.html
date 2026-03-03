@@ -11,10 +11,16 @@
         <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
             📝 Descripción Detallada
         </label>
+        @defer (on viewport) {
         <app-rich-text-editor [ngModel]="description()" (ngModelChange)="description.set($event)"
             (contentChange)="onEditorContentChange($event)" name="description" [quillModules]="quillModules"
             [height]="'300px'" [placeholder]="'Describe tu denuncia de manera detallada...'"
             [uploadUrl]="'/upload/image-anonymous'" [module]="'complaints'" required></app-rich-text-editor>
+        } @placeholder {
+        <div
+            class="h-[300px] flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg text-gray-400 italic">
+            Cargando editor de texto...</div>
+        }
         <p class="text-xs text-gray-500 mt-2">Sé lo más específico posible para facilitar la revisión</p>
     </div>
 

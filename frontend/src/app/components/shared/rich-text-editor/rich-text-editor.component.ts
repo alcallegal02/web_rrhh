@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnDestroy, inject, forwardRef, OnInit, AfterViewInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnDestroy, inject, forwardRef, OnInit, AfterViewInit, ChangeDetectionStrategy, input, output } from '@angular/core';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { QuillModule } from 'ngx-quill';
@@ -54,14 +54,14 @@ export class RichTextEditorComponent implements OnDestroy, ControlValueAccessor 
   private http = inject(HttpClient);
   private configService = inject(ConfigService);
 
-  @Input() placeholder: string = 'Escribe aquí...';
-  @Input() height: string = '400px';
-  @Input() quillModules: QuillModulesConfig = createQuillModulesConfig();
-  @Input() uploadUrl: string = '/upload/image';
-  @Input() module: string = 'common';
+  placeholder = input<string>('Escribe aquí...');
+  height = input<string>('400px');
+  quillModules = input<QuillModulesConfig>(createQuillModulesConfig());
+  uploadUrl = input<string>('/upload/image');
+  module = input<string>('common');
 
-  @Output() editorCreated = new EventEmitter<any>();
-  @Output() contentChange = new EventEmitter<string>();
+  editorCreated = output<any>();
+  contentChange = output<string>();
 
   content: string = '';
   quillEditor: any = null;
@@ -292,7 +292,7 @@ export class RichTextEditorComponent implements OnDestroy, ControlValueAccessor 
         formData.append('file', file);
 
         const uploadRes = await firstValueFrom(
-          this.http.post<{ url: string }>(`${environment.apiUrl}${this.uploadUrl}?module=${this.module}`, formData)
+          this.http.post<{ url: string }>(`${environment.apiUrl}${this.uploadUrl()}?module=${this.module()}`, formData)
         );
 
         if (uploadRes?.url) {
