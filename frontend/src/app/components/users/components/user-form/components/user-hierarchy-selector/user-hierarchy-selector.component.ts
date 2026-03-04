@@ -1,16 +1,17 @@
-import { Component, input, output, signal, computed } from '@angular/core';
+import { Component, input, output, computed, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../../config/environment';
 import { UserSummary } from '../../user-form.models';
+import { NgIconComponent } from '@ng-icons/core';
 
 // Re-export for convenience
 export { UserSummary };
 
 @Component({
     selector: 'app-user-hierarchy-selector',
-    imports: [CommonModule, FormsModule],
-    templateUrl: './user-hierarchy-selector.component.html'
+    imports: [CommonModule, FormsModule, NgIconComponent],
+    templateUrl: './user-hierarchy-selector.component.html',
 })
 export class UserHierarchySelectorComponent {
     // Inputs

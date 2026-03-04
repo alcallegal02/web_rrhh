@@ -5,6 +5,12 @@
     "changeOrigin": true,
     "logLevel": "debug"
   },
+  "/media": {
+    "target": "http://nginx:80",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
   "/ws": {
     "target": "ws://nginx:80",
     "ws": true,
@@ -13,4 +19,3 @@
     "logLevel": "debug"
   }
 }
-

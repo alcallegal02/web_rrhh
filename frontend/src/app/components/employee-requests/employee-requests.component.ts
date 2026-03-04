@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { VacationService } from '../../services/vacation.service';
 import { VacationRequest } from '../../models/app.models';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-employee-requests',
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, NgIconComponent],
   templateUrl: './employee-requests.component.html',
   styleUrl: './employee-requests.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

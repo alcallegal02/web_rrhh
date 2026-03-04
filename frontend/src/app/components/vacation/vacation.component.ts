@@ -13,6 +13,7 @@ import { VacationBalancesComponent } from './components/vacation-balances/vacati
 import { VacationCalendarComponent } from './components/vacation-calendar/vacation-calendar.component';
 import { VacationListComponent } from './components/vacation-list/vacation-list.component';
 import { VacationDynamicFormComponent } from './components/vacation-dynamic-form/vacation-dynamic-form.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-vacation',
@@ -22,7 +23,8 @@ import { VacationDynamicFormComponent } from './components/vacation-dynamic-form
     VacationCalendarComponent,
     VacationListComponent,
     VacationDynamicFormComponent,
-    FormsModule
+    FormsModule,
+    NgIconComponent
   ],
   templateUrl: './vacation.component.html',
   styleUrl: './vacation.component.scss',

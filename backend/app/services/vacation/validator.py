@@ -1,14 +1,18 @@
-from typing import Optional, Union
-from uuid import UUID
-from datetime import date, datetime
+from datetime import datetime
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from app.models.vacation import VacationRequest, RequestStatus, VacationRequestCreate, RequestType
-from app.models.policy import PermissionPolicy, DurationUnit
-from app.models.convenio import ConvenioConfig
+from app.models.policy import DurationUnit, PermissionPolicy
+from app.models.vacation import (
+    RequestStatus,
+    RequestType,
+    VacationRequest,
+    VacationRequestCreate,
+)
 from app.services.vacation.balance import get_vacation_balance
+
 
 class VacationValidator:
     """

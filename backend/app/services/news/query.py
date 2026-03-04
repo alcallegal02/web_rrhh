@@ -1,18 +1,19 @@
-from typing import List, Optional
 from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 from sqlalchemy.orm import selectinload
+from sqlmodel import select
 
 from app.models.news import News, NewsStatus
 
+
 async def get_all_news(
     session: AsyncSession,
-    user_role: Optional[str] = None,
-    status: Optional[str] = None,
+    user_role: str | None = None,
+    status: str | None = None,
     limit: int = 20,
     offset: int = 0
-) -> List[News]:
+) -> list[News]:
     """Get news - with automatic status filtering based on role"""
     from app.models.user import UserRole
     
@@ -42,7 +43,7 @@ async def get_all_news(
 
 async def get_latest_published_news(
     session: AsyncSession
-) -> Optional[News]:
+) -> News | None:
     """Get the latest published news"""
     result = await session.execute(
         select(News)
@@ -57,8 +58,8 @@ async def get_latest_published_news(
 async def get_news_by_id(
     session: AsyncSession,
     news_id: str,
-    user_role: Optional[str] = None
-) -> Optional[News]:
+    user_role: str | None = None
+) -> News | None:
     """Get news by ID with optional status security check"""
     from app.models.user import UserRole
     
@@ -74,6 +75,6 @@ async def get_news_by_id(
 
 
 # Deprecated but kept for compatibility if needed elsewhere
-async def get_all_published_news(session: AsyncSession) -> List[News]:
+async def get_all_published_news(session: AsyncSession) -> list[News]:
     from app.models.user import UserRole
     return await get_all_news(session, user_role=UserRole.EMPLEADO.value)

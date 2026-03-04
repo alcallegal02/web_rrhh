@@ -7,10 +7,11 @@ import { PolicyService, PermissionPolicy, PermissionPolicyCreate, DurationUnit, 
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { computed, effect } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-policy-form',
-    imports: [CommonModule, ReactiveFormsModule, RouterModule],
+    imports: [CommonModule, ReactiveFormsModule, RouterModule, NgIconComponent],
     templateUrl: './policy-form.component.html'
 })
 export class PolicyFormComponent {

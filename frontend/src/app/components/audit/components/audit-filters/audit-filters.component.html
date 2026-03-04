@@ -1,26 +1,120 @@
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-5 mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-    <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Módulo</label>
-        <select [ngModel]="filterModule()" (ngModelChange)="filterModule.set($event); applyFilters()"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 text-gray-700">
-            <option value="">Todos</option>
-            <option value="NEWS">Noticias</option>
-            <option value="COMPLAINTS">Denuncias</option>
-            <option value="CONVENIO">Convenio</option>
-            <option value="UPLOAD_COMMON">Archivos (Común)</option>
-            <option value="UPLOAD_COMPLAINTS">Archivos (Denuncias)</option>
-        </select>
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+    <div class="flex flex-col xl:flex-row gap-6 items-start xl:items-center">
+
+        <!-- Modules Multi-select -->
+        <div class="flex-1 min-w-0 w-full">
+            <div class="flex items-center gap-2 mb-2 ml-1">
+                <ng-icon name="lucideLayers" class="text-inespasa text-sm"></ng-icon>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Módulos</label>
+            </div>
+            <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 custom-scrollbar">
+                @for (mod of modules; track mod.value) {
+                <button (click)="toggleModule(mod.value)"
+                    class="inline-flex items-center px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all"
+                    [class.bg-inespasa]="selectedModules().includes(mod.value)"
+                    [class.text-white]="selectedModules().includes(mod.value)"
+                    [class.border-inespasa]="selectedModules().includes(mod.value)"
+                    [class.bg-white]="!selectedModules().includes(mod.value)"
+                    [class.text-gray-600]="!selectedModules().includes(mod.value)"
+                    [class.border-gray-100]="!selectedModules().includes(mod.value)"
+                    [class.hover:border-inespasa-light/30]="!selectedModules().includes(mod.value)"
+                    [class.hover:bg-inespasa-light/5]="!selectedModules().includes(mod.value)">
+                    <ng-icon [name]="mod.icon" class="mr-1.5"></ng-icon>
+                    {{ mod.label }}
+                </button>
+                }
+            </div>
+        </div>
+
+        <!-- Divider for desktop -->
+        <div class="hidden xl:block w-px h-16 bg-gray-100"></div>
+
+        <!-- Actions Multi-select -->
+        <div class="flex-1 min-w-0 w-full">
+            <div class="flex items-center gap-2 mb-2 ml-1">
+                <ng-icon name="lucideZap" class="text-amber-500 text-sm"></ng-icon>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Acciones</label>
+            </div>
+            <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 custom-scrollbar">
+                @for (act of actions; track act.value) {
+                <button (click)="toggleAction(act.value)"
+                    class="inline-flex items-center px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all"
+                    [class.bg-inespasa]="selectedActions().includes(act.value)"
+                    [class.text-white]="selectedActions().includes(act.value)"
+                    [class.border-inespasa]="selectedActions().includes(act.value)"
+                    [class.bg-white]="!selectedActions().includes(act.value)"
+                    [class.text-gray-600]="!selectedActions().includes(act.value)"
+                    [class.border-gray-100]="!selectedActions().includes(act.value)"
+                    [class.hover:border-inespasa-light/30]="!selectedActions().includes(act.value)"
+                    [class.hover:bg-inespasa-light/5]="!selectedActions().includes(act.value)">
+                    <ng-icon [name]="act.icon" class="mr-1.5"></ng-icon>
+                    {{ act.label }}
+                </button>
+                }
+            </div>
+        </div>
+
+        <!-- Divider for desktop -->
+        <div class="hidden xl:block w-px h-16 bg-gray-100"></div>
+
+        <!-- Date Range -->
+        <div class="xl:w-80 w-full">
+            <div class="flex items-center gap-2 mb-2 ml-1">
+                <ng-icon name="lucideCalendarRange" class="text-emerald-500 text-sm"></ng-icon>
+                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Periodo</label>
+            </div>
+            <div class="flex gap-2">
+                <input type="datetime-local" [ngModel]="filterStartDate()"
+                    (ngModelChange)="filterStartDate.set($event); applyFilters()"
+                    class="w-1/2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-inespasa focus:border-inespasa text-gray-700 text-[11px] transition-all">
+                <input type="datetime-local" [ngModel]="filterEndDate()"
+                    (ngModelChange)="filterEndDate.set($event); applyFilters()"
+                    class="w-1/2 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-inespasa focus:border-inespasa text-gray-700 text-[11px] transition-all">
+            </div>
+            <div class="mt-2 flex gap-1 justify-between">
+                <button (click)="setQuickRange('hour')"
+                    class="px-2 py-1 text-[10px] font-bold text-gray-500 hover:text-inespasa hover:bg-inespasa-light/10 rounded transition-colors">1h</button>
+                <button (click)="setQuickRange('today')"
+                    class="px-2 py-1 text-[10px] font-bold text-gray-500 hover:text-inespasa hover:bg-inespasa-light/10 rounded transition-colors">Hoy</button>
+                <button (click)="setQuickRange('yesterday')"
+                    class="px-2 py-1 text-[10px] font-bold text-gray-500 hover:text-inespasa hover:bg-inespasa-light/10 rounded transition-colors">Ayer</button>
+                <button (click)="setQuickRange('week')"
+                    class="px-2 py-1 text-[10px] font-bold text-gray-500 hover:text-inespasa hover:bg-inespasa-light/10 rounded transition-colors">7d</button>
+            </div>
+        </div>
     </div>
-    <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase mb-1">Acción</label>
-        <input type="text" [ngModel]="filterAction()" (ngModelChange)="filterAction.set($event)"
-            (keyup.enter)="applyFilters()" placeholder="Ej: CREATE, UPDATE..."
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50 text-gray-700">
-    </div>
-    <div class="md:col-span-2 flex items-end">
+
+    <!-- Clear Filters Button - Floating style -->
+    @if (selectedModules().length > 0 || selectedActions().length > 0 || filterStartDate() || filterEndDate()) {
+    <div class="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
+        <div class="flex gap-2">
+            <span class="text-[10px] font-bold text-gray-400 uppercase">Filtros activos:</span>
+            <div class="flex flex-wrap gap-1">
+                @if (selectedModules().length > 0) {
+                <span
+                    class="px-2 py-0.5 bg-inespasa-light/10 text-inespasa rounded-full text-[9px] font-bold border border-inespasa-light/20 flex items-center gap-1">
+                    <ng-icon name="lucideLayers"></ng-icon> {{ selectedModules().length }} Módulos
+                </span>
+                }
+                @if (selectedActions().length > 0) {
+                <span
+                    class="px-2 py-0.5 bg-inespasa-light/10 text-inespasa rounded-full text-[9px] font-bold border border-inespasa-light/20 flex items-center gap-1">
+                    <ng-icon name="lucideZap"></ng-icon> {{ selectedActions().length }} Acciones
+                </span>
+                }
+                @if (filterStartDate() || filterEndDate()) {
+                <span
+                    class="px-2 py-0.5 bg-inespasa-light/10 text-inespasa rounded-full text-[9px] font-bold border border-inespasa-light/20 flex items-center gap-1">
+                    <ng-icon name="lucideCalendar"></ng-icon> Tiempo
+                </span>
+                }
+            </div>
+        </div>
         <button (click)="clearFilters()"
-            class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium">
-            Limpiar Filtros
+            class="text-[11px] font-bold text-red-500 hover:text-red-600 flex items-center gap-1.5 transition-colors">
+            <ng-icon name="lucideTrash2"></ng-icon>
+            Limpiar todo
         </button>
     </div>
+    }
 </div>

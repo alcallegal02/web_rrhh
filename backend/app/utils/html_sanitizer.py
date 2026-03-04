@@ -47,8 +47,8 @@ def sanitize_html(html: str) -> str:
     if not html:
         return ""
     
-    import re
     import logging
+    import re
     
     logger = logging.getLogger(__name__)
     

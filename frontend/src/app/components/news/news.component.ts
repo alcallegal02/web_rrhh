@@ -11,12 +11,15 @@ import { environment } from '../../config/environment';
 // Components
 import { NewsListComponent } from './components/news-list/news-list.component';
 import { NewsFormComponent, NewsFormModel } from './components/news-form/news-form.component';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideNewspaper } from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-news',
-  imports: [CommonModule, NewsListComponent, NewsFormComponent],
+  imports: [CommonModule, NewsListComponent, NewsFormComponent, NgIconComponent],
   templateUrl: './news.component.html',
   styleUrl: './news.component.scss',
+  providers: [provideIcons({ lucideNewspaper })],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewsComponent {

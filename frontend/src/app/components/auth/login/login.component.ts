@@ -2,10 +2,11 @@ import { Component, signal, inject, OnInit, ChangeDetectionStrategy } from '@ang
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService, User } from '../../../services/auth.service';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-login',
-  imports: [FormsModule],
+  imports: [FormsModule, NgIconComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -20,7 +21,7 @@ export class LoginComponent implements OnInit {
     username: '',
     password: ''
   });
-  
+
   readonly loading = signal(false);
   readonly error = signal('');
   readonly infoMessage = signal('');
@@ -44,7 +45,7 @@ export class LoginComponent implements OnInit {
         this.loading.set(false);
         // Using window.location to strictly force a refresh is sometimes needed for auth state reset,
         // but typically router.navigate is preferred in SPAs. Keeping original logic but clean.
-        window.location.href = '/dashboard'; 
+        window.location.href = '/dashboard';
       },
       error: (err: unknown) => {
         // Safe access to error structure

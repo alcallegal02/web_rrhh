@@ -2,10 +2,11 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { PolicyBalance } from '../../../../services/vacation.service';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-vacation-balance-widget',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NgIconComponent],
   templateUrl: './vacation-balance-widget.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

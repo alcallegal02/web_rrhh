@@ -2,10 +2,11 @@ import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../../../../config/environment';
 import { UserAttachment } from '../../user-form.models';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-user-attachments',
-    imports: [CommonModule],
+    imports: [CommonModule, NgIconComponent],
     templateUrl: './user-attachments.component.html'
 })
 export class UserAttachmentsComponent {

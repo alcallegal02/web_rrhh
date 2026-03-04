@@ -1,10 +1,11 @@
 import { Component, signal, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-complaint-lookup',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, NgIconComponent],
     templateUrl: './complaint-lookup.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

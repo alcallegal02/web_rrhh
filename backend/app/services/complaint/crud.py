@@ -1,35 +1,45 @@
-from typing import Optional, List
+import re
+import secrets
+import string
 from datetime import datetime
 from uuid import UUID
-import string
-import secrets
-import re
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, text
-from sqlalchemy.orm import selectinload
 
-from app.models.complaint import Complaint, ComplaintCreate, ComplaintStatusLog, ComplaintStatus, ComplaintAttachment
-from app.utils.html_sanitizer import sanitize_html
-from app.utils.file_ops import delete_file_from_disk, sync_images_from_content
+from app.models.complaint import (
+    Complaint,
+    ComplaintAttachment,
+    ComplaintCreate,
+    ComplaintStatusLog,
+)
 from app.services.audit import log_action
+from app.utils.file_ops import delete_file_from_disk, sync_images_from_content
+from app.utils.html_sanitizer import sanitize_html
+
 
 async def process_and_save_complaint_files(
-    files: List[object], # List[UploadFile] really, but typing generic object to avoid dep cycle if needed, though we can import UploadFile under IF TYPE_CHECKING
+    files: list[object], # List[UploadFile] really, but typing generic object to avoid dep cycle if needed, though we can import UploadFile under IF TYPE_CHECKING
     session: AsyncSession,
     client_ip: str
-) -> List[dict]:
+) -> list[dict]:
     """
     Process, validate, convert (images) and save files for a complaint.
     Returns list of attachment dicts {file_url, file_original_name}.
     WARNING: Expects FastAPI UploadFile objects.
     """
-    from app.utils.upload_security import validate_payload_size, check_upload_quota
-    from app.config import settings
-    from app.utils.security import validate_file_extension, sanitize_filename, validate_magic_numbers
-    from app.utils.image_processing import process_image_to_webp
-    from app.utils.file_processing import save_file_organized
-    from pathlib import Path
     import logging
+    from pathlib import Path
+
+    from app.config import settings
+    from app.utils.file_processing import save_file_organized
+    from app.utils.image_processing import process_image_to_webp
+    from app.utils.security import (
+        sanitize_filename,
+        validate_file_extension,
+        validate_magic_numbers,
+    )
+    from app.utils.upload_security import check_upload_quota, validate_payload_size
     
     logger = logging.getLogger(__name__)
 
@@ -142,10 +152,10 @@ async def update_complaint_status(
     complaint_id: UUID,
     new_status: str,
     admin_id: UUID,
-    admin_notes: Optional[str] = None,
-    status_public_description: Optional[str] = None,
-    ip_address: Optional[str] = None
-) -> Optional[Complaint]:
+    admin_notes: str | None = None,
+    status_public_description: str | None = None,
+    ip_address: str | None = None
+) -> Complaint | None:
     """Update complaint status and record in log"""
     result = await session.execute(
         select(Complaint).where(Complaint.id == complaint_id)
@@ -156,6 +166,8 @@ async def update_complaint_status(
         return None
     
     old_status = complaint.status
+    old_admin_response = complaint.admin_response
+    
     complaint.status = new_status
     if status_public_description is not None:
         complaint.status_public_description = status_public_description
@@ -176,10 +188,15 @@ async def update_complaint_status(
     )
     session.add(status_log)
     
-    await session.commit()
-    await session.refresh(complaint)
-    
     # Audit Log (Global Audit - Security/Compliance Logic)
+    from app.services.audit import generate_diff, log_action
+    
+    diffs = {
+        "status": {"old": old_status, "new": new_status}
+    }
+    if admin_notes is not None and admin_notes != old_admin_response:
+        diffs["admin_response"] = {"old": "...", "new": "Updated"}
+
     await log_action(
         session=session,
         user_id=admin_id,
@@ -187,12 +204,14 @@ async def update_complaint_status(
         module="DENUNCIAS",
         details={
             "complaint_id": str(complaint.id),
-            "old_status": old_status,
-            "new_status": new_status,
-            "admin_notes": admin_notes
+            "complaint_code": complaint.code,
+            "changes": diffs
         },
         ip_address=ip_address
     )
+    
+    await session.commit()
+    await session.refresh(complaint)
     
     return complaint
 
@@ -201,21 +220,34 @@ async def delete_complaint(
     session: AsyncSession,
     complaint_id: UUID,
     user_id: UUID,
-    ip_address: Optional[str] = None
+    ip_address: str | None = None
 ) -> bool:
     """Delete a complaint and all its associated files"""
+    from sqlalchemy.orm import selectinload
     result = await session.execute(
         select(Complaint)
         .where(Complaint.id == complaint_id)
-        # .options(selectinload(Complaint.attachments))
+        .options(selectinload(Complaint.attachments))
     )
     complaint = result.scalar_one_or_none()
     
     if not complaint:
         return False
         
-    complaint_title = complaint.title # Capture for log
+    # Capture Full Snapshot for Audit BEFORE deletion
+    snapshot = complaint.model_dump()
+    snapshot['id'] = str(snapshot['id'])
+    if snapshot.get('created_at'):
+        snapshot['created_at'] = snapshot['created_at'].isoformat()
+    if snapshot.get('updated_at'):
+        snapshot['updated_at'] = snapshot['updated_at'].isoformat()
     
+    # Capture attachments
+    snapshot['attachments'] = [
+        {"file_url": att.file_url, "file_original_name": att.file_original_name} 
+        for att in complaint.attachments
+    ]
+
     # 1. Delete main attachment if exists (deprecated but kept for compatibility)
     if complaint.file_path:
         await delete_file_from_disk(complaint.file_path)
@@ -238,18 +270,23 @@ async def delete_complaint(
         text(f"DELETE FROM complaint_status_logs WHERE complaint_id = '{complaint_id}'")
     )
     
-    # 4. Delete the complaint record
-    await session.delete(complaint)
-    await session.commit()
-    
     # Audit Log
+    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=user_id,
         action="DELETE",
         module="DENUNCIAS",
-        details={"complaint_id": str(complaint_id), "title": complaint_title},
+        details={
+            "complaint_id": str(complaint_id), 
+            "complaint_code": complaint.code,
+            "full_snapshot": snapshot
+        },
         ip_address=ip_address
     )
+
+    # 4. Delete the complaint record
+    await session.delete(complaint)
+    await session.commit()
     
     return True

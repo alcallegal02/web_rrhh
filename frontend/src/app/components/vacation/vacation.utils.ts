@@ -1,25 +1,25 @@
 export class VacationUtils {
     static getIcon(type: string): string {
         const icons: Record<string, string> = {
-            'vacaciones': '🏖️',
-            'asuntos_propios': '📋',
-            'medico_general': '🏥',
-            'medico_especialista': '🩺',
-            'dias_compensados': '⚖️',
-            'licencia_retribuida': '📝',
-            'bolsa_horas': '💰',
-            'horas_sindicales': '📢',
-            'teletrabajo': '🏠',
-            'visita_clientes': '🤝',
-            'baja_enfermedad': '🤒',
-            'baja_accidente': '🚑',
-            'maternidad_paternidad': '👶',
-            'absentismo_no_retribuido': '🚫',
-            'licencia_no_retribuida': '💸',
-            'enfermo_en_casa': '🏠',
-            'permisos': '🔑'
+            'vacaciones': 'lucidePalmtree',
+            'asuntos_propios': 'lucideClipboardList',
+            'medico_general': 'lucideHospital',
+            'medico_especialista': 'lucideStethoscope',
+            'dias_compensados': 'lucideScale',
+            'licencia_retribuida': 'lucideFileText',
+            'bolsa_horas': 'lucideClock',
+            'horas_sindicales': 'lucideMegaphone',
+            'teletrabajo': 'lucideHome',
+            'visita_clientes': 'lucideHandshake',
+            'baja_enfermedad': 'lucideThermometer',
+            'baja_accidente': 'lucideAmbulance',
+            'maternidad_paternidad': 'lucideBaby',
+            'absentismo_no_retribuido': 'lucideBan',
+            'licencia_no_retribuida': 'lucideBanknote',
+            'enfermo_en_casa': 'lucideHome',
+            'permisos': 'lucideKey'
         };
-        return icons[type] || '📄';
+        return icons[type] || 'lucideFileText';
     }
 
     static getStatusClass(status: string): string {

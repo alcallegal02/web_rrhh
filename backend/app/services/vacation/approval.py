@@ -1,18 +1,18 @@
 from datetime import datetime
-from typing import List, Optional
 from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from sqlalchemy.orm import selectinload
 
-from app.models.vacation import VacationRequest, RequestStatus
 from app.models.user import User, UserRrhhLink
+from app.models.vacation import RequestStatus, VacationRequest
 from app.services.audit import log_action
+
 
 async def get_pending_manager_requests(
     session: AsyncSession,
     manager_id: str
-) -> List[VacationRequest]:
+) -> list[VacationRequest]:
     """Get pending requests assigned to a manager"""
     # Convert manager_id string to UUID
     manager_uuid = UUID(manager_id) if isinstance(manager_id, str) else manager_id
@@ -30,7 +30,7 @@ async def get_pending_manager_requests(
 async def get_pending_rrhh_requests(
     session: AsyncSession,
     rrhh_id: str
-) -> List[VacationRequest]:
+) -> list[VacationRequest]:
     """Get pending requests assigned to a RRHH user"""
     # Convert rrhh_id string to UUID
     rrhh_uuid = UUID(rrhh_id) if isinstance(rrhh_id, str) else rrhh_id
@@ -55,8 +55,8 @@ async def approve_by_manager(
     session: AsyncSession,
     request_id: str,
     manager_id: str,
-    ip_address: Optional[str] = None
-) -> Optional[VacationRequest]:
+    ip_address: str | None = None
+) -> VacationRequest | None:
     """Approve a vacation request by manager"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
     manager_uuid = UUID(manager_id) if isinstance(manager_id, str) else manager_id
@@ -80,10 +80,8 @@ async def approve_by_manager(
     if request.rrhh_approved_by:
         request.status = RequestStatus.ACCEPTED
     
-    await session.commit()
-    await session.refresh(request)
-    
     # Audit Log
+    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=manager_uuid,
@@ -92,10 +90,13 @@ async def approve_by_manager(
         details={
             "request_id": str(request.id),
             "requester_id": str(request.user_id),
-            "new_status": request.status
+            "changes": {"status": {"old": old_status, "new": request.status}}
         },
         ip_address=ip_address
     )
+    
+    await session.commit()
+    await session.refresh(request)
     
     return request
 
@@ -105,8 +106,8 @@ async def reject_by_manager(
     request_id: str,
     manager_id: str,
     reason: str,
-    ip_address: Optional[str] = None
-) -> Optional[VacationRequest]:
+    ip_address: str | None = None
+) -> VacationRequest | None:
     """Reject a vacation request by manager"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
     manager_uuid = UUID(manager_id) if isinstance(manager_id, str) else manager_id
@@ -127,10 +128,8 @@ async def reject_by_manager(
     request.manager_approved_at = datetime.utcnow()
     request.rejection_reason = reason
     
-    await session.commit()
-    await session.refresh(request)
-    
     # Audit Log
+    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=manager_uuid,
@@ -139,11 +138,15 @@ async def reject_by_manager(
         details={
             "request_id": str(request.id),
             "requester_id": str(request.user_id),
-            "reason": reason
+            "reason": reason,
+            "changes": {"status": {"old": old_status, "new": request.status}}
         },
         ip_address=ip_address
     )
 
+    await session.commit()
+    await session.refresh(request)
+    
     return request
 
 
@@ -151,8 +154,8 @@ async def approve_by_rrhh(
     session: AsyncSession,
     request_id: str,
     rrhh_id: str,
-    ip_address: Optional[str] = None
-) -> Optional[VacationRequest]:
+    ip_address: str | None = None
+) -> VacationRequest | None:
     """Approve a vacation request by RRHH (final approval)"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
     rrhh_uuid = UUID(rrhh_id) if isinstance(rrhh_id, str) else rrhh_id
@@ -171,6 +174,7 @@ async def approve_by_rrhh(
         if request.assigned_rrhh_id != rrhh_uuid:
             return None
     else:
+        # Check link
         link_result = await session.execute(
             select(UserRrhhLink).where(
                 UserRrhhLink.user_id == request.user_id,
@@ -190,10 +194,8 @@ async def approve_by_rrhh(
     if request.manager_approved_by:
         request.status = RequestStatus.ACCEPTED
     
-    await session.commit()
-    await session.refresh(request)
-    
     # Audit Log
+    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=rrhh_uuid,
@@ -202,10 +204,13 @@ async def approve_by_rrhh(
         details={
             "request_id": str(request.id),
             "requester_id": str(request.user_id),
-            "new_status": request.status
+            "changes": {"status": {"old": old_status, "new": request.status}}
         },
         ip_address=ip_address
     )
+    
+    await session.commit()
+    await session.refresh(request)
     
     return request
 
@@ -215,8 +220,8 @@ async def reject_by_rrhh(
     request_id: str,
     rrhh_id: str,
     reason: str,
-    ip_address: Optional[str] = None
-) -> Optional[VacationRequest]:
+    ip_address: str | None = None
+) -> VacationRequest | None:
     """Reject a vacation request by RRHH"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
     rrhh_uuid = UUID(rrhh_id) if isinstance(rrhh_id, str) else rrhh_id
@@ -235,6 +240,7 @@ async def reject_by_rrhh(
         if request.assigned_rrhh_id != rrhh_uuid:
             return None
     else:
+        # Check link
         link_result = await session.execute(
             select(UserRrhhLink).where(
                 UserRrhhLink.user_id == request.user_id,
@@ -252,10 +258,8 @@ async def reject_by_rrhh(
     request.rrhh_approved_at = datetime.utcnow()
     request.rejection_reason = reason
     
-    await session.commit()
-    await session.refresh(request)
-    
     # Audit Log
+    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=rrhh_uuid,
@@ -264,9 +268,13 @@ async def reject_by_rrhh(
         details={
             "request_id": str(request.id),
             "requester_id": str(request.user_id),
-            "reason": reason
+            "reason": reason,
+            "changes": {"status": {"old": old_status, "new": request.status}}
         },
         ip_address=ip_address
     )
+    
+    await session.commit()
+    await session.refresh(request)
     
     return request

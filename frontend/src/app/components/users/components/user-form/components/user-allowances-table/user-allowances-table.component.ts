@@ -1,15 +1,16 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DurationInputComponent } from '../../../../../shared/duration-input/duration-input.component';
 import { UserFormModel, AllowanceConcept } from '../../user-form.models';
+import { DurationInputComponent } from '../../../../../shared/duration-input/duration-input.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 // Re-export for convenience
 export { AllowanceConcept };
 
 @Component({
     selector: 'app-user-allowances-table',
-    imports: [CommonModule, FormsModule, DurationInputComponent],
+    imports: [CommonModule, FormsModule, DurationInputComponent, NgIconComponent],
     templateUrl: './user-allowances-table.component.html'
 })
 export class UserAllowancesTableComponent {

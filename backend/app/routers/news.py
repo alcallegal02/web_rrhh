@@ -1,15 +1,24 @@
-from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
+from typing import Annotated
+from typing import Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
-from app.routers.auth import get_current_user
+from app.models.news import NewsCreate, NewsResponse, NewsUpdate
 from app.models.user import User, UserRole
-from app.models.news import News, NewsCreate, NewsUpdate, NewsResponse
-from app.services.news import create_news, update_news_status, get_all_published_news, get_all_news, update_news, get_news_by_id, delete_news, get_latest_published_news
-
+from app.routers.auth import get_current_user
+from app.services.news import (
+    create_news,
+    delete_news,
+    get_all_news,
+    get_latest_published_news,
+    get_news_by_id,
+    update_news,
+    update_news_status,
+)
 
 router = APIRouter(tags=["news"])
 limiter = Limiter(key_func=get_remote_address)
@@ -19,9 +28,9 @@ limiter = Limiter(key_func=get_remote_address)
 @limiter.limit("5/minute")
 async def create_news_item(
     request: Request,
-    news_data: NewsCreate,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    news_data: NewsCreate
 ):
     """Create a new news item (RRHH/admin/superadmin)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -34,13 +43,13 @@ async def create_news_item(
     return NewsResponse.model_validate(news)
 
 
-@router.get("", response_model=List[NewsResponse])
+@router.get("", response_model=list[NewsResponse])
 async def get_news(
-    status: Optional[str] = Query(None, description="Filter by status: borrador, publicada, archivada"),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    status: Annotated[str | None, Query(description="Filter by status: borrador, publicada, archivada")] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0)] = 0
 ):
     """Get news - with automatic status filtering based on role"""
     news_list = await get_all_news(
@@ -56,8 +65,8 @@ async def get_news(
 
 @router.get("/latest", response_model=Optional[NewsResponse])
 async def get_latest_news_item(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get the most recent published news article (for dashboard popup)"""
     news = await get_latest_published_news(session)
@@ -70,10 +79,10 @@ async def get_latest_news_item(
 @limiter.limit("10/minute")
 async def update_news_status_endpoint(
     request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
     news_id: str,
-    new_status: str = Query(..., description="New status: borrador, publicada, archivada"),
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    new_status: Annotated[str, Query(description="New status: borrador, publicada, archivada")]
 ):
     """Update news status (RRHH/superadmin)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -100,10 +109,10 @@ async def update_news_status_endpoint(
 
 @router.delete("/{news_id}")
 async def delete_news_item(
-    news_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    news_id: str
 ):
     """Delete a news item (RRHH/superadmin)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -126,10 +135,10 @@ async def delete_news_item(
 @limiter.limit("10/minute")
 async def update_news_item(
     request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
     news_id: str,
-    news_data: NewsUpdate,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    news_data: NewsUpdate
 ):
     """Update a news item (RRHH/superadmin)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -158,9 +167,9 @@ async def update_news_item(
 
 @router.get("/{news_id}", response_model=NewsResponse)
 async def get_news_item(
-    news_id: str,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    news_id: str
 ):
     """Get a single news item by ID (with security matching role)"""
     news = await get_news_by_id(session, news_id, user_role=current_user.role)

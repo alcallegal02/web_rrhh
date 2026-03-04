@@ -2,7 +2,7 @@
     id="newsForm">
     <div class="flex items-center justify-between mb-10 pb-6 border-b border-white/10">
         <h2 class="text-3xl font-black text-white flex items-center gap-3">
-            <span class="text-4xl">✍️</span>
+            <span class="text-4xl flex items-center"><ng-icon name="lucidePencil"></ng-icon></span>
             @if (initialData()) { Editar Noticia } @else { Publicar Noticia }
         </h2>
     </div>
@@ -52,15 +52,10 @@
             <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Contenido de la
                 Noticia</label>
             <div class="rounded-2xl overflow-hidden border border-white/10 shadow-inner bg-white">
-                @defer (on viewport) {
                 <app-rich-text-editor [ngModel]="form().content" (ngModelChange)="updateField('content', $event)"
                     name="content" [quillModules]="quillModules" [height]="'450px'"
                     [placeholder]="'Empieza a escribir aquí...'" (contentChange)="onEditorContentChange($event)"
                     [module]="'news'" required></app-rich-text-editor>
-                } @placeholder {
-                <div class="h-[450px] flex items-center justify-center bg-white/5 text-white/40 italic">Cargando editor
-                    de texto...</div>
-                }
             </div>
         </div>
 
@@ -73,9 +68,9 @@
                     <select [ngModel]="form().status" (ngModelChange)="updateField('status', $event)" name="status"
                         required
                         class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all font-bold appearance-none text-gray-800">
-                        <option value="borrador">📝 Borrador (Solo tú lo verás)</option>
-                        <option value="publicada">📢 Publicada (Visible para todos)</option>
-                        <option value="archivada">📦 Archivada (Oculta del tablón)</option>
+                        <option value="borrador">Borrador (Solo tú lo verás)</option>
+                        <option value="publicada">Publicada (Visible para todos)</option>
+                        <option value="archivada">Archivada (Oculta del tablón)</option>
                     </select>
                     <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                         ▼
@@ -96,7 +91,9 @@
         <!-- File Upload Section -->
         <div class="bg-blue-900/20 rounded-3xl p-8 border border-white/5 space-y-6">
             <div class="flex items-center justify-between">
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">📁 Documentos
+                <label
+                    class="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/60"><ng-icon
+                        name="lucideFolderOpen"></ng-icon> Documentos
                     Adjuntos</label>
                 @if (uploading()) {
                 <span class="flex items-center gap-2 text-xs font-bold text-white animate-pulse">
@@ -112,7 +109,8 @@
                         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" [disabled]="uploading()">
                     <div
                         class="w-full py-10 border-2 border-dashed border-white/10 rounded-[1.5rem] bg-white/5 group-hover:bg-white/10 transition-all flex flex-col items-center justify-center gap-3">
-                        <span class="text-3xl">📎</span>
+                        <span class="text-3xl flex items-center text-white/50"><ng-icon
+                                name="lucidePaperclip"></ng-icon></span>
                         <span class="text-xs font-black uppercase tracking-widest text-white">Haz clic o arrastra
                             documentos aquí</span>
                         <span class="text-[10px] text-white/40 tracking-tight">PDF, DOC, DOCX, TXT o RTF (Máx.
@@ -127,12 +125,12 @@
                     <div
                         class="group flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl shadow-sm border border-white/5 hover:border-white/20 transition-all">
                         <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
-                            class="text-xs text-white/80 font-bold hover:text-white transition-colors truncate max-w-[200px]">
-                            📎 {{ att.file_original_name || 'documento' }}
+                            class="text-xs text-white/80 font-bold hover:text-white transition-colors truncate max-w-[200px] flex items-center gap-1">
+                            <ng-icon name="lucidePaperclip"></ng-icon> {{ att.file_original_name || 'documento' }}
                         </a>
                         <button type="button" (click)="removeExistingFile($index)"
                             class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs"
-                            title="Eliminar archivo">✕</button>
+                            title="Eliminar archivo"><ng-icon name="lucideX"></ng-icon></button>
                     </div>
                     }
                     }
@@ -142,12 +140,12 @@
                     <div
                         class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-white ring-2 ring-white/20 ring-offset-2 ring-offset-inespasa-dark animate-bounceIn">
                         <button type="button" (click)="downloadLocalFile(item.file)"
-                            class="text-xs text-inespasa-dark font-black truncate max-w-[200px]">
-                            📁 {{ item.file.name }}
+                            class="text-xs text-inespasa-dark font-black truncate max-w-[200px] flex items-center gap-1">
+                            <ng-icon name="lucideFolder"></ng-icon> {{ item.file.name }}
                         </button>
                         <button type="button" (click)="removePendingFile($index)"
                             class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all text-xs"
-                            title="Quitar archivo">✕</button>
+                            title="Quitar archivo"><ng-icon name="lucideX"></ng-icon></button>
                     </div>
                     }
                 </div>
@@ -156,7 +154,7 @@
             @if (uploadError()) {
             <div
                 class="bg-red-500/10 text-red-400 p-4 rounded-xl text-xs font-bold flex items-center gap-2 animate-shake">
-                <span>⚠️</span> {{ uploadError() }}
+                <ng-icon name="lucideTriangleAlert"></ng-icon> {{ uploadError() }}
             </div>
             }
         </div>
@@ -167,7 +165,7 @@
                 [disabled]="uploading() || !newsForm.valid || (totalUploadSize() + embeddedImagesSize()) > configService.maxNewsPayloadBytes"
                 class="group relative flex-1 md:flex-none flex items-center justify-center gap-3 bg-white text-inespasa-dark px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-black/20 hover:bg-blue-50 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100">
                 @if (!uploading()) {
-                <span class="text-lg">💾</span>
+                <span class="text-lg flex items-center"><ng-icon name="lucideCheck"></ng-icon></span>
                 <span>@if (initialData()) { Actualizar } @else { Publicar Noticia }</span>
                 } @else {
                 <span

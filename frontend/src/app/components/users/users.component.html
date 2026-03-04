@@ -16,7 +16,8 @@
                     class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                     placeholder="Buscar empleado..." [ngModel]="sidebarSearch()"
                     (ngModelChange)="sidebarSearch.set($event)">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">�</span>
+                <ng-icon name="lucideSearch"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></ng-icon>
             </div>
         </div>
 
@@ -58,7 +59,7 @@
             </div>
             } @empty {
             <div class="p-8 text-center text-gray-400">
-                <span class="text-2xl block mb-2">🔘</span>
+                <ng-icon name="lucideSearch" class="text-2xl block mb-2 opacity-50"></ng-icon>
                 <p class="text-[10px] font-bold uppercase tracking-widest">Sin resultados</p>
             </div>
             }
@@ -80,8 +81,8 @@
         } @else {
         <div class="h-full flex flex-col items-center justify-center text-center p-12">
             <div
-                class="w-24 h-24 bg-white rounded-3xl shadow-xl border border-gray-100 flex items-center justify-center text-4xl mb-6 animate-bounce duration-[3s]">
-                📁
+                class="w-24 h-24 bg-white rounded-3xl shadow-xl border border-gray-100 flex items-center justify-center text-4xl mb-6 animate-bounce duration-[3s] text-blue-500">
+                <ng-icon name="lucideFolderOpen"></ng-icon>
             </div>
             <h2 class="text-2xl font-black text-[#002855] mb-2 tracking-tight">Gestión de Expedientes</h2>
             <p class="text-gray-400 max-w-sm mb-8 text-sm leading-relaxed">
@@ -90,13 +91,13 @@
             </p>
             <div class="flex gap-4">
                 <div class="flex flex-col items-center gap-1 opacity-40">
-                    <span class="text-lg">👥</span>
+                    <ng-icon name="lucideUsers" class="text-lg"></ng-icon>
                     <span class="text-[9px] font-black uppercase tracking-widest">{{ users().length }}
                         Empleados</span>
                 </div>
                 <div class="w-px h-8 bg-gray-200"></div>
                 <div class="flex flex-col items-center gap-1 opacity-40">
-                    <span class="text-lg">🏢</span>
+                    <ng-icon name="lucideBuilding2" class="text-lg"></ng-icon>
                     <span class="text-[9px] font-black uppercase tracking-widest">INESPASA RRHH</span>
                 </div>
             </div>

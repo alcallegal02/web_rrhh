@@ -1,16 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
-from fastapi.responses import FileResponse
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
 from pathlib import Path
 from typing import Optional
 
-from app.database import get_session
-from app.routers.auth import get_current_user
-from app.models.user import User, UserRole
-from app.config import settings
-from app.services.upload import UploadService
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi.responses import FileResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.config import settings
+from app.database import get_session
+from app.models.user import User, UserRole
+from app.routers.auth import get_current_user
+from app.services.upload import UploadService
 
 router = APIRouter(tags=["upload"])
 limiter = Limiter(key_func=get_remote_address)
@@ -19,10 +21,10 @@ limiter = Limiter(key_func=get_remote_address)
 @limiter.limit("5/minute")
 async def upload_image(
     request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
     file: UploadFile = File(...),
-    module: str = "common",
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    module: str = "common"
 ):
     """Upload an image file (RRHH/superadmin only)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -45,9 +47,9 @@ async def upload_image(
 @limiter.limit("5/minute")
 async def upload_image_anonymous(
     request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
     file: UploadFile = File(...),
-    module: str = "complaints",
-    session: AsyncSession = Depends(get_session)
+    module: str = "complaints"
 ):
     """Upload an image file anonymously (for complaints)"""
     return await UploadService.process_upload(
@@ -64,10 +66,10 @@ async def upload_image_anonymous(
 @limiter.limit("5/minute")
 async def upload_document(
     request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
     file: UploadFile = File(...),
-    module: str = "common",
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    module: str = "common"
 ):
     """Upload a document file"""
     # Permission Logic
@@ -88,10 +90,7 @@ async def upload_document(
     )
 
 @router.get("/download")
-async def download_file(
-    file_path: str,
-    original_name: Optional[str] = None
-):
+async def download_file(file_path: str, original_name: str | None = None):
     """
     Proxy download endpoint to serve files.
     file_path should be the relative path stored in DB (e.g., /uploads/complaints/documents/hash.pdf.gz)

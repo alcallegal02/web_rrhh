@@ -1,6 +1,8 @@
-from typing import List, Optional
-from sqlmodel import SQLModel
+
 from uuid import UUID
+
+from sqlmodel import SQLModel
+
 
 class PolicyBalance(SQLModel):
     policy_id: UUID
@@ -25,4 +27,4 @@ class PolicyBalance(SQLModel):
 
 class VacationBalanceResponse(SQLModel):
     daily_work_hours: float
-    balances: List[PolicyBalance]
+    balances: list[PolicyBalance]

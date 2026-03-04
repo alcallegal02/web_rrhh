@@ -12,7 +12,7 @@
                 <div class="sm:flex sm:items-start">
                     <div
                         class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
-                        <span class="text-xl">👤</span>
+                        <ng-icon name="lucideUser" class="text-xl"></ng-icon>
                     </div>
                     <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
                         <h3 class="text-base font-semibold leading-6 text-gray-900" id="modal-title">Mi Perfil</h3>
@@ -44,7 +44,7 @@
                             <div class="text-start">
                                 <button (click)="requestOtp()" [disabled]="loading()"
                                     class="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
-                                    🔐 Cambiar contraseña
+                                    <ng-icon name="lucideLockKeyhole"></ng-icon> Cambiar contraseña
                                 </button>
                                 <p class="text-xs text-gray-500 mt-1">
                                     Se enviará un código de verificación a tu correo.

@@ -40,7 +40,7 @@
             <button (click)="activeMainTab.set('personal')"
                 [class]="activeMainTab() === 'personal' ? 'border-inespasa-dark text-inespasa-dark' : 'border-transparent text-slate-400 hover:text-slate-600'"
                 class="px-8 py-4 border-b-2 font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2">
-                <span>👤 Mis Solicitudes</span>
+                <span class="flex items-center gap-1"><ng-icon name="lucideUser"></ng-icon> Mis Solicitudes</span>
                 @if (myRequests().length > 0) {
                 <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px]">{{ myRequests().length
                     }}</span>
@@ -50,7 +50,7 @@
             <button (click)="activeMainTab.set('team')"
                 [class]="activeMainTab() === 'team' ? 'border-inespasa-dark text-inespasa-dark' : 'border-transparent text-slate-400 hover:text-slate-600'"
                 class="px-8 py-4 border-b-2 font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2">
-                <span>👥 Gestión de Equipo</span>
+                <span class="flex items-center gap-1"><ng-icon name="lucideUsers"></ng-icon> Gestión de Equipo</span>
                 @if ((managerRequests().length + rrhhRequests().length) > 0) {
                 <span class="px-1.5 py-0.5 bg-red-500 text-white rounded text-[9px] animate-pulse">{{
                     (managerRequests().length + rrhhRequests().length) }}</span>
@@ -73,7 +73,7 @@
         } @else if (myRequests().length === 0) {
         <div class="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
             <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span class="text-4xl text-slate-300">📄</span>
+                <span class="text-4xl flex items-center text-slate-300"><ng-icon name="lucideFileText"></ng-icon></span>
             </div>
             <h2 class="text-xl font-black text-slate-800 mb-2">Sin solicitudes registradas</h2>
             <p class="text-slate-500 text-sm max-w-xs mx-auto">Aún no has realizado ninguna solicitud de vacaciones o
@@ -102,20 +102,24 @@
                                 <!-- Status Badge -->
                                 @if (req.status === 'accepted') {
                                 <span
-                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-green-50 text-green-600 border border-green-100">✅
+                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-green-50 text-green-600 border border-green-100 flex items-center gap-1"><ng-icon
+                                        name="lucideCheckCircle2"></ng-icon>
                                     Aceptada</span>
                                 } @else if (req.status === 'rejected' || req.status === 'rejected_manager' || req.status
                                 === 'rejected_rrhh') {
                                 <span
-                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-100">❌
+                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 flex items-center gap-1"><ng-icon
+                                        name="lucideXCircle"></ng-icon>
                                     Rechazada</span>
                                 } @else if (req.status === 'borrador') {
                                 <span
-                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200">📝
+                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200 flex items-center gap-1"><ng-icon
+                                        name="lucidePencil"></ng-icon>
                                     Borrador</span>
                                 } @else {
                                 <span
-                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 animate-pulse">⏳
+                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 animate-pulse flex items-center gap-1"><ng-icon
+                                        name="lucideHourglass"></ng-icon>
                                     Pendiente</span>
                                 }
                             </div>
@@ -193,7 +197,8 @@
                 Consultando equipo...</div>
             } @else if (managerRequests().length === 0) {
             <div class="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
-                <span class="text-4xl mb-6 block">🌟</span>
+                <span class="text-4xl mb-6 flex justify-center text-slate-300"><ng-icon
+                        name="lucideStar"></ng-icon></span>
                 <p class="text-slate-400 font-black uppercase tracking-widest text-xs">No hay solicitudes pendientes de
                     validación operativa</p>
             </div>
@@ -240,7 +245,8 @@
                         @if (req.file_url) {
                         <a [href]="req.file_url" target="_blank"
                             class="inline-flex items-center gap-2 text-xs font-black text-blue-600 hover:text-blue-700 uppercase tracking-widest">
-                            <span>📎 Documento adjunto</span>
+                            <span class="flex items-center gap-1"><ng-icon name="lucidePaperclip"></ng-icon> Documento
+                                adjunto</span>
                         </a>
                         }
                     </div>
@@ -249,12 +255,14 @@
                         <button (click)="approveManager(req)" [disabled]="processing() === req.id"
                             class="group relative w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all overflow-hidden">
                             <span class="relative z-10 flex items-center justify-center gap-2">
-                                <span>✅ Validar Solicitud</span>
+                                <span class="flex items-center gap-1"><ng-icon name="lucideCheck"></ng-icon> Validar
+                                    Solicitud</span>
                             </span>
                         </button>
                         <button (click)="rejectManager(req)" [disabled]="processing() === req.id"
                             class="w-full py-4 bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
-                            <span>❌ Rechazar</span>
+                            <span class="flex items-center justify-center gap-1"><ng-icon name="lucideX"></ng-icon>
+                                Rechazar</span>
                         </button>
                     </div>
                 </div>
@@ -272,7 +280,8 @@
                 Accediendo a sistema RRHH...</div>
             } @else if (rrhhRequests().length === 0) {
             <div class="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-slate-200">
-                <span class="text-4xl mb-6 block">🏢</span>
+                <span class="text-4xl mb-6 flex justify-center text-slate-300"><ng-icon
+                        name="lucideBuilding2"></ng-icon></span>
                 <p class="text-slate-400 font-black uppercase tracking-widest text-xs">Sin pendientes de validación
                     final de RRHH</p>
             </div>
@@ -341,12 +350,13 @@
 
                     <div class="flex flex-col justify-center gap-3 min-w-[220px]">
                         <button (click)="approveRRHH(req)" [disabled]="processing() === req.id"
-                            class="w-full py-4 bg-inespasa-dark hover:bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-inespasa-dark/20">
-                            <span>✅ Firma Final RRHH</span>
+                            class="w-full py-4 bg-inespasa-dark hover:bg-slate-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-xl shadow-inespasa-dark/20 flex justify-center">
+                            <span class="flex items-center gap-1"><ng-icon name="lucideCheck"></ng-icon> Firma Final
+                                RRHH</span>
                         </button>
                         <button (click)="rejectRRHH(req)" [disabled]="processing() === req.id"
-                            class="w-full py-4 bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 rounded-2xl font-black text-xs uppercase tracking-widest transition-all">
-                            <span>❌ Rechazar</span>
+                            class="w-full py-4 bg-white border-2 border-red-100 text-red-600 hover:bg-red-50 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex justify-center">
+                            <span class="flex items-center gap-1"><ng-icon name="lucideX"></ng-icon> Rechazar</span>
                         </button>
                     </div>
                 </div>

@@ -16,6 +16,7 @@ import { VacationBalanceWidgetComponent } from './components/vacation-balance-wi
 import { EthicalChannelWidgetComponent } from './components/ethical-channel-widget/ethical-channel-widget.component';
 import { NewsCarouselWidgetComponent } from './components/news-carousel-widget/news-carousel-widget.component';
 import { MyRequestsStatusWidgetComponent } from './components/my-requests-status-widget/my-requests-status-widget.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -27,7 +28,8 @@ import { MyRequestsStatusWidgetComponent } from './components/my-requests-status
     VacationBalanceWidgetComponent,
     EthicalChannelWidgetComponent,
     NewsCarouselWidgetComponent,
-    MyRequestsStatusWidgetComponent
+    MyRequestsStatusWidgetComponent,
+    NgIconComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',

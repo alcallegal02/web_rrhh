@@ -1,21 +1,21 @@
-from typing import List, Dict
+from typing import Annotated
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
 from sqlmodel import select
 
 from app.database import get_session
-from app.models.user import User, UserManagerLink
+from app.models.user import User, UserRole
 from app.routers.auth import get_current_user
-from app.models.user import UserRole
 
 router = APIRouter(prefix="/org-chart", tags=["orgchart"])
 
 
-@router.get("", response_model=List[Dict])
+@router.get("", response_model=list[dict])
 async def get_org_chart(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     # Any authenticated user can access
     # Eager load managers

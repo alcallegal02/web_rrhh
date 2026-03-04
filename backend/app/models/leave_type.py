@@ -1,14 +1,15 @@
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
-from uuid import UUID, uuid4
 from datetime import datetime
+from uuid import UUID, uuid4
+
+from sqlmodel import Field, SQLModel
+
 
 class LeaveType(SQLModel, table=True):
     __tablename__ = "leave_types"
     
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     name: str = Field(index=True)
-    description: Optional[str] = None
+    description: str | None = None
     
     # Configuration
     days_allocated: int = Field(default=1) # 0 for unlimited/variable? Or use null? Let's say default 1.
@@ -26,7 +27,7 @@ class LeaveType(SQLModel, table=True):
     
 class LeaveTypeCreate(SQLModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     days_allocated: int = 1
     is_work_days: bool = False
     requires_justification: bool = True
@@ -35,7 +36,7 @@ class LeaveTypeCreate(SQLModel):
 class LeaveTypeResponse(SQLModel):
     id: UUID
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     days_allocated: int
     is_work_days: bool
     requires_justification: bool

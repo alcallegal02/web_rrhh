@@ -2,10 +2,11 @@ import { Component, input, output, ChangeDetectionStrategy } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { UserResponse } from '../../../../services/user.service';
 import { environment } from '../../../../config/environment';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-user-list',
-    imports: [CommonModule],
+    imports: [CommonModule, NgIconComponent],
     templateUrl: './user-list.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

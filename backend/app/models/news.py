@@ -1,9 +1,9 @@
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 from uuid import UUID, uuid4
-from sqlalchemy import Column, Enum as SAEnum
+
+from pydantic import ConfigDict
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class NewsStatus(str, Enum):
@@ -18,7 +18,7 @@ class NewsAttachmentResponse(SQLModel):
     id: UUID
     news_id: UUID
     file_url: str
-    file_original_name: Optional[str] = None
+    file_original_name: str | None = None
     created_at: datetime
 
 
@@ -28,7 +28,7 @@ class NewsAttachment(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     news_id: UUID = Field(foreign_key="news.id")
     file_url: str
-    file_original_name: Optional[str] = None
+    file_original_name: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     news: "News" = Relationship(back_populates="attachments")
@@ -38,16 +38,16 @@ class News(SQLModel, table=True):
     
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     title: str
-    summary: Optional[str] = None
+    summary: str | None = None
     content: str
-    cover_image_url: Optional[str] = None
+    cover_image_url: str | None = None
     author_id: UUID = Field(foreign_key="users.id", index=True)
     status: str = Field(default="borrador", index=True)
-    publish_date: Optional[datetime] = Field(default=None, index=True)
+    publish_date: datetime | None = Field(default=None, index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
-    attachments: List["NewsAttachment"] = Relationship(back_populates="news", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    attachments: list["NewsAttachment"] = Relationship(back_populates="news", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     
     @property
     def status_enum(self) -> NewsStatus:
@@ -60,37 +60,36 @@ class News(SQLModel, table=True):
 
 class NewsCreate(SQLModel):
     title: str
-    summary: Optional[str] = None
+    summary: str | None = None
     content: str
-    cover_image_url: Optional[str] = None
+    cover_image_url: str | None = None
     status: str = "borrador"
-    publish_date: Optional[datetime] = None
-    attachments: Optional[List[dict]] = None
+    publish_date: datetime | None = None
+    attachments: list[dict] | None = None
 
 
 class NewsUpdate(SQLModel):
-    title: Optional[str] = None
-    summary: Optional[str] = None
-    content: Optional[str] = None
-    cover_image_url: Optional[str] = None
-    status: Optional[str] = None
-    publish_date: Optional[datetime] = None
-    attachments: Optional[List[dict]] = None
+    title: str | None = None
+    summary: str | None = None
+    content: str | None = None
+    cover_image_url: str | None = None
+    status: str | None = None
+    publish_date: datetime | None = None
+    attachments: list[dict] | None = None
 
 
 class NewsResponse(SQLModel):
     id: UUID
     title: str
-    summary: Optional[str] = None
+    summary: str | None = None
     content: str
-    cover_image_url: Optional[str] = None
+    cover_image_url: str | None = None
     author_id: UUID
     status: str
-    publish_date: Optional[datetime] = None
-    attachments: List[NewsAttachmentResponse] = []
+    publish_date: datetime | None = None
+    attachments: list[NewsAttachmentResponse] = []
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 

@@ -10,9 +10,11 @@
             </div>
             <h2 class="text-2xl font-black flex items-center gap-2">
                 @if (form().id) {
-                <span class="bg-white/10 p-2 rounded-lg">👤</span> Editar Perfil de Empleado
+                <span class="bg-white/10 p-2 rounded-lg"><ng-icon name="lucideUser"></ng-icon></span> Editar Perfil de
+                Empleado
                 } @else {
-                <span class="bg-white/10 p-2 rounded-lg">🆕</span> Nuevo Registro de Usuario
+                <span class="bg-white/10 p-2 rounded-lg"><ng-icon name="lucideUserPlus"></ng-icon></span> Nuevo Registro
+                de Usuario
                 }
             </h2>
             @if (form().id) {
@@ -23,12 +25,12 @@
             <button
                 class="flex-1 md:flex-none bg-white text-[#002855] hover:bg-blue-50 px-6 py-2.5 rounded-lg font-bold transition-all shadow-md flex items-center justify-center gap-2"
                 (click)="onSubmit()" [disabled]="isLoading() || uploadingPhoto() || uploadingAttachments()">
-                <span class="text-lg">💾</span> Guardar Cambios
+                <ng-icon name="lucideSave" class="text-lg"></ng-icon> Guardar Cambios
             </button>
             <button
                 class="flex-1 md:flex-none bg-[#002855] text-white border border-white/20 hover:bg-white/10 px-6 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
                 (click)="cancel.emit()">
-                <span class="text-lg">✖️</span> Cancelar
+                <ng-icon name="lucideX" class="text-lg"></ng-icon> Cancelar
             </button>
         </div>
     </div>
@@ -86,7 +88,9 @@
 
     <!-- Footer Action Bar (Mobile only or extra reminder) -->
     <div class="lg:hidden bg-white p-4 rounded-xl shadow-xl flex gap-2 border border-gray-100">
-        <button class="flex-1 btn-primary py-3" (click)="onSubmit()">💾 Guardar</button>
-        <button class="flex-1 btn-secondary py-3" (click)="cancel.emit()">✖️ Salir</button>
+        <button class="flex-1 btn-primary py-3 flex items-center justify-center gap-2" (click)="onSubmit()"><ng-icon
+                name="lucideSave"></ng-icon> Guardar</button>
+        <button class="flex-1 btn-secondary py-3 flex items-center justify-center gap-2"
+            (click)="cancel.emit()"><ng-icon name="lucideX"></ng-icon> Salir</button>
     </div>
 </div>

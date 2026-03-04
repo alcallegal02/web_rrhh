@@ -1,5 +1,4 @@
 import logging
-import time
 
 # Configure logging FIRST
 logging.basicConfig(
@@ -8,20 +7,36 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-from fastapi import FastAPI, Request, HTTPException, status
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 from slowapi import Limiter
-from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from contextlib import asynccontextmanager
+from slowapi.util import get_remote_address
 
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, vacation, news, complaint, websocket, holiday, users, orgchart, upload, config, convenio, leave_types, audit, policies
-from app.websocket.manager import websocket_manager
+from app.routers import (
+    audit,
+    auth,
+    complaint,
+    config,
+    convenio,
+    holiday,
+    leave_types,
+    news,
+    orgchart,
+    policies,
+    upload,
+    users,
+    vacation,
+    websocket,
+)
 from app.utils.brute_force import security_manager
+from app.websocket.manager import websocket_manager
 
 
 @asynccontextmanager
@@ -78,6 +93,7 @@ async def security_headers(request: Request, call_next):
 
 # Trusted Host Middleware (Layer 1 Security)
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+
 valid_hosts = [h for h in settings.allowed_hosts_list if h and h != "*"]
 if valid_hosts:
     app.add_middleware(

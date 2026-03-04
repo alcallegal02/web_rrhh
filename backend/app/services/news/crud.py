@@ -1,20 +1,22 @@
-from typing import Optional, Any
 from datetime import datetime
+from typing import Any
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
-from sqlalchemy.orm import selectinload
 
-from app.models.news import News, NewsCreate, NewsAttachment
-from app.utils.html_sanitizer import sanitize_html
-from app.utils.file_ops import delete_file_from_disk, sync_images_from_content
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlmodel import select
+
+from app.models.news import News, NewsAttachment, NewsCreate
 from app.services.audit import log_action
+from app.utils.file_ops import delete_file_from_disk, sync_images_from_content
+from app.utils.html_sanitizer import sanitize_html
+
 
 async def create_news(
     session: AsyncSession,
     author_id: str,
     news_data: NewsCreate,
-    ip_address: Optional[str] = None
+    ip_address: str | None = None
 ) -> News:
     """Create a new news item"""
     author_uuid = UUID(author_id) if isinstance(author_id, str) else author_id
@@ -66,6 +68,9 @@ async def create_news(
             "id": str(reloaded_news.id),
             "title": reloaded_news.title,
             "status": reloaded_news.status,
+            "summary": reloaded_news.summary,
+            "content": reloaded_news.content,
+            "cover_image_url": reloaded_news.cover_image_url,
             "has_attachments": bool(reloaded_news.attachments)
         },
         ip_address=ip_address
@@ -79,8 +84,8 @@ async def update_news_status(
     news_id: str,
     new_status: str,
     user_id: str,
-    ip_address: Optional[str] = None
-) -> Optional[News]:
+    ip_address: str | None = None
+) -> News | None:
     """Update news status"""
     news_uuid = UUID(news_id) if isinstance(news_id, str) else news_id
     result = await session.execute(
@@ -99,14 +104,8 @@ async def update_news_status(
     if new_status == 'publicada' and (old_status != 'publicada' or not news.publish_date):
         news.publish_date = datetime.utcnow()
     
-    await session.commit()
-    
-    # Reload with attachments
-    result = await session.execute(
-        select(News).where(News.id == news_uuid).options(selectinload(News.attachments))
-    )
-    
     # Audit Log
+    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=UUID(user_id) if isinstance(user_id, str) else user_id,
@@ -120,6 +119,13 @@ async def update_news_status(
         ip_address=ip_address
     )
 
+    await session.commit()
+    
+    # Reload with attachments
+    result = await session.execute(
+        select(News).where(News.id == news_uuid).options(selectinload(News.attachments))
+    )
+    
     return result.scalar_one()
 
 
@@ -127,27 +133,38 @@ async def delete_news(
     session: AsyncSession,
     news_id: str,
     user_id: str,
-    ip_address: Optional[str] = None
+    ip_address: str | None = None
 ) -> bool:
     """Delete a news item"""
     news_uuid = UUID(news_id)
     result = await session.execute(
-        select(News).where(News.id == news_uuid)
+        select(News).where(News.id == news_uuid).options(selectinload(News.attachments))
     )
     news = result.scalar_one_or_none()
     
     if not news:
         return False
         
-    news_title = news.title # Capture for log
+    # Capture Full Snapshot for Audit BEFORE deletion
+    snapshot = news.model_dump()
+    snapshot['id'] = str(snapshot['id'])
+    snapshot['author_id'] = str(snapshot['author_id'])
+    if snapshot.get('publish_date'):
+        snapshot['publish_date'] = snapshot['publish_date'].isoformat()
+    if snapshot.get('created_at'):
+        snapshot['created_at'] = snapshot['created_at'].isoformat()
+    if snapshot.get('updated_at'):
+        snapshot['updated_at'] = snapshot['updated_at'].isoformat()
+    
+    # Capture attachments in snapshot
+    snapshot['attachments'] = [
+        {"file_url": att.file_url, "file_original_name": att.file_original_name} 
+        for att in news.attachments
+    ]
 
-    # Delete associated files from disk BEFORE deleting record
+    # Delete associated files from disk
     # 1. Attachments
-    result_attachments = await session.execute(
-        select(NewsAttachment).where(NewsAttachment.news_id == news_uuid)
-    )
-    attachments = result_attachments.scalars().all()
-    for att in attachments:
+    for att in news.attachments:
         await delete_file_from_disk(att.file_url)
         
     # 2. Embedded images in content
@@ -161,18 +178,23 @@ async def delete_news(
     if news.cover_image_url:
         await delete_file_from_disk(news.cover_image_url)
     
-    await session.delete(news)
-    await session.commit()
-    
     # Audit Log
+    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=UUID(user_id) if isinstance(user_id, str) else user_id,
         action="DELETE",
         module="NOTICIAS",
-        details={"id": news_id, "title": news_title},
+        details={
+            "id": news_id, 
+            "title": news.title,
+            "full_snapshot": snapshot
+        },
         ip_address=ip_address
     )
+    
+    await session.delete(news)
+    await session.commit()
     
     return True
 
@@ -182,35 +204,26 @@ async def update_news(
     news_id: str,
     news_data: dict,
     current_user_id: str,
-    ip_address: Optional[str] = None
-) -> Optional[News]:
+    ip_address: str | None = None
+) -> News | None:
     """Update a news item"""
     news_uuid = UUID(news_id) if isinstance(news_id, str) else news_id
     result = await session.execute(
-        select(News).where(News.id == news_uuid)
+        select(News).where(News.id == news_uuid).options(selectinload(News.attachments))
     )
     news = result.scalar_one_or_none()
     
     if not news:
         return None
     
-    # Diff Logic
-    diffs = {}
-    def check_diff(field: str, new_val: Any, old_val: Any):
-        if new_val is not None:
-            # s_new = str(new_val) if isinstance(new_val, (UUID, datetime, date)) else new_val
-            # s_old = str(old_val) if isinstance(old_val, (UUID, datetime, date)) else old_val
-            # Simplified diff for now
-            if new_val != old_val:
-                 diffs[field] = {"old": str(old_val), "new": str(new_val)}
-
+    # Capture old state for diffing
+    old_state_dict = news.model_dump()
+    
     # Update fields if provided
     if 'title' in news_data and news_data['title'] is not None:
-        check_diff('title', news_data['title'], news.title)
         news.title = news_data['title']
     
     if 'summary' in news_data and news_data['summary'] is not None:
-        check_diff('summary', news_data['summary'], news.summary)
         news.summary = news_data['summary']
     
     if 'content' in news_data and news_data['content'] is not None:
@@ -219,49 +232,39 @@ async def update_news(
         
         # Sync images (delete orphans)
         await sync_images_from_content(news.content, sanitized_content)
-        
-        check_diff('content', 'updated', 'old_content') # Don't log full content
         news.content = sanitized_content
 
     if 'cover_image_url' in news_data:
         # Delete old cover image if it changed
         if news.cover_image_url and news.cover_image_url != news_data['cover_image_url']:
             await delete_file_from_disk(news.cover_image_url)
-        check_diff('cover_image_url', news_data['cover_image_url'], news.cover_image_url)
         news.cover_image_url = news_data['cover_image_url']
     
     if 'status' in news_data and news_data['status'] is not None:
         old_status = news.status
-        check_diff('status', news_data['status'], old_status)
         news.status = news_data['status']
         # Set publish_date when status changes to publicada from another status
         if news_data['status'] == 'publicada' and (old_status != 'publicada' or not news.publish_date):
             news.publish_date = datetime.utcnow()
     
     if 'publish_date' in news_data:
-        check_diff('publish_date', news_data['publish_date'], news.publish_date)
         news.publish_date = news_data['publish_date']
         
     # Attachments handling
+    attachments_updated = False
     if 'attachments' in news_data and news_data['attachments'] is not None:
-        # Get current attachments
-        result_attachments = await session.execute(
-            select(NewsAttachment).where(NewsAttachment.news_id == news_uuid)
-        )
-        current_attachments = result_attachments.scalars().all()
+        current_attachments = news.attachments
         current_urls = {att.file_url for att in current_attachments}
         
         new_attachments_data = news_data['attachments']
         new_urls = {att['file_url'] for att in new_attachments_data}
-        
-        attachments_changed = False
         
         # 1. Identify removed
         for att in current_attachments:
             if att.file_url not in new_urls:
                 await session.delete(att)
                 await delete_file_from_disk(att.file_url)
-                attachments_changed = True
+                attachments_updated = True
         
         # 2. Add new
         for att_data in new_attachments_data:
@@ -272,19 +275,18 @@ async def update_news(
                     file_original_name=att_data.get('file_original_name')
                 )
                 session.add(new_att)
-                attachments_changed = True
-        
-        if attachments_changed:
-            diffs['attachments'] = {"old": "...", "new": "Updated"}
-    
-    await session.commit()
-    
-    # Reload with attachments
-    result = await session.execute(
-        select(News).where(News.id == news_uuid).options(selectinload(News.attachments))
-    )
+                attachments_updated = True
     
     # Audit Log
+    from app.services.audit import generate_diff, log_action
+    
+    # Prepare new state dict for diff utility
+    new_state_dict = news.model_dump()
+    diffs = generate_diff(old_state_dict, new_state_dict)
+    
+    if attachments_updated:
+        diffs['attachments'] = {"old": "...", "new": "Updated"}
+    
     if diffs:
         await log_action(
             session=session,
@@ -293,9 +295,17 @@ async def update_news(
             module="NOTICIAS",
             details={
                 "id": str(news.id),
+                "title": news.title,
                 "changes": diffs
             },
             ip_address=ip_address
         )
+    
+    await session.commit()
+    
+    # Reload with attachments
+    result = await session.execute(
+        select(News).where(News.id == news_uuid).options(selectinload(News.attachments))
+    )
     
     return result.scalar_one()

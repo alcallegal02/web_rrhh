@@ -1,10 +1,11 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-user-danger-zone',
-    imports: [CommonModule],
-    templateUrl: './user-danger-zone.component.html'
+    imports: [CommonModule, NgIconComponent],
+    templateUrl: './user-danger-zone.component.html',
 })
 export class UserDangerZoneComponent {
     // Inputs

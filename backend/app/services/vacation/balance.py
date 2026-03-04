@@ -1,14 +1,16 @@
 from datetime import date
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, case, or_
-from sqlmodel import select
 from uuid import UUID
 
-from app.models.vacation import VacationRequest, RequestStatus
-from app.models.balance_dynamic import VacationBalanceResponse, PolicyBalance
+from sqlalchemy import func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+
+from app.models.balance_dynamic import PolicyBalance, VacationBalanceResponse
+from app.models.convenio import ConvenioConfig
 from app.models.policy import PermissionPolicy
 from app.models.user import User
-from app.models.convenio import ConvenioConfig
+from app.models.vacation import RequestStatus, VacationRequest
+
 
 async def get_vacation_balance(
     session: AsyncSession,

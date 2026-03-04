@@ -7,12 +7,13 @@ import { Holiday, HolidayType, HolidayCreate, HolidayUpdate } from '../../interf
 import { HolidayCalendarComponent } from './components/holiday-calendar/holiday-calendar.component';
 import { HolidayListComponent } from './components/holiday-list/holiday-list.component';
 import { HolidayFormComponent } from './components/holiday-form/holiday-form.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 type ViewMode = 'calendar' | 'list';
 
 @Component({
     selector: 'app-calendar-config',
-    imports: [CommonModule, FormsModule, HolidayCalendarComponent, HolidayListComponent, HolidayFormComponent],
+    imports: [CommonModule, FormsModule, HolidayCalendarComponent, HolidayListComponent, HolidayFormComponent, NgIconComponent],
     templateUrl: './calendar-config.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

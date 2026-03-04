@@ -1,6 +1,6 @@
-from typing import Union
 
-def parse_duration(v: Union[float, str]) -> float:
+
+def parse_duration(v: float | str) -> float:
     """
     Parses a duration that can be either a float (decimal hours) 
     or a string in "HH:mm" format.

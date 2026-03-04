@@ -1,11 +1,12 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { UserFormModel } from '../../user-form.models';
+import { UserFormModel } from '../../user-form.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-user-contract-info',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, NgIconComponent],
     templateUrl: './user-contract-info.component.html'
 })
 export class UserContractInfoComponent {

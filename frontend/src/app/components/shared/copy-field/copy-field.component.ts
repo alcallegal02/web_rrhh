@@ -1,9 +1,10 @@
 import { Component, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-copy-field',
-  imports: [CommonModule],
+  imports: [CommonModule, NgIconComponent],
   templateUrl: './copy-field.component.html',
   styleUrl: './copy-field.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

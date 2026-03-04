@@ -1,12 +1,13 @@
-from typing import List
 from uuid import UUID
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
-from app.models.user import User, UserRole, UserResponse, UserManagerLink, UserRrhhLink
+from app.models.user import User, UserManagerLink, UserResponse, UserRole, UserRrhhLink
 from app.services.user.common import map_to_response
+
 
 async def get_user_with_relations(session: AsyncSession, user_id: UUID) -> User:
     result = await session.execute(
@@ -25,7 +26,7 @@ async def get_user_with_relations(session: AsyncSession, user_id: UUID) -> User:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
     return user
 
-async def list_users(session: AsyncSession, actor_role: UserRole) -> List[UserResponse]:
+async def list_users(session: AsyncSession, actor_role: UserRole) -> list[UserResponse]:
     query = select(User).options(
         selectinload(User.attachments),
         selectinload(User.parent),

@@ -17,6 +17,7 @@ import { UserHierarchySelectorComponent } from './components/user-hierarchy-sele
 import { UserAllowancesTableComponent } from './components/user-allowances-table/user-allowances-table.component';
 import { UserAttachmentsComponent } from './components/user-attachments/user-attachments.component';
 import { UserDangerZoneComponent } from './components/user-danger-zone/user-danger-zone.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-user-form',
@@ -28,7 +29,8 @@ import { UserDangerZoneComponent } from './components/user-danger-zone/user-dang
         UserHierarchySelectorComponent,
         UserAllowancesTableComponent,
         UserAttachmentsComponent,
-        UserDangerZoneComponent
+        UserDangerZoneComponent,
+        NgIconComponent
     ],
     templateUrl: './user-form.component.html'
 })

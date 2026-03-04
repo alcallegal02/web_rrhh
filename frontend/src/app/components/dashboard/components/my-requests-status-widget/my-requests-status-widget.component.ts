@@ -2,10 +2,11 @@ import { Component, input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { VacationRequest } from '../../../../models/app.models';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-my-requests-status-widget',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, NgIconComponent],
   templateUrl: './my-requests-status-widget.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

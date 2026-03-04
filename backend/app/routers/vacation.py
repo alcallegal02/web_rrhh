@@ -1,33 +1,35 @@
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.database import get_session
-from app.routers.auth import get_current_user
-from app.models.user import User, UserRole, UserResponse, UserSummary, UserManagerLink, UserRrhhLink
+from app.models.balance_dynamic import VacationBalanceResponse
+from app.models.user import (
+    User,
+    UserResponse,
+    UserRole,
+)
 from app.models.vacation import (
     VacationRequest,
     VacationRequestCreate,
-    VacationRequestResponse
+    VacationRequestResponse,
 )
-from app.models.balance_dynamic import VacationBalanceResponse
+from app.routers.auth import get_current_user
 from app.services.vacation import (
+    approve_by_manager,
+    approve_by_rrhh,
     create_vacation_request,
-    submit_vacation_request,
-    get_user_vacation_requests,
+    get_available_responsibles_for_user,
     get_pending_manager_requests,
     get_pending_rrhh_requests,
-    approve_by_manager,
+    get_user_vacation_requests,
+    get_vacation_balance,
     reject_by_manager,
-    approve_by_rrhh,
     reject_by_rrhh,
-    get_vacation_balance,
-    get_vacation_balance,
+    submit_vacation_request,
     update_vacation_request,
-    get_available_responsibles_for_user
 )
-from sqlmodel import select
 
 router = APIRouter(tags=["vacation"])
 
@@ -76,8 +78,8 @@ def _map_request_response(req: VacationRequest) -> VacationRequestResponse:
 async def create_request(
     request_data: VacationRequestCreate,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Create a new vacation request (as draft)"""
     new_request = await create_vacation_request(session, str(current_user.id), request_data, ip_address=request.client.host)
@@ -86,11 +88,11 @@ async def create_request(
 
 @router.put("/{request_id}", response_model=VacationRequestResponse)
 async def update_request(
-    request_id: str,
     request_data: VacationRequestCreate,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request_id: str
 ):
     """Update a vacation request (draft only)"""
     updated_request = await update_vacation_request(session, request_id, request_data, str(current_user.id), ip_address=request.client.host)
@@ -99,10 +101,10 @@ async def update_request(
 
 @router.post("/{request_id}/submit", response_model=VacationRequestResponse)
 async def submit_request(
-    request_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request_id: str
 ):
     """Submit a vacation request (change status from borrador to pending)"""
     result = await submit_vacation_request(session, request_id, ip_address=request.client.host)
@@ -114,10 +116,10 @@ async def submit_request(
     return _map_request_response(result)
 
 
-@router.get("/my-requests", response_model=List[VacationRequestResponse])
+@router.get("/my-requests", response_model=list[VacationRequestResponse])
 async def get_my_requests(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get current user's vacation requests"""
     requests = await get_user_vacation_requests(session, str(current_user.id))
@@ -126,18 +128,18 @@ async def get_my_requests(
 
 @router.get("/balance", response_model=VacationBalanceResponse)
 async def get_balance(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get vacation balance for current user"""
     balance = await get_vacation_balance(session, str(current_user.id))
     return balance
 
 
-@router.get("/pending-manager", response_model=List[VacationRequestResponse])
+@router.get("/pending-manager", response_model=list[VacationRequestResponse])
 async def get_pending_for_manager(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get pending requests for manager approval"""
     requests = await get_pending_manager_requests(session, str(current_user.id))
@@ -146,10 +148,10 @@ async def get_pending_for_manager(
 
 @router.post("/{request_id}/approve-manager")
 async def approve_request_manager(
-    request_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request_id: str
 ):
     """Approve a vacation request as manager"""
     result = await approve_by_manager(session, request_id, str(current_user.id), ip_address=request.client.host)
@@ -163,11 +165,11 @@ async def approve_request_manager(
 
 @router.post("/{request_id}/reject-manager")
 async def reject_request_manager(
-    request_id: str,
-    reason: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request_id: str,
+    reason: str
 ):
     """Reject a vacation request as manager"""
     result = await reject_by_manager(session, request_id, str(current_user.id), reason, ip_address=request.client.host)
@@ -179,10 +181,10 @@ async def reject_request_manager(
     return _map_request_response(result)
 
 
-@router.get("/pending-rrhh", response_model=List[VacationRequestResponse])
+@router.get("/pending-rrhh", response_model=list[VacationRequestResponse])
 async def get_pending_for_rrhh(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get pending requests for RRHH approval"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -197,10 +199,10 @@ async def get_pending_for_rrhh(
 
 @router.post("/{request_id}/approve-rrhh")
 async def approve_request_rrhh(
-    request_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request_id: str
 ):
     """Approve a vacation request as RRHH (final approval)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -220,11 +222,11 @@ async def approve_request_rrhh(
 
 @router.post("/{request_id}/reject-rrhh")
 async def reject_request_rrhh(
-    request_id: str,
-    reason: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request_id: str,
+    reason: str
 ):
     """Reject a vacation request as RRHH"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -242,10 +244,10 @@ async def reject_request_rrhh(
     return _map_request_response(result)
 
 
-@router.get("/available-responsibles", response_model=List[UserResponse])
+@router.get("/available-responsibles", response_model=list[UserResponse])
 async def get_available_responsibles(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get list of your assigned managers and RRHH users"""
     return await get_available_responsibles_for_user(session, str(current_user.id))

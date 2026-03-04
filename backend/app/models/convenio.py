@@ -1,9 +1,8 @@
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, Union, List
+from datetime import date, datetime
 from uuid import UUID, uuid4
-from datetime import datetime, date
-from pydantic import field_validator
-from app.utils.duration import parse_duration
+
+from sqlmodel import Field, SQLModel
+
 
 class ConvenioConfig(SQLModel, table=True):
     __tablename__ = "convenio_config"
@@ -18,8 +17,8 @@ class ConvenioConfig(SQLModel, table=True):
     maternity_weeks_total: int = Field(default=16)
     maternity_weeks_mandatory: int = Field(default=6)
 
-    default_shift_start: Optional[str] = Field(default="08:00")
-    default_shift_end: Optional[str] = Field(default="16:00")
+    default_shift_start: str | None = Field(default="08:00")
+    default_shift_end: str | None = Field(default="16:00")
     
     valid_from: date = Field(default_factory=date.today)
     valid_to: date = Field(default_factory=date.today)
@@ -32,16 +31,16 @@ class ConvenioConfigCreate(SQLModel):
     daily_work_hours: float = 8.0
     maternity_weeks_total: int = 16
     maternity_weeks_mandatory: int = 6
-    default_shift_start: Optional[str] = "08:00"
-    default_shift_end: Optional[str] = "16:00"
+    default_shift_start: str | None = "08:00"
+    default_shift_end: str | None = "16:00"
     valid_from: date
     valid_to: date
 
 class ConvenioConfigUpdate(SQLModel):
-    daily_work_hours: Optional[float] = None
-    maternity_weeks_total: Optional[int] = None
-    maternity_weeks_mandatory: Optional[int] = None
-    default_shift_start: Optional[str] = None
-    default_shift_end: Optional[str] = None
-    valid_from: Optional[date] = None
-    valid_to: Optional[date] = None
+    daily_work_hours: float | None = None
+    maternity_weeks_total: int | None = None
+    maternity_weeks_mandatory: int | None = None
+    default_shift_start: str | None = None
+    default_shift_end: str | None = None
+    valid_from: date | None = None
+    valid_to: date | None = None

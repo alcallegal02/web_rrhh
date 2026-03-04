@@ -5,6 +5,7 @@ import { form, field } from '../../../../utils/signal-forms';
 import { PolicyService } from '../../../../services/policy.service';
 import { ResponsibleUser, VacationService, VacationBalance } from '../../../../services/vacation.service';
 import { VacationRequestDraft } from '../vacation-request-form/vacation-request-form.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 export interface FormFieldSchema {
     name: string;
@@ -29,7 +30,7 @@ export interface DynamicFormSchema {
 
 @Component({
     selector: 'app-vacation-dynamic-form',
-    imports: [CommonModule, ReactiveFormsModule],
+    imports: [CommonModule, ReactiveFormsModule, NgIconComponent],
     templateUrl: './vacation-dynamic-form.component.html',
 })
 export class VacationDynamicFormComponent {

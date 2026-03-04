@@ -1,25 +1,31 @@
+from typing import Annotated
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Query, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.database import get_session
+from app.models.audit import AuditLogResponse
 from app.models.user import User, UserRole
 from app.routers.auth import get_current_user
-from app.models.audit import AuditLogResponse
 from app.services.audit import get_logs
 
 router = APIRouter(tags=["audit"])
 
-@router.get("", response_model=List[AuditLogResponse])
+from datetime import datetime
+
+@router.get("", response_model=list[AuditLogResponse])
 async def get_audit_logs(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
     skip: int = 0,
     limit: int = 50,
-    module: Optional[str] = Query(None, description="Filter by module"),
-    action: Optional[str] = Query(None, description="Filter by action"),
-    target_user_id: Optional[UUID] = Query(None, alias="user_id", description="Filter by user ID"),
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    module: Annotated[list[str] | None, Query(description="Filter by modules")] = None,
+    action: Annotated[list[str] | None, Query(description="Filter by actions")] = None,
+    target_user_id: Annotated[UUID | None, Query(alias="user_id", description="Filter by user ID")] = None,
+    start_date: Annotated[datetime | None, Query(description="Filter by start date")] = None,
+    end_date: Annotated[datetime | None, Query(description="Filter by end date")] = None
 ):
     """
     Get audit history.
@@ -37,6 +43,8 @@ async def get_audit_logs(
         limit=limit, 
         module=module, 
         action=action, 
-        user_id=target_user_id
+        user_id=target_user_id,
+        start_date=start_date,
+        end_date=end_date
     )
     return logs

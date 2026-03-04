@@ -8,10 +8,11 @@ import { UserService, UserResponse } from '../../services/user.service';
 import { environment } from '../../config/environment';
 import { ConvenioService, ConvenioConfig } from '../../services/convenio.service';
 import { UserFormComponent, UserFormModel } from './components/user-form/user-form.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-users',
-  imports: [CommonModule, UserFormComponent, FormsModule],
+  imports: [CommonModule, UserFormComponent, FormsModule, NgIconComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

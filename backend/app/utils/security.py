@@ -1,7 +1,8 @@
+import logging
 import re
 import unicodedata
+
 from fastapi import HTTPException, status
-import logging
 
 logger = logging.getLogger(__name__)
 

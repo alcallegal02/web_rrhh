@@ -7,10 +7,12 @@ import { AuthService } from '../../../../services/auth.service';
 import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-text-editor.component';
 import { ComplaintService } from '../../../../services/complaint.service';
 import { Complaint } from '../../../../models/app.models';
+import { QuillConfigModule } from 'ngx-quill';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-complaint-management',
-  imports: [CommonModule, FormsModule, DatePipe, RichTextEditorComponent],
+  imports: [CommonModule, FormsModule, RichTextEditorComponent, QuillConfigModule, NgIconComponent],
   templateUrl: './complaint-management.component.html',
   styleUrl: './complaint-management.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

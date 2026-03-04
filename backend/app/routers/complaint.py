@@ -1,27 +1,50 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request, UploadFile, File, Form, Query, BackgroundTasks
-from typing import Optional, List
-from pathlib import Path
-from uuid import UUID
-import os
-import aiofiles
+from typing import Annotated
 import asyncio
+import logging
+import os
 import uuid
-from app.utils.email import send_credentials_email
-from app.utils.brute_force import security_manager
+from pathlib import Path
+from typing import List, Optional
+from uuid import UUID
+
+import aiofiles
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
+    status,
+)
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
-import logging
-from app.utils.email import send_credentials_email
-from app.utils.brute_force import security_manager
 
-from app.database import get_session
 from app.config import settings
+from app.database import get_session
+from app.models.complaint import (
+    Complaint,
+    ComplaintCreate,
+    ComplaintCreateResponse,
+    ComplaintResponse,
+    ComplaintStatus,
+)
 from app.models.user import User, UserRole
 from app.routers.auth import get_current_user
-from app.models.complaint import Complaint, ComplaintCreate, ComplaintResponse, ComplaintStatus, ComplaintCreateResponse
-from app.services.complaint import create_complaint, get_complaint_by_code, get_all_complaints, update_complaint_status, delete_complaint, verify_complaint_access
-from app.services.complaint import create_complaint, get_complaint_by_code, get_all_complaints, update_complaint_status, delete_complaint, verify_complaint_access
+from app.services.complaint import (
+    create_complaint,
+    delete_complaint,
+    get_all_complaints,
+    get_complaint_by_code,
+    update_complaint_status,
+    verify_complaint_access,
+)
+from app.utils.brute_force import security_manager
+from app.utils.email import send_credentials_email
 
 router = APIRouter(tags=["complaint"])
 
@@ -35,11 +58,11 @@ logger = logging.getLogger(__name__)
 async def create_complaint_endpoint(
     request: Request,
     background_tasks: BackgroundTasks,
+    session: Annotated[AsyncSession, Depends(get_session)],
     title: str = Form(...),
     description: str = Form(...),
-    email: Optional[str] = Form(None),
-    files: List[UploadFile] = File(default=[]),
-    session: AsyncSession = Depends(get_session)
+    email: str | None = Form(None),
+    files: list[UploadFile] = File(default=[])
 ):
     """Create a new anonymous complaint (public endpoint)"""
     from app.services.complaint import process_and_save_complaint_files
@@ -90,10 +113,10 @@ async def create_complaint_endpoint(
 @limiter.limit("5/minute")
 async def get_complaint(
     request: Request,
-    code: str,
     background_tasks: BackgroundTasks,
-    token: str = Query(..., description="Access token/Security key"),
-    session: AsyncSession = Depends(get_session)
+    session: Annotated[AsyncSession, Depends(get_session)],
+    code: str,
+    token: Annotated[str, Query(description="Access token/Security key")]
 ):
     """Get complaint status by code and token (public endpoint)"""
     client_ip = request.client.host
@@ -134,8 +157,8 @@ async def get_complaint(
 
 @router.get("/admin/all", response_model=list[ComplaintResponse])
 async def get_all_complaints_endpoint(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get all complaints (RRHH/Superadmin only)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -151,12 +174,12 @@ async def get_all_complaints_endpoint(
 @router.patch("/{complaint_id}/status", response_model=ComplaintResponse)
 async def update_status_endpoint(
     request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
     complaint_id: UUID,
     new_status: str = Form(...),
-    admin_notes: Optional[str] = Form(None),
-    status_public_description: Optional[str] = Form(None),
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    admin_notes: str | None = Form(None),
+    status_public_description: str | None = Form(None)
 ):
     """Update complaint status (RRHH/Superadmin only)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -193,7 +216,7 @@ async def update_status_endpoint(
     from app.websocket.manager import websocket_manager
     # We should convert to Response model first to ensure no sensitive data leaks (though response model has public desc...)
     # Actually, broadcasting the RESPONSE model is safer than raw DB model.
-    response_data = ComplaintResponse.model_validate(complaint).dict()
+    response_data = ComplaintResponse.model_validate(complaint).model_dump()
     # Convert UUIDs
     response_data['id'] = str(response_data['id'])
 
@@ -208,9 +231,9 @@ async def update_status_endpoint(
 @router.delete("/admin/{complaint_id}")
 async def delete_complaint_endpoint(
     request: Request,
-    complaint_id: UUID,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    complaint_id: UUID
 ):
     """Delete a complaint and all its files (RRHH/Superadmin only)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:

@@ -1,16 +1,43 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select, desc
-from typing import Optional, List, Dict, Any
+from datetime import date, datetime
+from typing import Any
 from uuid import UUID
-from app.models.audit import AuditLog, AuditLogCreate
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import desc, select
+
+from app.models.audit import AuditLog
+
+
+def generate_diff(old_obj_dict: dict[str, Any], new_data_dict: dict[str, Any], exclude: list[str] | None = None) -> dict[str, Any]:
+    """
+    Generate a diff dictionary between an old object dictionary and new data.
+    """
+    diffs = {}
+    exclude = exclude or ["id", "created_at", "updated_at", "updated_by", "created_by"]
+    
+    for key, new_value in new_data_dict.items():
+        if key in exclude:
+            continue
+            
+        old_value = old_obj_dict.get(key)
+        
+        # Normalize for comparison
+        s_old = str(old_value) if isinstance(old_value, (UUID, datetime, date)) else old_value
+        s_new = str(new_value) if isinstance(new_value, (UUID, datetime, date)) else new_value
+        
+        if s_old != s_new:
+            diffs[key] = {"old": s_old, "new": s_new}
+            
+    return diffs
+
 
 async def log_action(
     session: AsyncSession,
-    user_id: Optional[UUID],
+    user_id: UUID | None,
     action: str,
     module: str,
-    details: Optional[Dict[str, Any]] = None,
-    ip_address: Optional[str] = None
+    details: dict[str, Any] | None = None,
+    ip_address: str | None = None
 ) -> AuditLog:
     """
     Record an action in the audit log.
@@ -35,25 +62,31 @@ async def log_action(
     await session.refresh(audit)
     return audit
 
-from sqlalchemy.orm import selectinload
+
 
 async def get_logs(
     session: AsyncSession,
     skip: int = 0,
     limit: int = 50,
-    module: Optional[str] = None,
-    action: Optional[str] = None,
-    user_id: Optional[UUID] = None
-) -> List[AuditLog]:
+    module: list[str] | None = None,
+    action: list[str] | None = None,
+    user_id: UUID | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None
+) -> list[AuditLog]:
     """Retrieve filtered audit logs with user info"""
-    query = select(AuditLog).order_by(desc(AuditLog.created_at)) # .options(selectinload(AuditLog.user))
+    query = select(AuditLog).order_by(desc(AuditLog.created_at))
     
     if module:
-        query = query.where(AuditLog.module == module)
+        query = query.where(AuditLog.module.in_(module))
     if action:
-        query = query.where(AuditLog.action == action)
+        query = query.where(AuditLog.action.in_(action))
     if user_id:
         query = query.where(AuditLog.user_id == user_id)
+    if start_date:
+        query = query.where(AuditLog.created_at >= start_date)
+    if end_date:
+        query = query.where(AuditLog.created_at <= end_date)
         
     query = query.offset(skip).limit(limit)
     result = await session.execute(query)

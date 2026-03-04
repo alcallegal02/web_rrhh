@@ -1,9 +1,12 @@
-from datetime import date, timedelta, datetime
-from typing import Optional, List, Dict, Any, Tuple
+from datetime import date, datetime, timedelta
+from typing import Any
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select, col
-from app.models.policy import PermissionPolicy, PolicyResetType, DurationUnit
-from app.models.vacation import VacationRequest, RequestStatus
+from sqlmodel import select
+
+from app.models.policy import DurationUnit, PermissionPolicy, PolicyResetType
+from app.models.vacation import RequestStatus, VacationRequest
+
 
 class PolicyEngine:
     """
@@ -17,7 +20,7 @@ class PolicyEngine:
         user_id: str, 
         policy_id: str, 
         target_date: date = date.today()
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Calculates available balance for a policy at a given date.
         """
@@ -50,8 +53,9 @@ class PolicyEngine:
         # For simplicity in this engine, let's try to get it if possible or use 8.0.
         # But wait, balance.py fetches it from ConvenioConfig.
         # Let's fetch it here too.
-        from app.models.convenio import ConvenioConfig
         from datetime import date
+
+        from app.models.convenio import ConvenioConfig
         config_result = await session.execute(
             select(ConvenioConfig).where(ConvenioConfig.year_reference == date.today().year)
         )
@@ -79,7 +83,7 @@ class PolicyEngine:
         user_id: str, 
         policy: PermissionPolicy, 
         target_date: date
-    ) -> Tuple[date, date]:
+    ) -> tuple[date, date]:
         
         if policy.reset_type == PolicyResetType.ANUAL_CALENDARIO:
             r_month = policy.reset_month if policy.reset_month else 1
@@ -148,7 +152,7 @@ class PolicyEngine:
         policy_id: str, 
         start: date, 
         end: date
-    ) -> Tuple[float, int]:
+    ) -> tuple[float, int]:
         
         statement = select(VacationRequest).where(
             VacationRequest.user_id == user_id,

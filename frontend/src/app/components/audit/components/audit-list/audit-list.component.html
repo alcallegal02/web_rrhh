@@ -1,81 +1,102 @@
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+<div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-gray-100">
+            <thead class="bg-gray-50/50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Fecha</th>
-                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Módulo</th>
-                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Acción</th>
-                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Usuario</th>
-                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">IP
+                    <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Fecha
+                        y Hora</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Módulo
                     </th>
-                    <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">
-                        Acciones</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Acción
+                    </th>
+                    <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        Usuario</th>
+                    <th class="px-6 py-4 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        Dispositivo / IP</th>
+                    <th class="px-6 py-4 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        Detalles</th>
                 </tr>
             </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
+            <tbody class="divide-y divide-gray-50">
                 @for (log of logs(); track log.id) {
-                <tr (click)="itemSelected.emit(log)" class="hover:bg-indigo-50 transition cursor-pointer group">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {{ formatDate(log.created_at) }}
+                <tr (click)="itemSelected.emit(log)"
+                    class="hover:bg-inespasa-light/10 transition-all cursor-pointer group border-b border-gray-50 last:border-0">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-[13px] font-bold text-gray-700 leading-tight">{{
+                            formatDate(log.created_at).split(' ')[0] }}</div>
+                        <div class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-0.5">{{
+                            formatDate(log.created_at).split(' ')[1] }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span
-                            class="px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full bg-blue-100 text-blue-800 border border-blue-200">
-                            {{ log.module }}
-                        </span>
+                        @let config = getModuleConfig(log.module);
+                        <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider inline-flex"
+                            [class]="config.color">
+                            <ng-icon [name]="config.icon" class="text-xs"></ng-icon>
+                            {{ config.label }}
+                        </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800 font-medium">
-                        {{ log.action }}
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1"
+                            [class]="getActionClass(log.action)">
+                            <ng-icon [name]="getActionIcon(log.action)" class="text-xs"></ng-icon>
+                            {{ log.action }}
+                        </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                    <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             @if (log.user) {
                             <div
-                                class="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold mr-3">
+                                class="h-8 w-8 rounded-lg bg-inespasa-light/10 text-inespasa flex items-center justify-center text-[11px] font-black mr-3 border border-inespasa-light/20 shadow-sm overflow-hidden capitalize">
                                 {{ log.user.first_name.charAt(0) }}{{ log.user.last_name.charAt(0) }}
                             </div>
                             <div>
-                                <div class="font-medium text-gray-900">
+                                <div class="text-[12px] font-bold text-gray-800 leading-none">
                                     {{ log.user.first_name }} {{ log.user.last_name }}
                                 </div>
-                                <div class="text-xs text-gray-500">
+                                <div class="text-[10px] text-gray-400 font-medium mt-0.5">
                                     {{ log.user.email }}
                                 </div>
                             </div>
                             } @else {
                             <div
-                                class="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mr-3">
-                                <i class="fas fa-user-secret"></i>
+                                class="h-8 w-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-400 mr-3 border border-gray-100">
+                                <ng-icon name="lucideSettings" class="text-sm"></ng-icon>
                             </div>
                             <div>
-                                <div class="font-medium text-gray-900">
-                                    <span class="text-gray-400 italic">Sistema / Anónimo</span>
+                                <div class="text-[12px] font-bold text-gray-400 italic">
+                                    Sistema
                                 </div>
                             </div>
                             }
                         </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
-                        {{ log.ip_address || '-' }}
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex flex-col">
+                            <span class="text-[11px] font-mono font-bold text-gray-500 tracking-tight">{{ log.ip_address
+                                || '---' }}</span>
+                            <span class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">IP Origen</span>
+                        </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <span
-                            class="text-indigo-600 hover:text-indigo-900 opacity-0 group-hover:opacity-100 transition-opacity">
-                            Ver Detalles →
-                        </span>
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                        <button (click)="itemSelected.emit(log); $event.stopPropagation()"
+                            class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-inespasa text-white shadow-lg shadow-inespasa-light/20 hover:bg-inespasa-dark hover:scale-110 active:scale-95 transition-all">
+                            <ng-icon name="lucideChevronRight" class="text-lg"></ng-icon>
+                        </button>
                     </td>
                 </tr>
                 }
 
                 @if (logs().length === 0 && !loading()) {
                 <tr>
-                    <td colspan="6" class="px-6 py-10 text-center text-gray-500 italic">
-                        No hay registros que coincidan con los filtros.
+                    <td colspan="6" class="px-6 py-16 text-center">
+                        <div class="flex flex-col items-center justify-center">
+                            <div class="p-4 bg-gray-50 rounded-2xl mb-4 text-gray-200">
+                                <ng-icon name="lucideInbox" class="text-4xl"></ng-icon>
+                            </div>
+                            <h4 class="text-gray-900 font-bold text-sm mb-1">Sin resultados</h4>
+                            <p class="text-gray-400 text-xs font-medium">Prueba a ajustar los filtros para encontrar lo
+                                que buscas.</p>
+                        </div>
                     </td>
                 </tr>
                 }
@@ -84,15 +105,23 @@
     </div>
 
     <!-- Pagination -->
-    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+    <div class="px-6 py-4 bg-white border-t border-gray-100 flex justify-between items-center">
         <button (click)="prevPage(); $event.stopPropagation()" [disabled]="currentPage() === 0"
-            class="px-4 py-2 rounded-md bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
-            Anterior
+            class="px-4 py-2 rounded-xl bg-gray-50 text-xs font-bold text-gray-500 hover:bg-inespasa-light/10 hover:text-inespasa disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2">
+            <ng-icon name="lucideChevronLeft"></ng-icon> Anterior
         </button>
-        <span class="text-sm text-gray-600 font-medium">Página {{ currentPage() + 1 }}</span>
+
+        <div class="flex items-center gap-2.5">
+            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Página</span>
+            <div
+                class="h-8 w-8 bg-inespasa text-white rounded-xl flex items-center justify-center text-xs font-black shadow-lg shadow-inespasa-light/20">
+                {{ currentPage() + 1 }}
+            </div>
+        </div>
+
         <button (click)="nextPage(); $event.stopPropagation()" [disabled]="logs().length < pageSize()"
-            class="px-4 py-2 rounded-md bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
-            Siguiente
+            class="px-4 py-2 rounded-xl bg-inespasa text-white text-xs font-bold hover:bg-inespasa-dark shadow-md shadow-inespasa-light/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center gap-2">
+            Siguiente <ng-icon name="lucideChevronRight"></ng-icon>
         </button>
     </div>
 </div>

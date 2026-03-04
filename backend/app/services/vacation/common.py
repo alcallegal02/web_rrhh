@@ -1,15 +1,15 @@
-from typing import List
 from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from sqlalchemy.orm import selectinload
 
-from app.models.user import User, UserResponse, UserManagerLink, UserRrhhLink
+from app.models.user import User, UserResponse
+
 
 async def get_available_responsibles_for_user(
     session: AsyncSession,
     user_id: str
-) -> List[UserResponse]:
+) -> list[UserResponse]:
     """Get list of assigned managers and RRHH users for a user"""
     user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
     

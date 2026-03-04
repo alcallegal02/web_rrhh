@@ -1,8 +1,9 @@
-import json
 import asyncio
-from typing import Dict, Set, Optional
-from fastapi import WebSocket
+import json
+
 import asyncpg
+from fastapi import WebSocket
+
 from app.config import settings
 
 
@@ -10,9 +11,9 @@ class WebSocketManager:
     """Manages WebSocket connections and distributes PostgreSQL NOTIFY events"""
     
     def __init__(self):
-        self.active_connections: Dict[str, Set[WebSocket]] = {}
-        self.pg_connection: Optional[asyncpg.Connection] = None
-        self.listen_task: Optional[asyncio.Task] = None
+        self.active_connections: dict[str, set[WebSocket]] = {}
+        self.pg_connection: asyncpg.Connection | None = None
+        self.listen_task: asyncio.Task | None = None
     
     async def connect(self, websocket: WebSocket, user_id: str):
         """Connect a WebSocket for a specific user"""

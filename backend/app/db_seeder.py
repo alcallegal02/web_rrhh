@@ -1,6 +1,8 @@
 import logging
+
 from sqlmodel import Session, select
-from app.models.policy import PermissionPolicy, DurationUnit, Modality, PolicyResetType
+
+from app.models.policy import DurationUnit, Modality, PermissionPolicy, PolicyResetType
 
 logger = logging.getLogger(__name__)
 
@@ -353,10 +355,10 @@ async def seed_test_hierarchy(session: Session):
     """
     Seed a more complex hierarchy for testing (20 users).
     """
-    from app.services.auth import get_password_hash
-    from app.models.user import User, UserRole, UserManagerLink, UserRrhhLink
+
     from app.models.organization import Department, Position
-    from uuid import UUID
+    from app.models.user import User, UserManagerLink, UserRrhhLink
+    from app.services.auth import get_password_hash
 
     try:
         logger.info("Starting test hierarchy seeding...")

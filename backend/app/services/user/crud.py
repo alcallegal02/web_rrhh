@@ -1,18 +1,33 @@
 from datetime import datetime
-from typing import Optional, List, Any, Dict
+from typing import Any
 from uuid import UUID
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-from sqlalchemy.orm import selectinload
 
-from app.models.user import User, UserCreate, UserUpdate, UserRole, UserResponse, UserManagerLink, UserRrhhLink, UserAttachment
+from app.models.user import (
+    User,
+    UserAttachment,
+    UserCreate,
+    UserManagerLink,
+    UserResponse,
+    UserRole,
+    UserRrhhLink,
+    UserUpdate,
+)
 from app.services.auth import get_password_hash
-from app.utils.file_ops import delete_file_from_disk
-from app.services.user.common import ROLE_RANK, can_manage, ensure_not_protected, extract_allowance_fields, map_to_response
+from app.services.user.common import (
+    can_manage,
+    ensure_not_protected,
+    extract_allowance_fields,
+    map_to_response,
+)
 from app.services.user.query import get_user_with_relations
+from app.utils.file_ops import delete_file_from_disk
 
-async def _update_links(session: AsyncSession, user: User, manager_ids: Optional[List[UUID]], rrhh_ids: Optional[List[UUID]]):
+
+async def _update_links(session: AsyncSession, user: User, manager_ids: list[UUID] | None, rrhh_ids: list[UUID] | None):
     if manager_ids:
         for mid in manager_ids:
             session.add(UserManagerLink(user_id=user.id, manager_id=mid))
@@ -21,7 +36,7 @@ async def _update_links(session: AsyncSession, user: User, manager_ids: Optional
             session.add(UserRrhhLink(user_id=user.id, rrhh_id=rid))
     # Removed commit to ensure atomicity in caller
 
-async def _replace_links(session: AsyncSession, user: User, manager_ids: Optional[List[UUID]], rrhh_ids: Optional[List[UUID]]):
+async def _replace_links(session: AsyncSession, user: User, manager_ids: list[UUID] | None, rrhh_ids: list[UUID] | None):
     # This requires clearing existing links first.
     # We rely on SQLAlchemy's cascade and collection management if eager loaded.
     # Assuming user.managers_links is populated.
@@ -33,7 +48,7 @@ async def _replace_links(session: AsyncSession, user: User, manager_ids: Optiona
     if rrhh_ids is not None:
         user.rrhh_links = [UserRrhhLink(user_id=user.id, rrhh_id=rid) for rid in rrhh_ids]
 
-async def _update_attachments_create(session: AsyncSession, user: User, attachments: List[dict]):
+async def _update_attachments_create(session: AsyncSession, user: User, attachments: list[dict]):
     for att in attachments:
         session.add(UserAttachment(
             user_id=user.id,
@@ -42,7 +57,7 @@ async def _update_attachments_create(session: AsyncSession, user: User, attachme
         ))
     # Removed commit
 
-async def _sync_attachments(session: AsyncSession, user: User, new_attachments_data: List[dict]):
+async def _sync_attachments(session: AsyncSession, user: User, new_attachments_data: list[dict]):
     current_attachments = user.attachments
     current_urls = {att.file_url for att in current_attachments}
     # new_urls = {att['file_url'] for att in new_attachments_data} # Unused var
@@ -76,7 +91,7 @@ def _enforce_superadmin_immutable(payload: UserUpdate):
     for f in extract_allowance_fields(payload).keys():
         setattr(payload, f, 0)
 
-async def create_user(session: AsyncSession, payload: UserCreate, current_user: User, ip_address: Optional[str] = None) -> UserResponse:
+async def create_user(session: AsyncSession, payload: UserCreate, current_user: User, ip_address: str | None = None) -> UserResponse:
     actor_role = UserRole(current_user.role)
     target_role = payload.role
 
@@ -145,7 +160,7 @@ async def create_user(session: AsyncSession, payload: UserCreate, current_user: 
     resp.updated_by_name = current_user.full_name
     return resp
 
-async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, current_user: User, ip_address: Optional[str] = None) -> UserResponse:
+async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, current_user: User, ip_address: str | None = None) -> UserResponse:
     user_uuid = UUID(user_id)
     target = await get_user_with_relations(session, user_uuid)
     actor_role = UserRole(current_user.role)
@@ -234,15 +249,24 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
     if payload.managers is not None or payload.rrhh_ids is not None:
             await _replace_links(session, target, payload.managers, payload.rrhh_ids)
 
+    # Relationships
+    if payload.managers is not None or payload.rrhh_ids is not None:
+            await _replace_links(session, target, payload.managers, payload.rrhh_ids)
+
     # Attachments Sync
     if payload.attachments is not None:
         await _sync_attachments(session, target, payload.attachments)
 
     target.updated_by = current_user.id
-    await session.commit()
     
     # Audit Log
-    from app.services.audit import log_action
+    from app.services.audit import generate_diff, log_action
+    
+    # Capture final payload-based diffs more robustly using utility
+    # We use model_dump for the old state (captured before sync usually but we have it in memory)
+    # Actually, for User, the manual diff logic was already quite extensive. 
+    # Let's just ensure it's logged correctly.
+    
     await log_action(
         session=session,
         user_id=current_user.id,
@@ -256,15 +280,17 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
         ip_address=ip_address
     )
     
+    await session.commit()
+    
     # Refresh
     target = await get_user_with_relations(session, target.id)
-    return map_to_response(target) # TODO: Audit names? Router can handle? Or we handle if critical.
+    return map_to_response(target)
 
-async def delete_user(session: AsyncSession, user_id: str, current_user: User, ip_address: Optional[str] = None):
+
+async def delete_user(session: AsyncSession, user_id: str, current_user: User, ip_address: str | None = None):
     user_uuid = UUID(user_id)
-    # Load lightly just for checks, but need attachments to delete
-    result = await session.execute(select(User).where(User.id == user_uuid)) # .options(selectinload(User.attachments)))
-    target = result.scalar_one_or_none()
+    # Load with relations to capture full snapshot
+    target = await get_user_with_relations(session, user_uuid)
     
     if not target:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
@@ -277,15 +303,24 @@ async def delete_user(session: AsyncSession, user_id: str, current_user: User, i
     if not can_manage(actor_role, UserRole(target.role)):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No puedes eliminar un rol superior al tuyo")
 
-    # Cleanup
+    # Capture Full Snapshot for Audit BEFORE deletion
+    snapshot = target.model_dump()
+    # Serialize UUIDs and datetimes for JSON
+    snapshot['id'] = str(snapshot['id'])
+    if snapshot.get('contract_expiration_date'):
+        snapshot['contract_expiration_date'] = snapshot['contract_expiration_date'].isoformat()
+    if snapshot.get('created_at'):
+        snapshot['created_at'] = snapshot['created_at'].isoformat()
+    if snapshot.get('updated_at'):
+        snapshot['updated_at'] = snapshot['updated_at'].isoformat()
+
+    # Cleanup Files
     if target.photo_url: await delete_file_from_disk(target.photo_url)
     for att in target.attachments:
         await delete_file_from_disk(att.file_url)
 
-    deleted_username = target.username
     await session.delete(target)
-    await session.commit()
-
+    
     # Audit Log
     from app.services.audit import log_action
     await log_action(
@@ -295,7 +330,10 @@ async def delete_user(session: AsyncSession, user_id: str, current_user: User, i
         module="USUARIOS",
         details={
             "deleted_user_id": str(user_uuid),
-            "deleted_username": deleted_username
+            "deleted_username": target.username,
+            "full_snapshot": snapshot
         },
         ip_address=ip_address
     )
+    
+    await session.commit()

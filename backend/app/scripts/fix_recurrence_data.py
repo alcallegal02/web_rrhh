@@ -1,9 +1,11 @@
 import asyncio
+
 import asyncpg
+
 
 async def fix_data():
     dsn = "postgresql://web_rrhh_user:dev_postgres_password@postgres:5432/web_rrhh_dev"
-    print(f"Connecting to DB...")
+    print("Connecting to DB...")
     conn = await asyncpg.connect(dsn)
     
     # helper

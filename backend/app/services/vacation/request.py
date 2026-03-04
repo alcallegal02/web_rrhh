@@ -1,23 +1,29 @@
 from datetime import date, datetime
-from typing import List, Optional, Any
-from fastapi import HTTPException
+from typing import Any
 from uuid import UUID
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import text
-from sqlmodel import select
-from sqlalchemy.orm import selectinload
 
-from app.models.vacation import VacationRequest, VacationRequestCreate, RequestStatus, VacationAttachment
+from fastapi import HTTPException
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
+
+from app.models.vacation import (
+    RequestStatus,
+    VacationAttachment,
+    VacationRequest,
+    VacationRequestCreate,
+)
 from app.services.audit import log_action
 from app.services.vacation.balance import get_vacation_balance
 from app.services.vacation.validator import VacationValidator
-from app.utils.duration import parse_duration
 from app.utils.business_days import get_business_days_count
+from app.utils.duration import parse_duration
+
 
 async def get_user_vacation_requests(
     session: AsyncSession,
     user_id: str
-) -> List[VacationRequest]:
+) -> list[VacationRequest]:
     """Get all vacation requests for a user"""
     user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
     result = await session.execute(
@@ -75,7 +81,7 @@ async def create_vacation_request(
     session: AsyncSession,
     user_id: str,
     request_data: VacationRequestCreate,
-    ip_address: Optional[str] = None
+    ip_address: str | None = None
 ) -> VacationRequest:
     """Create a new vacation request"""
     user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
@@ -159,7 +165,7 @@ async def update_vacation_request(
     request_id: str,
     request_data: VacationRequestCreate,
     current_user_id: str,
-    ip_address: Optional[str] = None
+    ip_address: str | None = None
 ) -> VacationRequest:
     """Update an existing vacation request"""
     # Fetch existing request
@@ -180,25 +186,8 @@ async def update_vacation_request(
     validator = VacationValidator(session, current_user_id)
     await validator.validate_update_request(request, request_data, final_days)
     
-    # --- Diff Logic --- (kept for audit)
-    old_data = request.model_dump()
-    diffs = {}
-    
-    def check_diff(field: str, new_val: Any, old_val: Any):
-        if new_val is not None:
-            s_new = str(new_val) if isinstance(new_val, (UUID, date, datetime)) else new_val
-            s_old = str(old_val) if isinstance(old_val, (UUID, date, datetime)) else old_val
-            if s_new != s_old:
-                if isinstance(new_val, float) and isinstance(old_val, float):
-                    if abs(new_val - old_val) < 0.0001: return
-                diffs[field] = {"old": s_old, "new": s_new}
-
-    # Capture changes
-    check_diff('request_type', request_data.request_type, request.request_type)
-    check_diff('description', request_data.description, request.description) 
-    check_diff('start_date', request_data.start_date, request.start_date)
-    check_diff('end_date', request_data.end_date, request.end_date)
-    check_diff('days_requested', final_days, request.days_requested)
+    # Capture old state for diffing
+    old_state_dict = request.model_dump()
         
     # Apply updates
     request.request_type = request_data.request_type
@@ -209,14 +198,10 @@ async def update_vacation_request(
     request.description = request_data.description
     
     if request_data.assigned_manager_id:
-        new_mid = UUID(request_data.assigned_manager_id)
-        check_diff('assigned_manager_id', new_mid, request.assigned_manager_id)
-        request.assigned_manager_id = new_mid
+        request.assigned_manager_id = UUID(request_data.assigned_manager_id)
     
     if request_data.assigned_rrhh_id:
-        new_rid = UUID(request_data.assigned_rrhh_id)
-        check_diff('assigned_rrhh_id', new_rid, request.assigned_rrhh_id)
-        request.assigned_rrhh_id = new_rid
+        request.assigned_rrhh_id = UUID(request_data.assigned_rrhh_id)
     
     # Update dynamic fields
     request.causal_date = request_data.causal_date
@@ -232,8 +217,9 @@ async def update_vacation_request(
         if pol: request.request_type = pol.slug
         
     # Handle Attachments
+    attachments_updated = False
     if request_data.attachments is not None:
-        diffs['attachments'] = {"old": "...", "new": "Updated"}
+        attachments_updated = True
         await session.execute(text("DELETE FROM vacation_attachments WHERE request_id = :req_id").bindparams(req_id=request.id))
         for attachment_data in request_data.attachments:
             attachment = VacationAttachment(
@@ -243,11 +229,14 @@ async def update_vacation_request(
             )
             session.add(attachment)
             
-    session.add(request)
-    await session.commit()
-    await session.refresh(request)
-    
     # Audit Log
+    from app.services.audit import generate_diff, log_action
+    new_state_dict = request.model_dump()
+    diffs = generate_diff(old_state_dict, new_state_dict)
+
+    if attachments_updated:
+        diffs['attachments'] = {"old": "...", "new": "Updated"}
+
     if diffs:
         await log_action(
             session=session,
@@ -261,6 +250,10 @@ async def update_vacation_request(
             },
             ip_address=ip_address
         )
+            
+    session.add(request)
+    await session.commit()
+    await session.refresh(request)
     
     # Reload
     stmt = select(VacationRequest).where(VacationRequest.id == request.id) # .options(selectinload(VacationRequest.attachments))
@@ -271,8 +264,8 @@ async def update_vacation_request(
 async def submit_vacation_request(
     session: AsyncSession,
     request_id: str,
-    ip_address: Optional[str] = None
-) -> Optional[VacationRequest]:
+    ip_address: str | None = None
+) -> VacationRequest | None:
     """Submit a vacation request (change status from borrador to pending)"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
     stmt = select(VacationRequest).where(VacationRequest.id == request_uuid)

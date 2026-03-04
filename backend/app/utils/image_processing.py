@@ -1,8 +1,9 @@
-from PIL import Image
 import io
-from typing import Tuple
 
-def process_image_to_webp(content: bytes, quality: int = 80) -> Tuple[bytes, str]:
+from PIL import Image
+
+
+def process_image_to_webp(content: bytes, quality: int = 80) -> tuple[bytes, str]:
     """
     Converts an image from bytes to WebP format.
     Returns the processed content and the new extension ('webp').

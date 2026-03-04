@@ -3,6 +3,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DatePipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { NgIconComponent } from '@ng-icons/core';
 import { environment } from '../../../../config/environment';
 import { ConfigService } from '../../../../services/config';
 import { ComplaintService } from '../../../../services/complaint.service';
@@ -10,7 +11,7 @@ import { Complaint } from '../../../../models/app.models';
 
 @Component({
   selector: 'app-complaint-status',
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, NgIconComponent],
   templateUrl: './complaint-status.component.html',
   styleUrl: './complaint-status.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

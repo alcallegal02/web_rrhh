@@ -1,15 +1,21 @@
-from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from typing import Annotated
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from jose import JWTError, jwt
 
-from app.database import get_session
-from app.services.auth import authenticate_user, create_access_token, get_user_by_id, get_password_hash
-from app.models.user import User, UserLogin, UserResponse, Token, UserCreate
 from app.config import settings
+from app.database import get_session
+from app.models.user import Token, User, UserResponse
+from app.services.auth import (
+    authenticate_user,
+    create_access_token,
+    get_user_by_id,
+)
 
 router = APIRouter(tags=["auth"])
 
@@ -18,8 +24,8 @@ limiter = Limiter(key_func=get_remote_address)
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    session: AsyncSession = Depends(get_session)
+    token: Annotated[str, Depends(oauth2_scheme)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ) -> User:
     """Get current authenticated user from JWT token"""
     credentials_exception = HTTPException(
@@ -61,12 +67,23 @@ async def get_current_user(
 @limiter.limit("5/minute")
 async def login(
     request: Request,
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    session: AsyncSession = Depends(get_session)
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Login endpoint"""
     user = await authenticate_user(session, form_data.username, form_data.password)
+    
     if not user:
+        # Audit Failed Login
+        from app.services.audit import log_action
+        await log_action(
+            session=session,
+            user_id=None,
+            action="LOGIN_FAILED",
+            module="AUTH",
+            details={"username": form_data.username},
+            ip_address=request.client.host
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -77,15 +94,30 @@ async def login(
     access_token = create_access_token(
         data={"sub": str(user.id)}, expires_delta=access_token_expires
     )
+    
+    # Audit Successful Login
+    from app.services.audit import log_action
+    await log_action(
+        session=session,
+        user_id=user.id,
+        action="LOGIN_SUCCESS",
+        module="AUTH",
+        details={"email": user.email},
+        ip_address=request.client.host
+    )
+    
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-from app.models.user import User, UserLogin, UserResponse, Token, UserCreate, UserSummary # Added UserSummary
+from app.models.user import (  # Added UserSummary
+    Token,
+    User,
+)
 
 # ...
 
 @router.get("/me", response_model=UserResponse)
-async def read_users_me(current_user: User = Depends(get_current_user)):
+async def read_users_me(current_user: Annotated[User, Depends(get_current_user)]):
     """Get current user information"""
     # Convert to response model manually to handle properties
     # OR better: use validation which works if structure matches.
@@ -111,10 +143,9 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
     return UserResponse.model_validate(user_dict)
 
 
+
 from pydantic import BaseModel
-import secrets
-import string
-from app.utils.email import send_password_reset_otp
+
 
 class PasswordChangeRequest(BaseModel):
     pass # No body needed, implicit current user
@@ -123,14 +154,14 @@ class PasswordChangeConfirm(BaseModel):
     otp: str
     new_password: str
 
-import re
+
 
 @router.post("/request-password-change", status_code=status.HTTP_200_OK)
 @limiter.limit("3/hour")
 async def request_password_change(
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """
     Generates an OTP and sends it to the user's email.
@@ -148,9 +179,9 @@ class OTPCheck(BaseModel):
 @limiter.limit("10/minute")
 async def check_password_reset_otp(
     request: Request,
-    payload: OTPCheck,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    payload: OTPCheck
 ):
     """
     Checks if the OTP is valid without consuming it.
@@ -168,9 +199,9 @@ async def check_password_reset_otp(
 @limiter.limit("5/minute")
 async def confirm_password_change(
     request: Request,
-    payload: PasswordChangeConfirm,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    payload: PasswordChangeConfirm
 ):
     """
     Verifies OTP and updates password.
@@ -178,5 +209,16 @@ async def confirm_password_change(
     from app.services.auth import confirm_password_reset
     user = await get_user_by_id(session, str(current_user.id))
     await confirm_password_reset(session, user, payload.otp, payload.new_password)
+    
+    # Audit Password Change
+    from app.services.audit import log_action
+    await log_action(
+        session=session,
+        user_id=user.id,
+        action="PASSWORD_CHANGED",
+        module="AUTH",
+        details={"email": user.email},
+        ip_address=request.client.host
+    )
     
     return {"message": "Password updated successfully"}

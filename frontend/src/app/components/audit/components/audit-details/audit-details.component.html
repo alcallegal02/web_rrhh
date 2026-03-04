@@ -1,70 +1,162 @@
-<div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm transition-all"
+    (click)="close.emit()">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in fade-in zoom-in duration-300"
+        (click)="$event.stopPropagation()">
 
-        <div class="fixed inset-0 bg-black bg-opacity-30 transition-opacity" aria-hidden="true" (click)="close.emit()">
+        <!-- Modal Header -->
+        <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
+            <div class="flex items-center gap-4">
+                <div
+                    class="h-10 w-10 rounded-xl bg-inespasa text-white flex items-center justify-center shadow-lg shadow-inespasa-light/20">
+                    <ng-icon name="lucideClipboardList" class="text-xl"></ng-icon>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-900 tracking-tight">Detalles del Registro</h3>
+                    <p class="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">ID: {{
+                        log().id.slice(0, 8) }}</p>
+                </div>
+            </div>
+            <button (click)="close.emit()"
+                class="p-2 hover:bg-gray-100 rounded-xl text-gray-400 hover:text-gray-600 transition-all">
+                <ng-icon name="lucideX" class="text-xl"></ng-icon>
+            </button>
         </div>
 
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-        <div
-            class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div
-                        class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                        <svg class="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+        <!-- Modal Content -->
+        <div class="flex-grow overflow-y-auto p-8 custom-scrollbar">
+            <!-- Metadata Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+                <div class="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                    <span class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Módulo</span>
+                    <div class="flex items-center gap-2 text-xs font-bold text-gray-700">
+                        <ng-icon name="lucideBox" class="text-inespasa"></ng-icon>
+                        {{ log().module }}
                     </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                            Detalles de Auditoría
-                        </h3>
-                        <div class="mt-4 space-y-3">
-                            <div class="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <span class="block text-gray-500 text-xs uppercase">Acción</span>
-                                    <span class="font-medium text-gray-900">{{ log().action }}</span>
-                                </div>
-                                <div>
-                                    <span class="block text-gray-500 text-xs uppercase">Módulo</span>
-                                    <span class="font-medium text-gray-900">{{ log().module }}</span>
-                                </div>
-                                <div>
-                                    <span class="block text-gray-500 text-xs uppercase">Fecha</span>
-                                    <span class="font-medium text-gray-900">{{ formatDate(log().created_at) }}</span>
-                                </div>
-                                <div>
-                                    <span class="block text-gray-500 text-xs uppercase">Usuario</span>
-                                    @if (log().user) {
-                                    <span class="font-medium text-gray-900">
-                                        {{ log().user!.first_name }} {{ log().user!.last_name }}
-                                    </span>
-                                    } @else {
-                                    <span class="font-medium text-gray-900 italic">
-                                        Anónimo / Sistema
-                                    </span>
-                                    }
-                                </div>
-                            </div>
-
-                            <div class="bg-gray-50 rounded p-3 mt-4">
-                                <span class="block text-gray-500 text-xs uppercase mb-2">Datos Técnicos (JSON)</span>
-                                <pre
-                                    class="text-xs text-gray-700 whitespace-pre-wrap font-mono overflow-auto max-h-60">{{ log().details | json }}</pre>
-                            </div>
-                        </div>
+                </div>
+                <div class="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                    <span class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Acción</span>
+                    <div class="flex items-center gap-2 text-xs font-bold text-gray-700">
+                        <ng-icon name="lucideZap" class="text-amber-500"></ng-icon>
+                        {{ log().action }}
+                    </div>
+                </div>
+                <div class="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                    <span class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Fecha y
+                        Hora</span>
+                    <div class="flex items-center gap-2 text-xs font-bold text-gray-700">
+                        <ng-icon name="lucideCalendar" class="text-emerald-500"></ng-icon>
+                        {{ formatDate(log().created_at) }}
+                    </div>
+                </div>
+                <div class="p-4 bg-gray-50/50 rounded-2xl border border-gray-100">
+                    <span
+                        class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Usuario</span>
+                    <div class="flex items-center gap-2 text-xs font-bold text-gray-700">
+                        <ng-icon name="lucideUser" class="text-inespasa"></ng-icon>
+                        {{ log().user ? (log().user!.first_name + ' ' + log().user!.last_name) : 'Sistema' }}
                     </div>
                 </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button (click)="close.emit()" type="button"
-                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                    Cerrar
-                </button>
+
+            <!-- Main Payload (Diff View) -->
+            @if (hasChanges) {
+            <div class="space-y-4 mb-10">
+                <div class="flex items-center gap-3">
+                    <div class="h-1 w-6 bg-inespasa rounded-full"></div>
+                    <h4 class="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Cambios Realizados</h4>
+                </div>
+
+                <div class="border border-gray-100 rounded-3xl overflow-hidden shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-100 text-sm">
+                        <thead class="bg-gray-50/50">
+                            <tr>
+                                <th
+                                    class="px-6 py-4 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest w-1/4">
+                                    Campo</th>
+                                <th
+                                    class="px-6 py-4 text-left text-[9px] font-black text-red-400 uppercase tracking-widest">
+                                    Valor Anterior</th>
+                                <th
+                                    class="px-6 py-4 text-left text-[9px] font-black text-inespasa uppercase tracking-widest">
+                                    Valor Nuevo</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-50">
+                            @for (key of objectKeys(changes); track key) {
+                            <tr class="hover:bg-gray-50/50 transition-colors">
+                                <td class="px-6 py-4 font-bold text-gray-700 bg-gray-50/30 whitespace-nowrap">{{ key }}
+                                </td>
+                                <td class="px-6 py-4 text-red-600 font-medium bg-red-50/10 italic">
+                                    {{ changes[key].old === null ? '(vacío)' : changes[key].old }}
+                                </td>
+                                <td class="px-6 py-4 text-inespasa font-bold bg-inespasa-light/10">
+                                    {{ changes[key].new === null ? '(vacío)' : changes[key].new }}
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
+            }
+
+            <!-- Snapshot Section (Delete) -->
+            @if (hasSnapshot) {
+            <div class="space-y-4 mb-10">
+                <div class="flex items-center gap-3">
+                    <div class="h-1 w-6 bg-red-600 rounded-full"></div>
+                    <h4 class="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Contenido Eliminado</h4>
+                </div>
+                <div class="bg-gray-50 border border-gray-100 rounded-3xl p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
+                        @for (key of objectKeys(snapshot); track key) {
+                        <div class="flex flex-col border-b border-gray-100 pb-2">
+                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">{{ key
+                                }}</span>
+                            <span class="text-xs font-bold text-gray-800 break-words">{{ snapshot[key] === null ? '-' :
+                                snapshot[key] }}</span>
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            }
+
+            @if (!hasChanges && !hasSnapshot && log().details) {
+            <div class="space-y-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="h-1 w-6 bg-inespasa rounded-full"></div>
+                    <h4 class="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">Detalles del Evento</h4>
+                </div>
+                <div class="bg-gray-50 border border-gray-100 rounded-3xl p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-4">
+                        @for (key of objectKeys(log().details!); track key) {
+                        <div [class.sm:col-span-2]="key === 'content' || key === 'summary'"
+                            class="flex flex-col border-b border-gray-100 pb-2">
+                            <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">{{ key
+                                }}</span>
+                            @if (key === 'content') {
+                            <div class="text-xs text-gray-700 leading-relaxed prose prose-xs max-w-none line-clamp-6 [&>*]:mb-1"
+                                [innerHTML]="log().details![key]"></div>
+                            } @else {
+                            <span class="text-xs font-bold text-gray-800 break-words">{{ log().details![key] ?? '-'
+                                }}</span>
+                            }
+                        </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            }
+
+        </div>
+
+        <!-- Footer -->
+        <div class="px-8 py-5 border-t border-gray-100 flex justify-end bg-gray-50/30">
+            <button (click)="close.emit()"
+                class="px-8 py-2.5 bg-inespasa text-white font-black text-[11px] uppercase tracking-widest rounded-xl hover:bg-inespasa-dark transition-all shadow-lg shadow-inespasa-light/20">
+                Cerrar Detalle
+            </button>
         </div>
     </div>
 </div>

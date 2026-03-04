@@ -5,12 +5,20 @@ import { environment } from '../../../../config/environment';
 import { News } from '../../../../models/app.models';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FileUrlPipe } from '../../../../pipes/file-url.pipe';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucideNewspaper, lucidePencil, lucideTrash2, lucideChevronRight,
+    lucidePaperclip, lucideCalendarDays
+} from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-news-list',
-    imports: [CommonModule, DatePipe, RouterModule, FileUrlPipe],
+    imports: [CommonModule, DatePipe, RouterModule, FileUrlPipe, NgIconComponent],
     templateUrl: './news-list.component.html',
     styleUrl: './news-list.component.scss',
+    providers: [
+        provideIcons({ lucideNewspaper, lucidePencil, lucideTrash2, lucideChevronRight, lucidePaperclip, lucideCalendarDays })
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None
 })
@@ -64,12 +72,12 @@ export class NewsListComponent {
 
     getStatusClass(status: string): string {
         const classes: { [key: string]: string } = {
-            'borrador': 'bg-gray-100 text-gray-800',
-            'publicada': 'bg-green-100 text-green-800',
-            'archivada': 'bg-yellow-100 text-yellow-800',
-            'eliminada': 'bg-red-100 text-red-800'
+            'borrador': 'bg-gray-50 text-gray-500 border-gray-200',
+            'publicada': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            'archivada': 'bg-amber-50 text-amber-700 border-amber-200',
+            'eliminada': 'bg-red-50 text-red-700 border-red-200'
         };
-        return classes[status] || 'bg-gray-100 text-gray-800';
+        return classes[status] || 'bg-gray-50 text-gray-500 border-gray-200';
     }
 
     // Actions

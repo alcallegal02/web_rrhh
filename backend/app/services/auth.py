@@ -1,14 +1,12 @@
 from datetime import datetime, timedelta
-from typing import Optional
-from jose import JWTError, jwt
+
+from jose import jwt
 from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 from sqlmodel import select as sql_select
 
 from app.config import settings
-from app.models.user import User, UserLogin
+from app.models.user import User
 
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
@@ -23,7 +21,7 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """Create a JWT access token"""
     to_encode = data.copy()
     if expires_delta:
@@ -35,7 +33,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
-async def authenticate_user(session: AsyncSession, identifier: str, password: str) -> Optional[User]:
+async def authenticate_user(session: AsyncSession, identifier: str, password: str) -> User | None:
     """Authenticate a user by username OR email and password"""
     from sqlalchemy import or_
     
@@ -58,10 +56,10 @@ async def authenticate_user(session: AsyncSession, identifier: str, password: st
 
 # ... (imports)
 
-async def get_user_by_id(session: AsyncSession, user_id: str) -> Optional[User]:
+async def get_user_by_id(session: AsyncSession, user_id: str) -> User | None:
     """Get a user by ID"""
     from uuid import UUID
-    from app.models.user import UserManagerLink, UserRrhhLink # Import locally to avoid circular imports if any
+
     
     try:
         user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
@@ -88,6 +86,7 @@ async def request_password_reset(
     import secrets
     import string
     from datetime import timezone
+
     from app.utils.email import send_password_reset_otp
     
     # 1. Generate 6 digit numeric OTP
@@ -140,7 +139,8 @@ async def confirm_password_reset(
     """Verify OTP again and update password"""
     import re
     from datetime import timezone
-    from fastapi import HTTPException, status
+
+    from fastapi import HTTPException
     
     # Complexity check
     if len(new_password) < 8:

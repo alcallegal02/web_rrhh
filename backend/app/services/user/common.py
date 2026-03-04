@@ -1,7 +1,8 @@
-from typing import Dict, Any
 from uuid import UUID
+
 from fastapi import HTTPException, status
-from app.models.user import User, UserRole, UserResponse, UserSummary
+
+from app.models.user import User, UserResponse, UserRole, UserSummary
 
 ROLE_RANK = {
     UserRole.SUPERADMIN: 2,
@@ -19,7 +20,7 @@ def ensure_not_protected(target: User, actor: User):
             detail="No puedes modificar ni eliminar al superadmin",
         )
 
-def extract_allowance_fields(payload) -> Dict:
+def extract_allowance_fields(payload) -> dict:
     fields = [
         "vac_days", "vac_hours", "asuntos_propios_days", "asuntos_propios_hours",
         "dias_compensados_days", "dias_compensados_hours", "med_gral_days", "med_gral_hours",
@@ -33,7 +34,7 @@ def extract_allowance_fields(payload) -> Dict:
             data[f] = val
     return data
 
-def map_to_response(user: User, audit_names: Dict[UUID, str] = None) -> UserResponse:
+def map_to_response(user: User, audit_names: dict[UUID, str] = None) -> UserResponse:
     resp = UserResponse.model_validate(user, from_attributes=True)
     
     # Ensure full_name is populated (property might not be caught by model_validate in some versions)

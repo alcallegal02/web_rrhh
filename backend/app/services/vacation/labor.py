@@ -1,11 +1,12 @@
+import logging
+import math
 from datetime import date
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-import math
-import logging
 
-from app.models.user import User
 from app.models.convenio import ConvenioConfig
+from app.models.user import User
 
 logger = logging.getLogger(__name__)
 

@@ -1,30 +1,34 @@
-from sqlmodel import SQLModel, select
+import logging
+from collections.abc import AsyncGenerator
+
+import asyncpg
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-import asyncpg
-from typing import AsyncGenerator
-import logging
+from sqlmodel import SQLModel, select
+
 logger = logging.getLogger(__name__)
 
-from app.config import settings
-from app.models.user import User
-from app.models.vacation import VacationRequest, VacationAttachment
-from app.models.leave_type import LeaveType
-
-from app.models.complaint import Complaint, ComplaintAttachment
-from app.models.convenio import ConvenioConfig
-# Import AuditLog and UploadQuota - ensuring they are imported to register with SQLModel
-# Note: If recursion errors occur, we might need to be careful with import order,
-# but create_all usually handles registry if imports are done.
-from app.models.audit import AuditLog
-from app.models.upload import UploadQuota
-from app.models.news import News, NewsAttachment
-from app.models.organization import Department, Position
-from app.models.holiday import Holiday
-from app.models.policy import PermissionPolicy
-# Ensure all models are imported so SQLModel.metadata.create_all works
-from app.services.auth import get_password_hash
 from sqlalchemy import text
+
+from app.config import settings
+
+# --- Centralized Model Registration ---
+# We must import all models that define tables here so that SQLModel.metadata.create_all
+# can discover them, especially those referenced via Foreign Keys (e.g., positions, departments).
+from app.models.user import User, UserAttachment, UserManagerLink, UserRrhhLink
+from app.models.organization import Department, Position
+from app.models.news import News, NewsAttachment
+from app.models.complaint import Complaint, ComplaintAttachment, ComplaintStatusLog
+from app.models.holiday import Holiday
+from app.models.vacation import VacationRequest, VacationAttachment
+from app.models.audit import AuditLog
+from app.models.leave_type import LeaveType
+from app.models.policy import PermissionPolicy
+from app.models.convenio import ConvenioConfig
+from app.models.upload import UploadQuota
+
+# Import password hash service for ensure_admin_user
+from app.services.auth import get_password_hash
 
 # Async engine for SQLModel
 async_engine = create_async_engine(
@@ -47,6 +51,7 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 import asyncio
+
 
 async def init_db():
     """Initialize database tables and ensure admin user exists if enabled"""
@@ -143,8 +148,6 @@ async def init_db():
         raise e 
 
     # Connection check moved to start of function
-    await ensure_admin_user()
-
     await ensure_admin_user()
 
     # Seed default policies if needed

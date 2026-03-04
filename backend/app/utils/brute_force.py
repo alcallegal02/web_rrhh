@@ -1,6 +1,6 @@
-import time
 import logging
-from typing import Dict, Tuple
+import time
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -12,9 +12,9 @@ class SecurityManager:
     """
     def __init__(self):
         # Dictionary structure: {ip: (failed_attempts, last_attempt_time, blocked_until, last_order_code)}
-        self._ip_stats: Dict[str, Dict] = {}
+        self._ip_stats: dict[str, dict] = {}
 
-    def is_blocked(self, ip: str) -> Tuple[bool, int]:
+    def is_blocked(self, ip: str) -> tuple[bool, int]:
         """
         Checks if an IP is currently blocked.
         Returns (is_blocked, minutes_remaining)

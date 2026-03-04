@@ -1,32 +1,27 @@
 @if (!submitted()) {
 <form (ngSubmit)="submitComplaint()" #complaintForm="ngForm" class="space-y-6">
     <div>
-        <label for="title" class="block text-sm font-semibold text-gray-700 mb-2">
-            📋 Título de la Denuncia
+        <label for="title" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+            <ng-icon name="lucideClipboardList"></ng-icon> Título de la Denuncia
         </label>
         <input type="text" id="title" name="title" [ngModel]="title()" (ngModelChange)="title.set($event)" required
             placeholder="Ej: Problema con..." class="input-field" />
     </div>
     <div>
-        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
-            📝 Descripción Detallada
+        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+            <ng-icon name="lucideFileEdit"></ng-icon> Descripción Detallada
         </label>
-        @defer (on viewport) {
         <app-rich-text-editor [ngModel]="description()" (ngModelChange)="description.set($event)"
             (contentChange)="onEditorContentChange($event)" name="description" [quillModules]="quillModules"
             [height]="'300px'" [placeholder]="'Describe tu denuncia de manera detallada...'"
             [uploadUrl]="'/upload/image-anonymous'" [module]="'complaints'" required></app-rich-text-editor>
-        } @placeholder {
-        <div
-            class="h-[300px] flex items-center justify-center bg-gray-50 border border-gray-200 rounded-lg text-gray-400 italic">
-            Cargando editor de texto...</div>
-        }
         <p class="text-xs text-gray-500 mt-2">Sé lo más específico posible para facilitar la revisión</p>
     </div>
 
     <!-- Document Upload -->
     <div class="border-t pt-4 border-gray-100">
-        <label class="block text-sm font-semibold text-gray-700 mb-2">📎 Adjuntar Documentos (PDF, DOC,
+        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1"><ng-icon
+                name="lucidePaperclip"></ng-icon> Adjuntar Documentos (PDF, DOC,
             Imágenes)</label>
         <div class="flex flex-col gap-3">
             <input type="file" (change)="onFilesSelected($event)" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
@@ -60,25 +55,22 @@
             </div>
             }
 
-            <p class="text-[10px] text-gray-400">
-                💡 Puedes subir varios archivos. Máximo global: {{ configService.limits().maxComplaintPayloadMB
-                }}MB. Formatos permitidos: PDF, Word, JPG, PNG.
+            <p class="text-[10px] text-gray-400 flex items-start gap-1">
+                <ng-icon name="lucideLightbulb" class="mt-0.5 text-base"></ng-icon> <span>Puedes subir varios archivos.
+                    Máximo global: {{ configService.limits().maxComplaintPayloadMB
+                    }}MB. Formatos permitidos: PDF, Word, JPG, PNG.</span>
             </p>
         </div>
     </div>
 
     <!-- Email Opcional -->
     <div class="border-t pt-6 border-gray-100">
-        <label for="optionalEmail" class="block text-sm font-semibold text-gray-700 mb-2">
-            📧 Correo Electrónico (Opcional)
+        <label for="optionalEmail" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+            <ng-icon name="lucideMail"></ng-icon> Correo Electrónico (Opcional)
         </label>
         <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="w-5 h-5 text-gray-400">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                </svg>
+                <ng-icon name="lucideMail" class="w-5 h-5 text-gray-400"></ng-icon>
             </div>
             <input type="email" id="optionalEmail" name="optionalEmail" [ngModel]="optionalEmail()"
                 (ngModelChange)="optionalEmail.set($event)" placeholder="tu@email.com (para recibir las claves)"
@@ -88,7 +80,7 @@
         <p class="text-xs text-red-500 mt-1">Por favor, introduce un formato de correo válido.</p>
         }
         <div class="mt-3 flex items-start gap-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-            <span class="text-blue-500 mt-0.5">🛡️</span>
+            <ng-icon name="lucideShield" class="text-blue-500 mt-0.5"></ng-icon>
             <p class="text-[11px] text-blue-800 leading-relaxed">
                 <strong>Dato opcional.</strong> Este correo se usará exclusivamente para enviarte las claves y
                 será eliminado de forma inmediata.
@@ -96,19 +88,13 @@
             </p>
         </div>
     </div>
-    <button type="submit" [disabled]="loading() || !complaintForm.valid" class="btn-primary w-full">
+    <button type="submit" [disabled]="loading() || !complaintForm.valid"
+        class="btn-primary w-full flex items-center justify-center gap-2">
         @if (!loading()) {
-        <span>📤 Enviar Denuncia</span>
+        <ng-icon name="lucideSend"></ng-icon> <span>Enviar Denuncia</span>
         } @else {
-        <span class="flex items-center justify-center">
-            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                </circle>
-                <path class="opacity-75" fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                </path>
-            </svg>
+        <span class="flex items-center justify-center gap-2">
+            <ng-icon name="lucideLoaderCircle" class="animate-spin text-xl"></ng-icon>
             Enviando...
         </span>
         }
@@ -119,7 +105,7 @@
 @if (submitted() && complaintCode()) {
 <div class="text-center">
     <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 mb-6">
-        <div class="text-6xl mb-4">✅</div>
+        <ng-icon name="lucideCheck" class="text-6xl mb-4 text-green-500"></ng-icon>
         <h2 class="text-2xl font-bold text-green-800 mb-4">Denuncia Enviada Exitosamente</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <app-copy-field [label]="'Código de Seguimiento'" [value]="complaintCode()"></app-copy-field>
@@ -128,7 +114,8 @@
                 [isSensitive]="true"></app-copy-field>
         </div>
         <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mb-6 text-left">
-            <p class="text-sm text-yellow-800 font-semibold mb-2">⚠️ ¡MUY IMPORTANTE!</p>
+            <p class="text-sm text-yellow-800 font-semibold mb-2 flex items-center gap-1"><ng-icon
+                    name="lucideTriangleAlert"></ng-icon> ¡MUY IMPORTANTE!</p>
             <p class="text-sm text-yellow-700">
                 Guarda <strong>ambos códigos</strong> en un lugar seguro. Necesitarás tanto el código de
                 seguimiento como la clave de seguridad para consultar el estado.
@@ -136,8 +123,8 @@
                 <strong>No podrás recuperarlos si los pierdes.</strong>
             </p>
         </div>
-        <button (click)="goToStatus()" class="btn-primary">
-            🔍 Consultar Estado Ahora
+        <button (click)="goToStatus()" class="btn-primary flex items-center justify-center gap-2">
+            <ng-icon name="lucideSearch"></ng-icon> Consultar Estado Ahora
         </button>
     </div>
 </div>
@@ -146,7 +133,7 @@
 @if (error()) {
 <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
     <div class="flex items-center">
-        <span class="text-red-500 mr-2 text-xl">⚠️</span>
+        <ng-icon name="lucideTriangleAlert" class="text-red-500 mr-2 text-xl"></ng-icon>
         <p class="text-sm text-red-700 font-medium">{{ error() }}</p>
     </div>
 </div>

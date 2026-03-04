@@ -7,6 +7,7 @@ import { ConvenioConfig } from '../../../../services/convenio.service';
 import { LeaveType } from '../../../../services/leave-type.service';
 import { DurationInputComponent } from '../../../shared/duration-input/duration-input.component';
 import { VacationUtils } from '../../vacation.utils';
+import { NgIconComponent } from '@ng-icons/core';
 
 // We need a partial request type for new requests
 export interface VacationRequestDraft {
@@ -25,7 +26,7 @@ export interface VacationRequestDraft {
 
 @Component({
     selector: 'app-vacation-request-form',
-    imports: [CommonModule, FormsModule, DurationInputComponent],
+    imports: [CommonModule, FormsModule, DurationInputComponent, NgIconComponent],
     templateUrl: './vacation-request-form.component.html',
 })
 export class VacationRequestFormComponent {

@@ -1,8 +1,10 @@
 from datetime import date, timedelta
-from typing import List, Set
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
+
 from app.models.holiday import Holiday
+
 
 async def get_business_days_count(
     session: AsyncSession,

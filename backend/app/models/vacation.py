@@ -1,9 +1,8 @@
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, Union, TYPE_CHECKING, List
-from datetime import datetime, date
+from datetime import date, datetime
 from enum import Enum
 from uuid import UUID, uuid4
-from sqlalchemy import Column, Enum as SAEnum
+
+from sqlmodel import Field, SQLModel
 
 
 class RequestType(str, Enum):
@@ -55,7 +54,7 @@ class VacationAttachment(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     request_id: UUID = Field(foreign_key="vacation_requests.id")
     file_url: str
-    file_original_name: Optional[str] = None
+    file_original_name: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     # request: "VacationRequest" = Relationship(back_populates="attachments")
@@ -64,29 +63,29 @@ class VacationAttachment(SQLModel, table=True):
 class VacationRequest(SQLModel, table=True):
     __tablename__ = "vacation_requests"
     
-    id: Optional[UUID] = Field(default_factory=uuid4, primary_key=True)
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     user_id: UUID = Field(foreign_key="users.id", index=True)
     request_type: str = Field(index=True)
-    leave_type_id: Optional[UUID] = Field(default=None, foreign_key="leave_types.id") # Deprecated
-    policy_id: Optional[UUID] = Field(default=None, foreign_key="permission_policies.id", index=True) # New FK
+    leave_type_id: UUID | None = Field(default=None, foreign_key="leave_types.id") # Deprecated
+    policy_id: UUID | None = Field(default=None, foreign_key="permission_policies.id", index=True) # New FK
     start_date: datetime = Field(index=True)
-    end_date: Optional[datetime]
+    end_date: datetime | None
     days_requested: float
     status: str = Field(default="borrador", index=True)
-    assigned_manager_id: Optional[UUID] = Field(default=None, foreign_key="users.id")
-    assigned_rrhh_id: Optional[UUID] = Field(default=None, foreign_key="users.id")
-    manager_approved_at: Optional[datetime] = None
-    manager_approved_by: Optional[UUID] = Field(default=None, foreign_key="users.id")
-    rrhh_approved_at: Optional[datetime] = None
-    rrhh_approved_by: Optional[UUID] = Field(default=None, foreign_key="users.id")
-    rejection_reason: Optional[str] = None
-    description: Optional[str] = None
+    assigned_manager_id: UUID | None = Field(default=None, foreign_key="users.id")
+    assigned_rrhh_id: UUID | None = Field(default=None, foreign_key="users.id")
+    manager_approved_at: datetime | None = None
+    manager_approved_by: UUID | None = Field(default=None, foreign_key="users.id")
+    rrhh_approved_at: datetime | None = None
+    rrhh_approved_by: UUID | None = Field(default=None, foreign_key="users.id")
+    rejection_reason: str | None = None
+    description: str | None = None
 
     # Dynamic Form Fields
-    causal_date: Optional[date] = None # For POR_EVENTO resets
-    child_name: Optional[str] = None
-    child_birthdate: Optional[date] = None
-    telework_percentage: Optional[float] = None # For mixta modality
+    causal_date: date | None = None # For POR_EVENTO resets
+    child_name: str | None = None
+    child_birthdate: date | None = None
+    telework_percentage: float | None = None # For mixta modality
     
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
@@ -114,64 +113,64 @@ class VacationRequest(SQLModel, table=True):
 
 
 class VacationRequestCreate(SQLModel):
-    request_type: Optional[RequestType] = None # Made optional for backward compatibility, eventually deprecated
-    policy_id: Optional[str] = None # The new way
-    leave_type_id: Optional[str] = None # UUID as str for JSON
+    request_type: RequestType | None = None # Made optional for backward compatibility, eventually deprecated
+    policy_id: str | None = None # The new way
+    leave_type_id: str | None = None # UUID as str for JSON
     start_date: datetime
-    end_date: Optional[datetime] = None
-    days_requested: Union[float, str]
-    assigned_manager_id: Optional[str] = None
-    assigned_rrhh_id: Optional[str] = None
-    description: Optional[str] = None
-    status: Optional[RequestStatus] = RequestStatus.BORRADOR
-    attachments: Optional[List[dict]] = None # List of {file_url, file_original_name}
+    end_date: datetime | None = None
+    days_requested: float | str
+    assigned_manager_id: str | None = None
+    assigned_rrhh_id: str | None = None
+    description: str | None = None
+    status: RequestStatus | None = RequestStatus.BORRADOR
+    attachments: list[dict] | None = None # List of {file_url, file_original_name}
     
     # Dynamic fields
-    causal_date: Optional[date] = None
-    child_name: Optional[str] = None
-    child_birthdate: Optional[date] = None
-    telework_percentage: Optional[float] = None
+    causal_date: date | None = None
+    child_name: str | None = None
+    child_birthdate: date | None = None
+    telework_percentage: float | None = None
 
 
 class VacationAttachmentResponse(SQLModel):
     id: UUID
     file_url: str
-    file_original_name: Optional[str] = None
+    file_original_name: str | None = None
     created_at: datetime
 
 class VacationRequestResponse(SQLModel):
     id: str
     user_id: str
     request_type: str # Changed from RequestType enum to str to allow dynamic slugs
-    policy_id: Optional[str] = None
-    leave_type_id: Optional[str] = None
+    policy_id: str | None = None
+    leave_type_id: str | None = None
     start_date: datetime
-    end_date: Optional[datetime]
+    end_date: datetime | None
     days_requested: float
     status: RequestStatus
-    assigned_manager_id: Optional[str] = None
-    assigned_rrhh_id: Optional[str] = None
-    manager_approved_at: Optional[datetime] = None
-    manager_approved_by: Optional[str] = None
-    rrhh_approved_at: Optional[datetime] = None
-    rrhh_approved_by: Optional[str] = None
-    rejection_reason: Optional[str] = None
-    description: Optional[str] = None
+    assigned_manager_id: str | None = None
+    assigned_rrhh_id: str | None = None
+    manager_approved_at: datetime | None = None
+    manager_approved_by: str | None = None
+    rrhh_approved_at: datetime | None = None
+    rrhh_approved_by: str | None = None
+    rejection_reason: str | None = None
+    description: str | None = None
     
     # Dynamic fields
-    causal_date: Optional[date] = None
-    child_name: Optional[str] = None
-    child_birthdate: Optional[date] = None
-    telework_percentage: Optional[float] = None
+    causal_date: date | None = None
+    child_name: str | None = None
+    child_birthdate: date | None = None
+    telework_percentage: float | None = None
 
-    attachments: Optional[List[VacationAttachmentResponse]] = []
-    attachments: List[VacationAttachmentResponse] = []
+    attachments: list[VacationAttachmentResponse] | None = []
+    attachments: list[VacationAttachmentResponse] = []
     created_at: datetime
     updated_at: datetime
     # Include user info for display
-    user_name: Optional[str] = None
-    assigned_manager_name: Optional[str] = None
-    assigned_rrhh_name: Optional[str] = None
+    user_name: str | None = None
+    assigned_manager_name: str | None = None
+    assigned_rrhh_name: str | None = None
 
 
 class CategoryBalance(SQLModel):

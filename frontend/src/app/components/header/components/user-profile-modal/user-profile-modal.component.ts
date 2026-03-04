@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../config/environment';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-user-profile-modal',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, NgIconComponent],
     templateUrl: './user-profile-modal.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

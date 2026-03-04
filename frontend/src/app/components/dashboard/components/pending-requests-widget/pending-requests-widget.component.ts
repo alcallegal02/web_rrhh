@@ -1,6 +1,7 @@
 import { Component, input, output, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgIconComponent } from '@ng-icons/core';
 
 export interface DashboardVacationRequest {
     id: string;
@@ -15,7 +16,7 @@ export interface DashboardVacationRequest {
 
 @Component({
     selector: 'app-pending-requests-widget',
-    imports: [CommonModule, FormsModule, DatePipe],
+    imports: [CommonModule, FormsModule, DatePipe, NgIconComponent],
     templateUrl: './pending-requests-widget.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

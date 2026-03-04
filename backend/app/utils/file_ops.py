@@ -1,14 +1,14 @@
-import os
-import re
 import logging
+import re
 from pathlib import Path
-from typing import Set
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 import aiofiles.os
+
 
 async def delete_file_from_disk(file_url: str) -> bool:
     """
@@ -50,7 +50,7 @@ async def sync_images_from_content(old_content: str, new_content: str):
         return
 
     # Helper function to find all /uploads/ URLs
-    def find_uploads(content: str) -> Set[str]:
+    def find_uploads(content: str) -> set[str]:
         if not content:
             return set()
         # Find all src="/uploads/..."

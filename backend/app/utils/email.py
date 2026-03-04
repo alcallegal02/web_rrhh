@@ -1,12 +1,14 @@
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import logging
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)
 
 from starlette.concurrency import run_in_threadpool
+
 
 def _send_credentials_email_sync(email_to: str, code: str, token: str):
     """Sync implementation of email sending"""

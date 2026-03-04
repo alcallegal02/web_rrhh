@@ -1,5 +1,6 @@
+
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
-from typing import List
 
 
 class Settings(BaseSettings):
@@ -60,7 +61,7 @@ class Settings(BaseSettings):
     MAX_NEWS_PAYLOAD_MB: int = 30
     DAILY_UPLOAD_QUOTA_MB: int = 50
     
-    ALLOWED_IMAGE_TYPES: List[str] = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    ALLOWED_IMAGE_TYPES: list[str] = ["image/jpeg", "image/png", "image/gif", "image/webp"]
     
     @property
     def MAX_IMAGE_SIZE(self) -> int:
@@ -88,16 +89,14 @@ class Settings(BaseSettings):
         return self.DAILY_UPLOAD_QUOTA_MB * 1024 * 1024
     
     @property
-    def cors_origins_list(self) -> List[str]:
+    def cors_origins_list(self) -> list[str]:
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
         
     @property
-    def allowed_hosts_list(self) -> List[str]:
+    def allowed_hosts_list(self) -> list[str]:
         return [host.strip() for host in self.ALLOWED_HOSTS.split(",")]
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = ConfigDict(env_file=".env", case_sensitive=True)
 
 
 settings = Settings()

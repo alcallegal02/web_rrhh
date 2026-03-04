@@ -1,7 +1,7 @@
 <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
     <div class="flex items-center gap-3 pb-2 border-b border-gray-100">
         <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
-            <span class="material-symbols-rounded">account_tree</span>
+            <ng-icon name="lucideNetwork" class="text-2xl"></ng-icon>
         </div>
         <div>
             <h3 class="text-lg font-bold text-gray-900 leading-tight">Jerarquía y Responsables</h3>
@@ -34,8 +34,8 @@
                         <p class="text-sm font-bold text-gray-900 truncate">{{parent.full_name}}</p>
                     </div>
                     <button type="button" (click)="removeParent()"
-                        class="text-gray-400 hover:text-red-500 transition-colors mr-1">
-                        <span class="material-symbols-rounded text-sm">close</span>
+                        class="text-gray-400 hover:text-red-500 transition-colors mr-1 flex items-center">
+                        <ng-icon name="lucideX" class="text-sm"></ng-icon>
                     </button>
                 </div>
                 } @else {
@@ -43,8 +43,8 @@
                     <input type="text" [ngModel]="parentSearch()" (ngModelChange)="parentSearch.set($event)"
                         (focus)="openParentDropdown()" placeholder="Buscar jefe..." class="input-field-new pl-9 text-xs"
                         autocomplete="off" [ngModelOptions]="{standalone: true}">
-                    <span
-                        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-rounded text-lg">search</span>
+                    <ng-icon name="lucideSearch"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></ng-icon>
 
                     @if (parentDropdownOpen() && filteredParents().length > 0) {
                     <div
@@ -82,8 +82,8 @@
                 <input type="text" class="input-field-new pl-9 text-xs" [ngModel]="managerSearch()"
                     (ngModelChange)="managerSearch.set($event)" (focus)="openManagerDropdown()"
                     placeholder="Añadir gestor..." autocomplete="off" [ngModelOptions]="{standalone: true}">
-                <span
-                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-rounded text-lg">search</span>
+                <ng-icon name="lucideSearch"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></ng-icon>
                 @if (managerDropdownOpen() && filteredManagers().length > 0) {
                 <div
                     class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto py-1 animate-in fade-in zoom-in-95">
@@ -108,7 +108,8 @@
                     class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-100 text-[11px] font-bold flex items-center gap-2 group">
                     {{ m.full_name }}
                     <button type="button" (click)="removeManager(i)"
-                        class="text-blue-300 hover:text-red-500 transition-colors">✕</button>
+                        class="text-blue-300 hover:text-red-500 transition-colors flex items-center"><ng-icon
+                            name="lucideX"></ng-icon></button>
                 </div>
                 }
             </div>
@@ -123,8 +124,8 @@
                 <input type="text" class="input-field-new pl-9 text-xs" [ngModel]="rrhhSearch()"
                     (ngModelChange)="rrhhSearch.set($event)" (focus)="openRrhhDropdown()" placeholder="Asignar RRHH..."
                     autocomplete="off" [ngModelOptions]="{standalone: true}">
-                <span
-                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-rounded text-lg">search</span>
+                <ng-icon name="lucideSearch"
+                    class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></ng-icon>
                 @if (rrhhDropdownOpen() && filteredRrhh().length > 0) {
                 <div
                     class="absolute z-50 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-48 overflow-y-auto py-1 animate-in fade-in zoom-in-95">
@@ -149,7 +150,8 @@
                     class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-100 text-[11px] font-bold flex items-center gap-2 group">
                     {{ r.full_name }}
                     <button type="button" (click)="removeRrhh(i)"
-                        class="text-indigo-300 hover:text-red-500 transition-colors">✕</button>
+                        class="text-indigo-300 hover:text-red-500 transition-colors flex items-center"><ng-icon
+                            name="lucideX"></ng-icon></button>
                 </div>
                 }
             </div>

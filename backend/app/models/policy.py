@@ -1,8 +1,9 @@
-from sqlmodel import SQLModel, Field
-from typing import Optional
-from uuid import UUID, uuid4
 from datetime import datetime
 from enum import Enum
+from uuid import UUID, uuid4
+
+from sqlmodel import Field, SQLModel
+
 
 class DurationUnit(str, Enum):
     DAYS_NATURAL = "days_natural" # Dias naturales
@@ -27,7 +28,7 @@ class PermissionPolicy(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     slug: str = Field(unique=True, index=True) 
     name: str = Field(index=True)
-    description: Optional[str] = None
+    description: str | None = None
     
     # Duration Rules
     duration_value: float 
@@ -37,16 +38,16 @@ class PermissionPolicy(SQLModel, table=True):
     is_paid: bool = Field(default=True)
     requires_justification: bool = Field(default=True)
     modality: str = Field(default=Modality.PRESENCIAL_AUSENTE)
-    limit_age_child: Optional[int] = None
+    limit_age_child: int | None = None
     
     # Recurrence & Lifecycle (Refactor 2026)
     reset_type: str = Field(default=PolicyResetType.ANUAL_CALENDARIO) 
     reset_month: int = Field(default=1) # 1=January
     reset_day: int = Field(default=1)   # 1=1st
     
-    max_usos_por_periodo: Optional[int] = Field(default=None) # Start count
+    max_usos_por_periodo: int | None = Field(default=None) # Start count
     max_days_per_period: float = Field(default=0.0) # Duration limit (renamed from max_days_per_year)
-    max_duration_per_day: Optional[float] = Field(default=None) # New: Daily limit (e.g. 1.0 for Lactancia)
+    max_duration_per_day: float | None = Field(default=None) # New: Daily limit (e.g. 1.0 for Lactancia)
     
     validity_window_value: int = Field(default=0)
     validity_window_unit: str = Field(default="months") # months/weeks/days
@@ -62,11 +63,11 @@ class PermissionPolicy(SQLModel, table=True):
     
     # Specifics
     travel_extension_days: float = Field(default=0.0)
-    requires_document_type: Optional[str] = None
+    requires_document_type: str | None = None
     
     # visual
-    color: Optional[str] = "#3B82F6"
-    icon: Optional[str] = None
+    color: str | None = "#3B82F6"
+    icon: str | None = None
     is_public_dashboard: bool = Field(default=False) # Show in dashboard header?
 
     # System flags
@@ -80,20 +81,20 @@ class PermissionPolicy(SQLModel, table=True):
 class PermissionPolicyCreate(SQLModel):
     slug: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     duration_value: float
     duration_unit: DurationUnit
     is_paid: bool = True
     requires_justification: bool = True
     modality: Modality = Modality.PRESENCIAL_AUSENTE
-    limit_age_child: Optional[int] = None
+    limit_age_child: int | None = None
     
     reset_type: PolicyResetType = PolicyResetType.ANUAL_CALENDARIO
     reset_month: int = 1
     reset_day: int = 1
-    max_usos_por_periodo: Optional[int] = None
+    max_usos_por_periodo: int | None = None
     max_days_per_period: float = 0.0
-    max_duration_per_day: Optional[float] = None
+    max_duration_per_day: float | None = None
     validity_window_value: int = 0
     validity_window_unit: str = "months"
     is_accumulable: bool = False
@@ -104,43 +105,43 @@ class PermissionPolicyCreate(SQLModel):
     split_min_duration: float = 0.0
     
     travel_extension_days: float = 0.0
-    requires_document_type: Optional[str] = None
+    requires_document_type: str | None = None
     
-    color: Optional[str] = "#3B82F6"
-    icon: Optional[str] = None
+    color: str | None = "#3B82F6"
+    icon: str | None = None
     is_featured: bool = False
     is_public_dashboard: bool = False
 
 class PermissionPolicyUpdate(SQLModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    duration_value: Optional[float] = None
-    duration_unit: Optional[DurationUnit] = None
-    is_paid: Optional[bool] = None
-    requires_justification: Optional[bool] = None
-    modality: Optional[Modality] = None
-    limit_age_child: Optional[int] = None
+    name: str | None = None
+    description: str | None = None
+    duration_value: float | None = None
+    duration_unit: DurationUnit | None = None
+    is_paid: bool | None = None
+    requires_justification: bool | None = None
+    modality: Modality | None = None
+    limit_age_child: int | None = None
     
-    reset_type: Optional[PolicyResetType] = None
-    reset_month: Optional[int] = None
-    reset_day: Optional[int] = None
-    max_usos_por_periodo: Optional[int] = None
-    max_days_per_period: Optional[float] = None
-    max_duration_per_day: Optional[float] = None
-    validity_window_value: Optional[int] = None
-    validity_window_unit: Optional[str] = None
-    is_accumulable: Optional[bool] = None
-    accumulable_years: Optional[int] = None
+    reset_type: PolicyResetType | None = None
+    reset_month: int | None = None
+    reset_day: int | None = None
+    max_usos_por_periodo: int | None = None
+    max_days_per_period: float | None = None
+    max_duration_per_day: float | None = None
+    validity_window_value: int | None = None
+    validity_window_unit: str | None = None
+    is_accumulable: bool | None = None
+    accumulable_years: int | None = None
     
-    allow_split: Optional[bool] = None
-    mandatory_immediate_duration: Optional[float] = None
-    split_min_duration: Optional[float] = None
+    allow_split: bool | None = None
+    mandatory_immediate_duration: float | None = None
+    split_min_duration: float | None = None
     
-    travel_extension_days: Optional[float] = None
-    requires_document_type: Optional[str] = None
+    travel_extension_days: float | None = None
+    requires_document_type: str | None = None
     
-    color: Optional[str] = None
-    icon: Optional[str] = None
-    is_active: Optional[bool] = None
-    is_featured: Optional[bool] = None
-    is_public_dashboard: Optional[bool] = None
+    color: str | None = None
+    icon: str | None = None
+    is_active: bool | None = None
+    is_featured: bool | None = None
+    is_public_dashboard: bool | None = None

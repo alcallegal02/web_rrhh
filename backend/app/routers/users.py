@@ -1,21 +1,20 @@
-from typing import List
+from typing import Annotated
 import logging
-from uuid import UUID
 
-from fastapi import APIRouter, Depends, status, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import app.services.user as UserService  # Functional Module Import
 from app.database import get_session
 from app.models.user import User, UserCreate, UserResponse, UserRole, UserUpdate
 from app.routers.auth import get_current_user
-import app.services.user as UserService # Functional Module Import
 
 router = APIRouter(tags=["users"])
 
-@router.get("", response_model=List[UserResponse])
+@router.get("", response_model=list[UserResponse])
 async def list_users(
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
 ):
     # service = UserService(session) # Removed
     actor_role = UserRole(current_user.role)
@@ -30,10 +29,10 @@ async def list_users(
     
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
-    payload: UserCreate,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    payload: UserCreate
 ):
     try:
         logging.info(f"CREATING USER request received. Payload: {payload.model_dump()}")
@@ -45,11 +44,11 @@ async def create_user(
 
 @router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
-    user_id: str,
-    payload: UserUpdate,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user_id: str,
+    payload: UserUpdate
 ):
     logging.info(f"UPDATING USER {user_id} with payload: {payload.model_dump()}")
     return await UserService.update_user(session, user_id, payload, current_user, ip_address=request.client.host)
@@ -57,10 +56,10 @@ async def update_user(
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
-    user_id: str,
     request: Request,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session),
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    user_id: str
 ):
     await UserService.delete_user(session, user_id, current_user, ip_address=request.client.host)
 

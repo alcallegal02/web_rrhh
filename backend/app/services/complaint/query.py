@@ -1,14 +1,14 @@
-from typing import List, Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select, desc
-from sqlalchemy.orm import selectinload
+from sqlmodel import desc, select
 
 from app.models.complaint import Complaint
+
 
 async def get_complaint_by_code(
     session: AsyncSession,
     code: str
-) -> Optional[Complaint]:
+) -> Complaint | None:
     """Get a complaint by its unique code (internal/admin)"""
     result = await session.execute(
         select(Complaint)
@@ -22,7 +22,7 @@ async def verify_complaint_access(
     session: AsyncSession,
     code: str,
     access_token: str
-) -> Optional[Complaint]:
+) -> Complaint | None:
     """Get a complaint ONLY if the access token matches (public)"""
     result = await session.execute(
         select(Complaint)
@@ -37,7 +37,7 @@ async def verify_complaint_access(
 
 async def get_all_complaints(
     session: AsyncSession
-) -> List[Complaint]:
+) -> list[Complaint]:
     """Get all complaints (for administrators)"""
     result = await session.execute(
         select(Complaint)

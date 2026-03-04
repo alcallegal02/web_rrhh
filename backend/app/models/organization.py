@@ -1,17 +1,18 @@
-from typing import Optional, List, TYPE_CHECKING
-from uuid import UUID, uuid4
 from datetime import datetime
-from sqlmodel import SQLModel, Field, Relationship
+from typing import TYPE_CHECKING
+from uuid import UUID, uuid4
+
+from sqlmodel import Field, SQLModel
 
 if TYPE_CHECKING:
-    from app.models.user import User
+    pass
 
 class Department(SQLModel, table=True):
     __tablename__ = "departments"
     
-    id: Optional[UUID] = Field(default_factory=uuid4, primary_key=True)
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     name: str = Field(unique=True, index=True)
-    description: Optional[str] = None
+    description: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -21,9 +22,9 @@ class Department(SQLModel, table=True):
 class Position(SQLModel, table=True):
     __tablename__ = "positions"
     
-    id: Optional[UUID] = Field(default_factory=uuid4, primary_key=True)
+    id: UUID | None = Field(default_factory=uuid4, primary_key=True)
     name: str = Field(unique=True, index=True)
-    description: Optional[str] = None
+    description: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     

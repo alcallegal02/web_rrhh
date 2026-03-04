@@ -52,18 +52,14 @@
         <div class="lg:col-span-8 space-y-8 animate-fadeIn" style="animation-delay: 200ms;">
             <div class="relative">
                 <div class="flex items-center gap-2 mb-4 px-2">
-                    <span class="text-xl">👥</span>
+                    <ng-icon name="lucideUsers" class="text-xl"></ng-icon>
                     <h2 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Gestión de Equipo</h2>
                     <span class="ml-2 bg-inespasa-dark text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{{
                         pendingRequests().length }} pendientes</span>
                 </div>
-                @defer (on viewport) {
                 <app-pending-requests-widget [requests]="pendingRequests()" [processingId]="processingRequestId()"
                     (approve)="handleApprove($event)" (reject)="handleReject($event)">
                 </app-pending-requests-widget>
-                } @placeholder {
-                <div class="h-40 bg-gray-100 animate-pulse rounded-xl"></div>
-                }
             </div>
         </div>
     </div>

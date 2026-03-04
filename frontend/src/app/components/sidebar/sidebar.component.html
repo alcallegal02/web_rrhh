@@ -16,10 +16,7 @@
                 class="object-contain transition-all duration-300">
         </div>
         <button class="lg:hidden p-2 text-gray-400 hover:text-inespasa-dark transition-colors" (click)="close()">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <ng-icon name="lucideX" class="text-2xl"></ng-icon>
         </button>
     </div>
 
@@ -30,7 +27,8 @@
         <a routerLink="/dashboard" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📊</span>
+            <ng-icon name="lucideLayoutDashboard"
+                class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Dashboard</span>
             }
@@ -39,7 +37,7 @@
         <a routerLink="/vacation" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">🏖️</span>
+            <ng-icon name="lucidePalmtree" class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Vacaciones</span>
             }
@@ -48,7 +46,8 @@
         <a routerLink="/requests-management" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📋</span>
+            <ng-icon name="lucideClipboardList"
+                class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Gestión de Solicitudes</span>
             }
@@ -57,7 +56,7 @@
         <a routerLink="/org-chart" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">🌳</span>
+            <ng-icon name="lucideNetwork" class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Organigrama</span>
             }
@@ -66,7 +65,7 @@
         <a routerLink="/news" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📰</span>
+            <ng-icon name="lucideNewspaper" class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Noticias</span>
             }
@@ -84,7 +83,7 @@
         <a routerLink="/users" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">👥</span>
+            <ng-icon name="lucideUsers" class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Usuarios</span>
             }
@@ -93,7 +92,7 @@
         <a routerLink="/complaint/admin" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">⚖️</span>
+            <ng-icon name="lucideScale" class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Denuncias</span>
             }
@@ -102,7 +101,8 @@
         <a routerLink="/audit" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">🛡️</span>
+            <ng-icon name="lucideShieldCheck"
+                class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Auditoría</span>
             }
@@ -111,7 +111,8 @@
         <a routerLink="/calendar-config" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📅</span>
+            <ng-icon name="lucideCalendarDays"
+                class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Calendario</span>
             }
@@ -120,7 +121,7 @@
         <a routerLink="/news/manage" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">📰</span>
+            <ng-icon name="lucideNewspaper" class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Gestión Noticias</span>
             }
@@ -129,7 +130,7 @@
         <a routerLink="/config/absence-types"
             routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg" (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <span class="mr-3 text-lg opacity-80 group-hover:opacity-100 flex-none">⚙️</span>
+            <ng-icon name="lucideSettings" class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Configuración</span>
             }
@@ -141,7 +142,7 @@
         <a routerLink="/login" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-3 rounded-lg text-inespasa-dark hover:bg-inespasa-dark hover:text-white transition-all font-bold group mt-4 border border-inespasa-dark/10">
-            <span class="mr-3 flex-none">🔐</span>
+            <ng-icon name="lucideLockKeyhole" class="mr-3 text-xl flex-none"></ng-icon>
             @if (!isCollapsed()) {
             <span class="whitespace-nowrap">Iniciar Sesión</span>
             }

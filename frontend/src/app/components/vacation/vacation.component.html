@@ -1,7 +1,8 @@
 <div class="space-y-8 pb-8">
     <div class="flex justify-between items-center">
         <div>
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">🏖️ Gestión de Derechos Laborales</h1>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2 flex items-center gap-3"><ng-icon name="lucidePalmtree"
+                    class="text-inespasa-dark"></ng-icon> Gestión de Derechos Laborales</h1>
             <p class="text-gray-600">Saldos, calendario y solicitudes de permisos</p>
         </div>
     </div>
@@ -19,7 +20,7 @@
         <!-- New Request Form (Persistent at bottom) -->
         <div class="card bg-gray-900 text-white border-0 shadow-2xl">
             <h2 class="text-2xl font-bold mb-6 flex items-center">
-                <span class="mr-3">⚡</span> Nueva Solicitud
+                <span class="mr-3"><ng-icon name="lucideSparkles"></ng-icon></span> Nueva Solicitud
             </h2>
             <div class="p-1">
                 <div class="mb-6">
@@ -60,13 +61,15 @@
             <div class="flex justify-between items-start mb-8">
                 <div>
                     <h3 class="text-3xl font-black uppercase tracking-tighter flex items-center gap-3">
-                        <span class="text-blue-500 italic">⚡</span>
+                        <span class="text-blue-500 italic flex items-center"><ng-icon
+                                name="lucideSparkles"></ng-icon></span>
                         {{ newRequest().id ? 'Editar Solicitud' : 'Nueva Solicitud' }}
                     </h3>
                     <p class="text-gray-400 text-sm mt-1">Completa los detalles para tramitar tu permiso</p>
                 </div>
-                <button (click)="closeDayModal()" class="text-gray-500 hover:text-white transition-colors">
-                    <span class="text-3xl">×</span>
+                <button (click)="closeDayModal()"
+                    class="text-gray-500 hover:text-white transition-colors flex items-center">
+                    <ng-icon name="lucideX" class="text-3xl"></ng-icon>
                 </button>
             </div>
 
@@ -78,14 +81,16 @@
                     @if (h) {
                     <div
                         class="flex items-center gap-2 px-3 py-1 bg-red-900/30 text-red-400 rounded-full border border-red-800/30 text-xs font-bold">
-                        <span>🚩 Festivo: {{ h.name }}</span>
+                        <span class="flex items-center gap-1"><ng-icon name="lucideFileText"></ng-icon> Festivo: {{
+                            h.name }}</span>
                     </div>
                     }
                     @let r = selectedDay()?.request;
                     @if (r) {
                     <div
                         class="flex items-center gap-2 px-3 py-1 bg-blue-900/30 text-blue-400 rounded-full border border-blue-800/30 text-xs font-bold">
-                        <span>📋 Ya tienes una solicitud: {{ r.status }}</span>
+                        <span class="flex items-center gap-1"><ng-icon name="lucideClipboardList"></ng-icon> Ya tienes
+                            una solicitud: {{ r.status }}</span>
                     </div>
                     }
                 </div>
@@ -123,11 +128,11 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scaleIn">
             <div class="p-6 border-b flex justify-between items-center bg-gray-50">
                 <h3 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                    <span>📄</span> Detalle de Solicitud
+                    <ng-icon name="lucideFile"></ng-icon> Detalle de Solicitud
                 </h3>
                 <button (click)="closeRequestDetails()"
                     class="text-gray-400 hover:text-gray-600 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors">
-                    ✕
+                    <ng-icon name="lucideX"></ng-icon>
                 </button>
             </div>
             <div class="p-6 space-y-4">
@@ -174,7 +179,8 @@
                         @for (att of req.attachments; track $index) {
                         <a [href]="att.file_url" target="_blank"
                             class="flex items-center gap-2 p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors text-sm font-bold">
-                            <span>📎</span> {{ att.file_original_name || 'Documento' }}
+                            <span class="flex items-center"><ng-icon name="lucidePaperclip"></ng-icon></span> {{
+                            att.file_original_name || 'Documento' }}
                         </a>
                         }
                     </div>
@@ -193,8 +199,8 @@
                     Editar
                 </button>
                 <button (click)="deleteRequest(req)"
-                    class="px-4 py-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl font-bold transition-colors">
-                    🗑️
+                    class="px-4 py-3 bg-red-100 text-red-600 hover:bg-red-200 rounded-xl font-bold transition-colors flex items-center justify-center">
+                    <ng-icon name="lucideTrash2"></ng-icon>
                 </button>
                 } @else {
                 <button (click)="closeRequestDetails()"

@@ -1,19 +1,20 @@
 @if (userId() && role() !== 'superadmin') {
 <div class="bg-red-50 p-6 rounded-2xl border border-red-100 space-y-3">
-    <h4 class="text-sm font-bold text-red-800 flex items-center gap-2">⚠️ Zona de Gestión Crítica</h4>
+    <h4 class="text-sm font-bold text-red-800 flex items-center gap-2"><ng-icon name="lucideTriangleAlert"></ng-icon>
+        Zona de Gestión Crítica</h4>
     <div class="flex gap-2">
         @if (isActive()) {
         <button type="button"
-            class="flex-1 bg-white text-orange-600 border border-orange-200 hover:bg-orange-50 px-4 py-2 rounded-lg text-xs font-bold transition-all"
-            (click)="deactivate.emit()">🚫 Baja Temporal</button>
+            class="flex-1 bg-white text-orange-600 border border-orange-200 hover:bg-orange-50 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+            (click)="deactivate.emit()"><ng-icon name="lucideBan"></ng-icon> Baja Temporal</button>
         } @else {
         <button type="button"
-            class="flex-1 bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg text-xs font-bold transition-all"
-            (click)="activate.emit()">✅ Reactivar Alta</button>
+            class="flex-1 bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+            (click)="activate.emit()"><ng-icon name="lucideCheck"></ng-icon> Reactivar Alta</button>
         }
         <button type="button"
-            class="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg text-xs font-bold transition-all"
-            (click)="delete.emit()">🗑️ Eliminar Definitivo</button>
+            class="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
+            (click)="delete.emit()"><ng-icon name="lucideTrash"></ng-icon> Eliminar Definitivo</button>
     </div>
 </div>
 }

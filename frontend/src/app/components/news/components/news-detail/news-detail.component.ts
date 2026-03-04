@@ -8,10 +8,11 @@ import { environment } from '../../../../config/environment';
 import { FileUrlPipe } from '../../../../pipes/file-url.pipe';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { map, of } from 'rxjs';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-news-detail',
-    imports: [CommonModule, RouterModule, DatePipe, FileUrlPipe],
+    imports: [CommonModule, RouterModule, DatePipe, FileUrlPipe, NgIconComponent],
     templateUrl: './news-detail.component.html',
     styleUrl: './news-detail.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush

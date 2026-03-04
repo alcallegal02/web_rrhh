@@ -1,9 +1,24 @@
-<div class="space-y-8 pb-8">
+<div class="space-y-6 pb-8">
+
+    <!-- Page Header -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm px-8 py-6 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div
+                class="h-10 w-10 rounded-xl bg-inespasa text-white flex items-center justify-center shadow-lg shadow-inespasa-light/20">
+                <ng-icon name="lucideNewspaper" class="text-xl"></ng-icon>
+            </div>
+            <div>
+                <h1 class="text-lg font-black text-gray-900 tracking-tight">Gestión de Noticias</h1>
+                <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">Portal de comunicación
+                    interna</p>
+            </div>
+        </div>
+        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            {{ newsList().length }} {{ newsList().length === 1 ? 'noticia' : 'noticias' }}
+        </div>
+    </div>
 
     <!-- Create/Edit News Form (RRHH/Admin/Superadmin only) -->
-    <!-- Always show form if managing, but maybe we only want to show it when needed? 
-         Original showed it always if authorized. 
-         But typically "New" is always available. Edit populates it. -->
     @if (authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()) {
     <app-news-form [initialData]="initialFormData()" (save)="onSave($event)" (cancel)="onCancel()">
     </app-news-form>
@@ -14,4 +29,5 @@
         [canManage]="authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()" layout="list"
         (edit)="onEdit($event)" (delete)="onDelete($event)" (statusChange)="onStatusChange($event)">
     </app-news-list>
+
 </div>

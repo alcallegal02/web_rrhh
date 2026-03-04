@@ -1,20 +1,17 @@
-from pathlib import Path
-import aiofiles
-from fastapi import UploadFile, HTTPException, status
-from typing import Tuple, Optional
-import io
-import httpx
 import os
-from PIL import Image
+
+import httpx
+from fastapi import HTTPException, UploadFile, status
 
 from app.config import settings
-from app.utils.security import validate_file_extension, validate_magic_numbers, sanitize_filename
-from app.utils.upload_security import check_upload_quota
-from app.utils.file_processing import get_file_hash, compress_content, is_compressed
+
 # from app.utils.image_processing import process_image_to_webp # No longer needed locally
 from app.services.audit import log_action
-
-
+from app.utils.security import (
+    validate_file_extension,
+    validate_magic_numbers,
+)
+from app.utils.upload_security import check_upload_quota
 
 
 class UploadService:
@@ -46,7 +43,7 @@ class UploadService:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Media Proxy Error: {str(e)}")
 
     @staticmethod
-    async def validate_document(file: UploadFile) -> Tuple[bytes, str]:
+    async def validate_document(file: UploadFile) -> tuple[bytes, str]:
         """Validate document file (Pre-flight check)"""
         allowed = [
             'application/pdf', 'application/msword', 

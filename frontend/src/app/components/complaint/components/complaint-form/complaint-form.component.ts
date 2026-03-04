@@ -6,10 +6,11 @@ import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-t
 import { CopyFieldComponent } from '../../../shared/copy-field/copy-field.component';
 import { ComplaintService } from '../../../../services/complaint.service';
 import { ConfigService } from '../../../../services/config';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-complaint-form',
-    imports: [CommonModule, FormsModule, RichTextEditorComponent, CopyFieldComponent],
+    imports: [CommonModule, FormsModule, RichTextEditorComponent, CopyFieldComponent, NgIconComponent],
     templateUrl: './complaint-form.component.html',
     styleUrl: './complaint-form.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush

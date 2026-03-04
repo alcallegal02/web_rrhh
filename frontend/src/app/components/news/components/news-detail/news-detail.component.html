@@ -18,9 +18,8 @@
         </div>
         <p class="font-bold animate-pulse">Cargando noticia...</p>
     </div>
-    } @else if (error()) {
     <div class="card bg-red-50 border-red-100 text-center py-12">
-        <div class="text-4xl mb-4">⚠️</div>
+        <div class="text-4xl mb-4 flex justify-center text-red-500"><ng-icon name="lucideTriangleAlert"></ng-icon></div>
         <p class="text-red-700 font-bold mb-2">{{ error() }}</p>
         <button (click)="goBack()" class="btn-primary mt-4">Regresar</button>
     </div>
@@ -42,7 +41,8 @@
                             @if (other.cover_image_url) {
                             <img [src]="other.cover_image_url | fileUrl" class="w-full h-full object-cover">
                             } @else {
-                            <div class="w-full h-full flex items-center justify-center text-gray-300">📌</div>
+                            <div class="w-full h-full flex items-center justify-center text-gray-300"><ng-icon
+                                    name="lucideFileText"></ng-icon></div>
                             }
                         </div>
                         <div class="flex-1 space-y-1">
@@ -105,7 +105,8 @@
                     <div class="mt-16 pt-10 border-t border-gray-100">
                         <h3
                             class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                            <span>📎 Recurso Adjuntos</span>
+                            <span class="flex items-center gap-2"><ng-icon name="lucidePaperclip"></ng-icon> Recurso
+                                Adjuntos</span>
                             <span class="flex-1 h-px bg-gray-100"></span>
                         </h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -114,7 +115,8 @@
                                 class="group flex items-center gap-4 p-4 bg-gray-50 hover:bg-white border border-transparent hover:border-inespasa-dark/10 rounded-2xl transition-all hover:shadow-lg">
                                 <div
                                     class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm group-hover:bg-inespasa-dark group-hover:text-white transition-all">
-                                    {{ isImage(att.file_url) ? '🖼️' : '📄' }}
+                                    <ng-icon
+                                        [name]="isImage(att.file_url) ? 'lucideImagePlus' : 'lucideFileText'"></ng-icon>
                                 </div>
                                 <div class="flex-1 overflow-hidden">
                                     <p
@@ -136,7 +138,8 @@
                 </div>
                 <div class="px-8 pb-8 md:px-10 md:pb-10 pt-4 flex justify-end">
                     <div class="flex items-center gap-2 text-gray-400 text-xs font-black uppercase tracking-widest">
-                        <span>📅 Publicado el {{ item.publish_date | date:'dd MMMM, yyyy' }}</span>
+                        <span class="flex items-center gap-1"><ng-icon name="lucideCalendarDays"></ng-icon> Publicado el
+                            {{ item.publish_date | date:'dd MMMM, yyyy' }}</span>
                     </div>
                 </div>
             </article>

@@ -1,10 +1,11 @@
-import hashlib
 import gzip
+import hashlib
 import io
 import logging
-import aiofiles
-import os
 from pathlib import Path
+
+import aiofiles
+
 from app.config import settings
 
 logger = logging.getLogger(__name__)

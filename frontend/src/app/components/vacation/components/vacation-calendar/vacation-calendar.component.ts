@@ -2,10 +2,11 @@ import { Component, ChangeDetectionStrategy, input, output } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { CalendarDay } from '../../vacation.types';
 import { VacationUtils } from '../../vacation.utils';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-vacation-calendar',
-    imports: [CommonModule],
+    imports: [CommonModule, NgIconComponent],
     templateUrl: './vacation-calendar.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

@@ -1,12 +1,12 @@
 <div class="p-6 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="mb-6 flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-gray-800">Auditoría del Sistema</h2>
-            <button (click)="logsResource.reload()"
-                class="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors">
-                <i class="fas fa-sync-alt mr-1"></i> Recargar
-            </button>
+        <div class="mb-8">
+            <div>
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Auditoría del Sistema</h2>
+                <p class="text-gray-500 mt-1 text-sm font-medium">Registro detallado de actividad y cambios en la
+                    plataforma.</p>
+            </div>
         </div>
 
         <app-audit-filters (filtersChanged)="onFiltersChanged($event)">

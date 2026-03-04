@@ -4,8 +4,8 @@
         <div
             class="mb-8 flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
             <h2
-                class="text-2xl font-bold text-gray-800 mb-4 sm:mb-0 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">
-                <i class="fas fa-calendar-alt mr-2 text-indigo-600"></i>
+                class="text-2xl font-bold text-gray-800 mb-4 sm:mb-0 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent flex items-center gap-2">
+                <ng-icon name="lucideCalendarDays" class="text-indigo-600 flex items-center text-3xl"></ng-icon>
                 Calendario Laboral
             </h2>
 
@@ -13,13 +13,13 @@
                 <!-- Year Selector -->
                 <div class="flex items-center bg-slate-100 rounded-lg p-1">
                     <button (click)="changeYear(-1)"
-                        class="p-2 hover:bg-white rounded-md transition duration-150 text-gray-600 hover:text-indigo-600 shadow-sm">
-                        <i class="fas fa-chevron-left"></i>
+                        class="p-2 hover:bg-white rounded-md transition duration-150 text-gray-600 hover:text-indigo-600 shadow-sm flex items-center justify-center">
+                        <ng-icon name="lucideChevronLeft"></ng-icon>
                     </button>
                     <span class="mx-4 text-xl font-bold text-gray-700 font-mono">{{ selectedYear() }}</span>
                     <button (click)="changeYear(1)"
-                        class="p-2 hover:bg-white rounded-md transition duration-150 text-gray-600 hover:text-indigo-600 shadow-sm">
-                        <i class="fas fa-chevron-right"></i>
+                        class="p-2 hover:bg-white rounded-md transition duration-150 text-gray-600 hover:text-indigo-600 shadow-sm flex items-center justify-center">
+                        <ng-icon name="lucideChevronRight"></ng-icon>
                     </button>
                 </div>
 
@@ -27,19 +27,19 @@
                 <div class="flex bg-slate-100 rounded-lg p-1">
                     <button (click)="viewMode.set('calendar')"
                         [class]="viewMode() === 'calendar' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                        class="px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center">
-                        <i class="fas fa-th mr-2"></i> Calendario
+                        class="px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2">
+                        <ng-icon name="lucideLayoutGrid"></ng-icon> Calendario
                     </button>
                     <button (click)="viewMode.set('list')"
                         [class]="viewMode() === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                        class="px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center">
-                        <i class="fas fa-list mr-2"></i> Lista
+                        class="px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2">
+                        <ng-icon name="lucideList"></ng-icon> Lista
                     </button>
                 </div>
 
                 <button (click)="openCreateModal()"
-                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium flex items-center">
-                    <i class="fas fa-plus mr-2"></i> Nuevo
+                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium flex items-center gap-2">
+                    <ng-icon name="lucidePlus"></ng-icon> Nuevo
                 </button>
             </div>
         </div>
@@ -47,7 +47,8 @@
         <!-- Content -->
         @if (loading()) {
         <div class="flex justify-center p-12">
-            <i class="fas fa-spinner fa-spin text-4xl text-indigo-600"></i>
+            <ng-icon name="lucideLoaderCircle"
+                class="animate-spin text-4xl text-indigo-600 flex items-center"></ng-icon>
         </div>
         } @else {
         @if (viewMode() === 'calendar') {

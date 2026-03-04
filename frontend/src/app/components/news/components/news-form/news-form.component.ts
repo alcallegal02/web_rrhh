@@ -7,6 +7,7 @@ import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-t
 import { NewsService } from '../../../../services/news.service';
 import { ConfigService } from '../../../../services/config';
 import { environment } from '../../../../config/environment';
+import { NgIconComponent } from '@ng-icons/core';
 
 export interface NewsFormModel {
     id?: string;
@@ -21,7 +22,7 @@ export interface NewsFormModel {
 
 @Component({
     selector: 'app-news-form',
-    imports: [CommonModule, FormsModule, RichTextEditorComponent],
+    imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIconComponent],
     templateUrl: './news-form.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

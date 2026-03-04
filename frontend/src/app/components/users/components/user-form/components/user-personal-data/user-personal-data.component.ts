@@ -1,13 +1,14 @@
 import { Component, EventEmitter, Input, Output, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { UserFormModel } from '../../user-form.component';
 import { environment } from '../../../../../../config/environment';
-import { UserFormModel } from '../../user-form.models';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-user-personal-data',
-    imports: [CommonModule, FormsModule],
-    templateUrl: './user-personal-data.component.html'
+    imports: [CommonModule, FormsModule, NgIconComponent],
+    templateUrl: './user-personal-data.component.html',
 })
 export class UserPersonalDataComponent {
     // Inputs

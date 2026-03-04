@@ -12,8 +12,8 @@
         <div (click)="openRequestDetails(request)"
             class="p-4 hover:bg-blue-50 transition-colors flex justify-between items-center cursor-pointer group">
             <div class="flex items-center gap-4">
-                <div class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-xl">
-                    {{ getIcon(request.request_type) }}
+                <div class="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-full text-xl text-gray-500">
+                    <ng-icon [name]="getIcon(request.request_type)"></ng-icon>
                 </div>
                 <div>
                     <h4 class="font-bold text-gray-800 capitalize leading-none mb-1 text-sm">

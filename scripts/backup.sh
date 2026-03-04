@@ -4,7 +4,7 @@
 echo "Starting backup service..."
 
 while true; do
-    # Wait until 3:00 AM
+    # Wait until 03:00 AM
     current_hour=$(date +%H)
     if [ "$current_hour" != "03" ]; then
         # Check every hour

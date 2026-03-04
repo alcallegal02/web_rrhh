@@ -5,10 +5,11 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { UserProfileModalComponent } from './components/user-profile-modal/user-profile-modal.component';
+import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterModule, UserProfileModalComponent],
+  imports: [CommonModule, RouterModule, UserProfileModalComponent, NgIconComponent],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
