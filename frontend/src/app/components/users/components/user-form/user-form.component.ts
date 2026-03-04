@@ -17,7 +17,10 @@ import { UserHierarchySelectorComponent } from './components/user-hierarchy-sele
 import { UserAllowancesTableComponent } from './components/user-allowances-table/user-allowances-table.component';
 import { UserAttachmentsComponent } from './components/user-attachments/user-attachments.component';
 import { UserDangerZoneComponent } from './components/user-danger-zone/user-danger-zone.component';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucideUser, lucideUserPlus, lucideSave, lucideX, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-user-form',
@@ -31,6 +34,11 @@ import { NgIconComponent } from '@ng-icons/core';
         UserAttachmentsComponent,
         UserDangerZoneComponent,
         NgIconComponent
+    ],
+    providers: [
+        provideIcons({
+            lucideUser, lucideUserPlus, lucideSave, lucideX, lucideHelpCircle
+        })
     ],
     templateUrl: './user-form.component.html'
 })

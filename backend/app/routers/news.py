@@ -30,7 +30,7 @@ async def create_news_item(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    news_data: NewsCreate
+    news_data: Annotated[NewsCreate, Depends()]
 ):
     """Create a new news item (RRHH/admin/superadmin)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -138,7 +138,7 @@ async def update_news_item(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     news_id: str,
-    news_data: NewsUpdate
+    news_data: Annotated[NewsUpdate, Depends()]
 ):
     """Update a news item (RRHH/superadmin)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:

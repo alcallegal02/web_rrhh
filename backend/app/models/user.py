@@ -3,6 +3,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
 
+from pydantic import ConfigDict
+
 import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, ForeignKey
 from sqlmodel import Field, Relationship, SQLModel
@@ -25,6 +27,8 @@ class UserRole(str, Enum):
                 if member.value == value_lower:
                     return member
         return None
+
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class UserAttachmentResponse(SQLModel):
@@ -298,6 +302,8 @@ class UserResponse(SQLModel):
     is_active: bool = True
     created_at: datetime
     updated_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
     
     contract_start_date: datetime | None = None
     contract_expiration_date: datetime | None = None

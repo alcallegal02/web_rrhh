@@ -6,8 +6,18 @@
 
     <div class="space-y-4">
         <div>
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Rol de
-                Sistema</label>
+            <label
+                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center justify-between">
+                <span>Rol de Sistema</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-600 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Nivel de acceso del usuario (ej: admin puede gestionar a otros, user solo su portal).
+                    </div>
+                </div>
+            </label>
             @if (form().role === 'superadmin') {
             <div class="bg-gray-100 text-gray-500 p-3 rounded-xl text-sm font-bold border border-gray-200">
                 SUPERADMIN (Protegido)</div>
@@ -21,7 +31,7 @@
             }
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
                 <label
                     class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Departamento</label>
@@ -37,8 +47,18 @@
         </div>
 
         <div class="pt-2">
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Modalidad de
-                Contrato</label>
+            <label
+                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center justify-between">
+                <span>Modalidad de Contrato</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-600 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Si es temporal, el sistema alertará 15 días antes de la fecha de finalización.
+                    </div>
+                </div>
+            </label>
             <div class="flex p-1 bg-gray-50 rounded-xl border border-gray-100">
                 <button type="button" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all"
                     [class]="contractType() === 'indefinite' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-400 hover:text-gray-600'"

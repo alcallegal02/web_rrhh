@@ -4,6 +4,8 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { AuditService, AuditLog } from '../../services/audit.service';
 import { catchError, of, switchMap } from 'rxjs';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideShieldCheck } from '@ng-icons/lucide';
 
 import { AuditFiltersComponent } from './components/audit-filters/audit-filters.component';
 import { AuditListComponent } from './components/audit-list/audit-list.component';
@@ -11,8 +13,11 @@ import { AuditDetailsComponent } from './components/audit-details/audit-details.
 
 @Component({
     selector: 'app-audit',
-    imports: [CommonModule, AuditFiltersComponent, AuditListComponent, AuditDetailsComponent],
+    imports: [CommonModule, AuditFiltersComponent, AuditListComponent, AuditDetailsComponent, NgIconComponent],
     templateUrl: './audit.component.html',
+    providers: [
+        provideIcons({ lucideShieldCheck })
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AuditComponent {

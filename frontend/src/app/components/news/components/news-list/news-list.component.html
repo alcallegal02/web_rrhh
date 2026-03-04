@@ -2,22 +2,146 @@
     <!-- Empty State -->
     @if (newsList().length === 0) {
     <div
-        class="bg-white rounded-3xl border border-gray-100 shadow-sm p-16 flex flex-col items-center justify-center gap-4">
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 flex flex-col items-center justify-center gap-3">
         <div
-            class="h-16 w-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-200 shadow-sm">
-            <ng-icon name="lucideNewspaper" class="text-3xl"></ng-icon>
+            class="h-12 w-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-200">
+            <ng-icon name="lucideNewspaper" class="text-2xl"></ng-icon>
         </div>
-        <p class="text-sm font-black text-gray-400 uppercase tracking-widest">Sin noticias disponibles</p>
-        <p class="text-xs text-gray-300 -mt-2">Las noticias aparecerán aquí cuando sean publicadas</p>
+        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Sin noticias</p>
     </div>
     }
 
     <!-- News Items -->
     @for (news of newsList(); track news.id) {
+    @if (layout() === 'sidebar') {
+    <!-- Sidebar Directory Card -->
+    <div class="group relative bg-white rounded-[2rem] border-2 transition-all duration-[400ms]"
+        [class]="editingId() === news.id ? 'bg-blue-50 border-[#3C65AB] shadow-xl shadow-blue-500/10 ring-2 ring-blue-500/5' : 'bg-white border-transparent shadow-sm hover:border-blue-100 hover:bg-gray-50/50 hover:shadow-md'">
+
+        <div class="flex items-start gap-4 p-4">
+            <!-- Enriched Cover Image Thumbnail -->
+            <div (click)="edit.emit(news)"
+                class="relative h-20 w-20 rounded-[1.25rem] bg-gray-50 border border-gray-100 shrink-0 overflow-hidden cursor-pointer shadow-sm group/thumb">
+                @if (news.cover_image_url) {
+                <img [src]="news.cover_image_url | fileUrl"
+                    class="w-full h-full object-cover group-hover/thumb:scale-125 transition-transform duration-700">
+                } @else {
+                <div
+                    class="w-full h-full flex items-center justify-center text-gray-200 bg-gradient-to-br from-gray-50 to-gray-100">
+                    <ng-icon name="lucideNewspaper" class="text-3xl"></ng-icon>
+                </div>
+                }
+                <!-- Modern Status Overaly (bottom-right) -->
+                <div class="absolute bottom-1.5 right-1.5 h-6 w-6 rounded-lg border-2 border-white shadow-md flex items-center justify-center transition-transform group-hover:scale-110"
+                    [class.bg-emerald-500]="news.status === 'publicada'"
+                    [class.bg-gray-400]="news.status === 'borrador'" [class.bg-amber-500]="news.status === 'archivada'">
+                    @if (news.status === 'publicada') { <ng-icon name="lucideSend"
+                        class="text-[12px] text-white"></ng-icon> }
+                    @else if (news.status === 'borrador') { <ng-icon name="lucideFileEdit"
+                        class="text-[12px] text-white"></ng-icon> }
+                    @else { <ng-icon name="lucideArchive" class="text-[12px] text-white"></ng-icon> }
+                </div>
+            </div>
+
+            <!-- Enhanced Main Info -->
+            <div (click)="edit.emit(news)" class="flex-1 min-w-0 cursor-pointer py-1">
+                <div class="flex items-center gap-2 mb-1.5">
+                    <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">{{ news.publish_date |
+                        date:'dd MMM yyyy' }}</span>
+                </div>
+                <h4
+                    class="text-base font-black leading-snug text-gray-900 group-hover:text-[#3C65AB] transition-colors mb-1.5 line-clamp-2">
+                    {{ news.title }}
+                </h4>
+                <p class="text-[11px] leading-relaxed text-gray-400 font-medium line-clamp-2 italic">{{ news.summary ||
+                    'Sin entradilla disponible para esta noticia...' }}</p>
+            </div>
+        </div>
+
+        <!-- Premium Footer Actions Area -->
+        @if (canManage()) {
+        <div class="px-4 pb-4 pt-1 flex items-center gap-2.5">
+            <!-- Custom Premium Status Dropdown -->
+            <div class="relative flex-1">
+                <button (click)="toggleDropdown(news.id, $event)"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-gray-100 bg-white shadow-sm hover:border-blue-200 hover:shadow-md transition-all group/btn">
+                    <div class="flex-none flex items-center justify-center h-5 w-5 rounded-lg shadow-sm"
+                        [class.bg-emerald-50]="news.status === 'publicada'"
+                        [class.text-emerald-500]="news.status === 'publicada'"
+                        [class.bg-gray-50]="news.status === 'borrador'"
+                        [class.text-gray-400]="news.status === 'borrador'"
+                        [class.bg-amber-50]="news.status === 'archivada'"
+                        [class.text-amber-500]="news.status === 'archivada'">
+                        @if (news.status === 'publicada') { <ng-icon name="lucideSend" class="text-[11px]"></ng-icon> }
+                        @else if (news.status === 'borrador') { <ng-icon name="lucideFileEdit"
+                            class="text-[11px]"></ng-icon> }
+                        @else { <ng-icon name="lucideArchive" class="text-[11px]"></ng-icon> }
+                    </div>
+                    <span class="flex-1 text-[11px] font-black uppercase tracking-wider text-gray-600 text-left">
+                        {{ news.status === 'publicada' ? 'Publicada' : news.status === 'borrador' ? 'Borrador' :
+                        'Archivada' }}
+                    </span>
+                    <ng-icon name="lucideChevronDown"
+                        class="text-[10px] text-gray-300 group-hover/btn:text-blue-400 transition-colors"></ng-icon>
+                </button>
+
+                <!-- Floating Options Portal -->
+                @if (activeDropdownId() === news.id) {
+                <div
+                    class="absolute bottom-full left-0 w-full mb-2 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2.5 z-[100] animate-in fade-in slide-in-from-bottom-2 duration-200">
+                    <!-- Option Borrador -->
+                    <button (click)="selectStatus(news.id, 'borrador', $event)"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors group/opt">
+                        <div
+                            class="h-8 w-8 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center group-hover/opt:bg-white group-hover/opt:shadow-sm transition-all border border-transparent group-hover/opt:border-gray-100">
+                            <ng-icon name="lucideFileEdit" class="text-xs"></ng-icon>
+                        </div>
+                        <div class="flex flex-col text-left">
+                            <span class="text-[11px] font-black uppercase tracking-wider text-gray-600">Borrador</span>
+                            <span class="text-[9px] text-gray-400 font-medium">Sigue editando privado</span>
+                        </div>
+                    </button>
+                    <!-- Option Publicar -->
+                    <button (click)="selectStatus(news.id, 'publicada', $event)"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-emerald-50 transition-colors group/opt">
+                        <div
+                            class="h-8 w-8 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center group-hover/opt:bg-white group-hover/opt:shadow-sm transition-all border border-transparent group-hover/opt:border-emerald-100">
+                            <ng-icon name="lucideSend" class="text-xs"></ng-icon>
+                        </div>
+                        <div class="flex flex-col text-left">
+                            <span
+                                class="text-[11px] font-black uppercase tracking-wider text-emerald-600">Publicar</span>
+                            <span class="text-[9px] text-emerald-400 font-medium">Visible para todos</span>
+                        </div>
+                    </button>
+                    <!-- Option Archivar -->
+                    <button (click)="selectStatus(news.id, 'archivada', $event)"
+                        class="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-amber-50 transition-colors group/opt">
+                        <div
+                            class="h-8 w-8 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center group-hover/opt:bg-white group-hover/opt:shadow-sm transition-all border border-transparent group-hover/opt:border-amber-100">
+                            <ng-icon name="lucideArchive" class="text-xs"></ng-icon>
+                        </div>
+                        <div class="flex flex-col text-left">
+                            <span class="text-[11px] font-black uppercase tracking-wider text-amber-600">Archivar</span>
+                            <span class="text-[9px] text-amber-400 font-medium">Quitar de la portada</span>
+                        </div>
+                    </button>
+                </div>
+                }
+            </div>
+
+            <button (click)="$event.stopPropagation(); delete.emit(news.id)"
+                class="h-10 w-10 shrink-0 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition-all shadow-sm border border-red-100 hover:shadow-lg hover:shadow-red-500/20 active:scale-95">
+                <ng-icon name="lucideTrash2" class="text-[14px]"></ng-icon>
+            </button>
+        </div>
+        }
+    </div>
+    } @else {
+    <!-- Standard List Card (Legacy/Full view) -->
     <div
         class="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group overflow-hidden">
         <div class="flex gap-0">
-
             <!-- Status stripe -->
             <div class="w-1 flex-none rounded-l-3xl" [class.bg-emerald-400]="news.status === 'publicada'"
                 [class.bg-gray-300]="news.status === 'borrador'" [class.bg-amber-400]="news.status === 'archivada'">
@@ -40,7 +164,6 @@
             <div class="flex-1 px-6 py-4 flex flex-col justify-between min-w-0">
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
-                        <!-- Status + Date row -->
                         <div class="flex items-center gap-2 mb-2">
                             <span
                                 class="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
@@ -53,65 +176,51 @@
                             </span>
                             }
                         </div>
-
-                        <!-- Title -->
                         <h3 (click)="goToDetail(news.id)"
-                            class="text-sm font-black text-gray-900 hover:text-inespasa cursor-pointer transition-colors line-clamp-1 leading-tight mb-1">
+                            class="text-sm font-black text-gray-900 hover:text-[#3C65AB] cursor-pointer transition-colors line-clamp-1 leading-tight mb-1">
                             {{ news.title }}
                         </h3>
-
-                        <!-- Summary -->
                         @if (news.summary) {
                         <p class="text-xs text-gray-400 line-clamp-1 italic">{{ news.summary }}</p>
                         }
                     </div>
 
-                    <!-- Actions (manage mode) -->
                     @if (canManage()) {
                     <div class="flex items-center gap-2 flex-none">
-                        <!-- Status select -->
                         <select [value]="news.status" (change)="onStatusChange(news.id, $event)"
-                            class="text-[10px] font-bold px-2 py-1.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 focus:outline-none focus:border-inespasa-light/50 hover:border-inespasa-light/30 transition-colors cursor-pointer">
+                            class="text-[10px] font-bold px-2 py-1.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 focus:outline-none focus:border-blue-500/50 hover:border-[#3C65AB]/30 transition-colors cursor-pointer">
                             <option value="borrador">Borrador</option>
                             <option value="publicada">Publicada</option>
                             <option value="archivada">Archivada</option>
                         </select>
-
-                        <!-- Edit -->
                         <button (click)="edit.emit(news)"
-                            class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-inespasa-light/10 text-inespasa hover:bg-inespasa hover:text-white transition-all shadow-sm hover:scale-110 active:scale-95">
+                            class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-blue-50 text-[#3C65AB] hover:bg-[#3C65AB] hover:text-white transition-all shadow-sm">
                             <ng-icon name="lucidePencil" class="text-sm"></ng-icon>
                         </button>
-
-                        <!-- Delete -->
                         <button (click)="delete.emit(news.id)"
-                            class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm hover:scale-110 active:scale-95">
+                            class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-sm">
                             <ng-icon name="lucideTrash2" class="text-sm"></ng-icon>
                         </button>
-
-                        <!-- View detail -->
                         <button (click)="goToDetail(news.id)"
-                            class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-inespasa text-white shadow-md shadow-inespasa-light/20 hover:bg-inespasa-dark hover:scale-110 active:scale-95 transition-all">
+                            class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-[#3C65AB] text-white shadow-md shadow-blue-500/20 hover:bg-blue-800 transition-all">
                             <ng-icon name="lucideChevronRight" class="text-sm"></ng-icon>
                         </button>
                     </div>
                     } @else {
-                    <!-- Read-only view button -->
                     <button (click)="goToDetail(news.id)"
-                        class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-inespasa text-white shadow-md shadow-inespasa-light/20 hover:bg-inespasa-dark hover:scale-110 active:scale-95 transition-all flex-none">
+                        class="inline-flex items-center justify-center h-8 w-8 rounded-xl bg-[#3C65AB] text-white shadow-md shadow-blue-500/20 hover:bg-blue-800 transition-all flex-none">
                         <ng-icon name="lucideChevronRight" class="text-sm"></ng-icon>
                     </button>
                     }
                 </div>
 
-                <!-- Attachments row -->
                 @if (news.attachments && news.attachments.length > 0) {
                 <div class="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-gray-50">
                     @for (att of news.attachments; track $index) {
                     @if (!isImage(att.file_url)) {
                     <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
                         title="{{ att.file_original_name }}"
-                        class="flex items-center gap-1 text-[10px] text-inespasa font-bold bg-inespasa-light/10 hover:bg-inespasa hover:text-white px-2 py-0.5 rounded-lg border border-inespasa-light/20 transition-all max-w-[180px]">
+                        class="flex items-center gap-1 text-[10px] text-[#3C65AB] font-bold bg-blue-50 hover:bg-[#3C65AB] hover:text-white px-2 py-0.5 rounded-lg border border-blue-100 transition-all max-w-[180px]">
                         <ng-icon name="lucidePaperclip" class="flex-none text-[10px]"></ng-icon>
                         <span class="truncate">{{ att.file_original_name || 'Documento' }}</span>
                     </a>
@@ -122,5 +231,6 @@
             </div>
         </div>
     </div>
+    }
     }
 </div>

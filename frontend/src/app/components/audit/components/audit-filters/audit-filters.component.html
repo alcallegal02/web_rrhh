@@ -6,20 +6,30 @@
             <div class="flex items-center gap-2 mb-2 ml-1">
                 <ng-icon name="lucideLayers" class="text-inespasa text-sm"></ng-icon>
                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Módulos</label>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Filtra los registros por el área funcional del sistema (ej: noticias, denuncias, configuración).
+                    </div>
+                </div>
             </div>
             <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 custom-scrollbar">
                 @for (mod of modules; track mod.value) {
                 <button (click)="toggleModule(mod.value)"
-                    class="inline-flex items-center px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all"
+                    class="inline-flex items-center px-3 py-2 rounded-xl border text-[11px] font-bold transition-all shadow-sm active:scale-95"
                     [class.bg-inespasa]="selectedModules().includes(mod.value)"
                     [class.text-white]="selectedModules().includes(mod.value)"
                     [class.border-inespasa]="selectedModules().includes(mod.value)"
+                    [class.shadow-inespasa-light/20]="selectedModules().includes(mod.value)"
                     [class.bg-white]="!selectedModules().includes(mod.value)"
-                    [class.text-gray-600]="!selectedModules().includes(mod.value)"
+                    [class.text-gray-500]="!selectedModules().includes(mod.value)"
                     [class.border-gray-100]="!selectedModules().includes(mod.value)"
                     [class.hover:border-inespasa-light/30]="!selectedModules().includes(mod.value)"
                     [class.hover:bg-inespasa-light/5]="!selectedModules().includes(mod.value)">
-                    <ng-icon [name]="mod.icon" class="mr-1.5"></ng-icon>
+                    <ng-icon [name]="mod.icon" class="mr-2 text-sm"
+                        [class.text-inespasa]="!selectedModules().includes(mod.value)"></ng-icon>
                     {{ mod.label }}
                 </button>
                 }
@@ -34,20 +44,30 @@
             <div class="flex items-center gap-2 mb-2 ml-1">
                 <ng-icon name="lucideZap" class="text-amber-500 text-sm"></ng-icon>
                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Acciones</label>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-amber-500 hover:text-amber-600 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Filtra por el tipo de operación realizada sobre los datos (crear, borrar, etc.).
+                    </div>
+                </div>
             </div>
             <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 custom-scrollbar">
                 @for (act of actions; track act.value) {
                 <button (click)="toggleAction(act.value)"
-                    class="inline-flex items-center px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all"
+                    class="inline-flex items-center px-3 py-2 rounded-xl border text-[11px] font-bold transition-all shadow-sm active:scale-95"
                     [class.bg-inespasa]="selectedActions().includes(act.value)"
                     [class.text-white]="selectedActions().includes(act.value)"
                     [class.border-inespasa]="selectedActions().includes(act.value)"
+                    [class.shadow-inespasa-light/20]="selectedActions().includes(act.value)"
                     [class.bg-white]="!selectedActions().includes(act.value)"
-                    [class.text-gray-600]="!selectedActions().includes(act.value)"
+                    [class.text-gray-500]="!selectedActions().includes(act.value)"
                     [class.border-gray-100]="!selectedActions().includes(act.value)"
                     [class.hover:border-inespasa-light/30]="!selectedActions().includes(act.value)"
                     [class.hover:bg-inespasa-light/5]="!selectedActions().includes(act.value)">
-                    <ng-icon [name]="act.icon" class="mr-1.5"></ng-icon>
+                    <ng-icon [name]="act.icon" class="mr-2 text-sm"
+                        [class.text-amber-500]="!selectedActions().includes(act.value)"></ng-icon>
                     {{ act.label }}
                 </button>
                 }
@@ -62,6 +82,14 @@
             <div class="flex items-center gap-2 mb-2 ml-1">
                 <ng-icon name="lucideCalendarRange" class="text-emerald-500 text-sm"></ng-icon>
                 <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Periodo</label>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-emerald-500 hover:text-emerald-600 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Define el rango de fecha y hora para la búsqueda de registros históricos.
+                    </div>
+                </div>
             </div>
             <div class="flex gap-2">
                 <input type="datetime-local" [ngModel]="filterStartDate()"

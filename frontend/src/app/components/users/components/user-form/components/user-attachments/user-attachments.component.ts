@@ -2,12 +2,20 @@ import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../../../../config/environment';
 import { UserAttachment } from '../../user-form.models';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucidePaperclip, lucideUpload, lucideX, lucideFolder, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-user-attachments',
     imports: [CommonModule, NgIconComponent],
-    templateUrl: './user-attachments.component.html'
+    templateUrl: './user-attachments.component.html',
+    providers: [
+        provideIcons({
+            lucidePaperclip, lucideUpload, lucideX, lucideFolder, lucideHelpCircle
+        })
+    ]
 })
 export class UserAttachmentsComponent {
     // Inputs

@@ -7,7 +7,12 @@ import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-t
 import { NewsService } from '../../../../services/news.service';
 import { ConfigService } from '../../../../services/config';
 import { environment } from '../../../../config/environment';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucidePencil, lucideImage, lucideChevronDown, lucideFolderOpen,
+    lucidePaperclip, lucideFileText, lucideX, lucideLoader2,
+    lucideTriangleAlert, lucideCheck, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 export interface NewsFormModel {
     id?: string;
@@ -24,6 +29,13 @@ export interface NewsFormModel {
     selector: 'app-news-form',
     imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIconComponent],
     templateUrl: './news-form.component.html',
+    providers: [
+        provideIcons({
+            lucidePencil, lucideImage, lucideChevronDown, lucideFolderOpen,
+            lucidePaperclip, lucideFileText, lucideX, lucideLoader2,
+            lucideTriangleAlert, lucideCheck, lucideHelpCircle
+        })
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewsFormComponent {

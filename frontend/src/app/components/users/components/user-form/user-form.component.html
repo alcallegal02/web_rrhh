@@ -1,7 +1,7 @@
 <div class="space-y-6">
     <!-- Corporate Header -->
     <div
-        class="bg-[#002855] text-white p-6 rounded-xl shadow-lg mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b-4 border-[#e31e24]">
+        class="bg-[#3C65AB] text-white p-6 rounded-xl shadow-lg mb-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div>
             <div class="flex items-center gap-2 text-blue-200 text-xs font-bold uppercase tracking-widest mb-1">
                 <span class="bg-blue-900/50 px-2 py-0.5 rounded">Administración</span>
@@ -21,23 +21,31 @@
             <p class="text-blue-100/70 text-sm mt-1">ID: {{ form().id }} | {{ form().full_name }}</p>
             }
         </div>
-        <div class="flex gap-2 w-full md:w-auto">
+        <div class="flex flex-wrap gap-2 w-full xl:w-auto">
             <button
-                class="flex-1 md:flex-none bg-white text-[#002855] hover:bg-blue-50 px-6 py-2.5 rounded-lg font-bold transition-all shadow-md flex items-center justify-center gap-2"
+                class="flex-1 md:flex-none bg-white text-[#3C65AB] hover:bg-blue-50 px-6 py-2.5 rounded-lg font-bold transition-all shadow-md flex items-center justify-center gap-2 group relative"
                 (click)="onSubmit()" [disabled]="isLoading() || uploadingPhoto() || uploadingAttachments()">
                 <ng-icon name="lucideSave" class="text-lg"></ng-icon> Guardar Cambios
+                <div
+                    class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                    Confirma y persiste todos los cambios realizados en la ficha del empleado.
+                </div>
             </button>
             <button
-                class="flex-1 md:flex-none bg-[#002855] text-white border border-white/20 hover:bg-white/10 px-6 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                class="flex-1 md:flex-none bg-[#3C65AB] text-white border border-white/20 hover:bg-white/10 px-6 py-2.5 rounded-lg font-bold transition-all flex items-center justify-center gap-2 group relative"
                 (click)="cancel.emit()">
                 <ng-icon name="lucideX" class="text-lg"></ng-icon> Cancelar
+                <div
+                    class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                    Descartar los cambios no guardados y volver al directorio de empleados.
+                </div>
             </button>
         </div>
     </div>
 
     <form (ngSubmit)="onSubmit()" class="flex flex-col gap-6">
-        <!-- ROW 1: Personal Data & Contract Info (50/50) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- ROW 1: Personal Data & Contract Info (50/50 initially, stack on smaller screens) -->
+        <div class="grid grid-cols-1 2xl:grid-cols-2 gap-6">
 
             <!-- COL 1: Personal Data & Danger Zone -->
             <div class="space-y-6">

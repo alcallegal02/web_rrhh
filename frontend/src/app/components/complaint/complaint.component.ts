@@ -5,13 +5,17 @@ import { Router } from '@angular/router';
 // Components
 import { ComplaintFormComponent } from './components/complaint-form/complaint-form.component';
 import { ComplaintLookupComponent } from './components/complaint-lookup/complaint-lookup.component';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideMegaphone, lucideTriangleAlert, lucideShieldCheck } from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-complaint',
   imports: [CommonModule, ComplaintFormComponent, ComplaintLookupComponent, NgIconComponent],
   templateUrl: './complaint.component.html',
   styleUrl: './complaint.component.scss',
+  providers: [
+    provideIcons({ lucideMegaphone, lucideTriangleAlert, lucideShieldCheck })
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComplaintComponent {

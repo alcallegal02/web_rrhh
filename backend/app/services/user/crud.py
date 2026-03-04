@@ -182,27 +182,7 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
             _enforce_superadmin_immutable(payload)
     
     # Capture Old State for Diff
-    # old_state = target.model_dump()
-    
-    diffs = {}
-    
-    # Helper to check diff
-    def check_diff(field: str, new_val: Any, old_val: Any):
-        if new_val is not None:
-            s_new = str(new_val) if isinstance(new_val, UUID) else new_val
-            s_old = str(old_val) if isinstance(old_val, UUID) else old_val
-            
-            if s_new != s_old:
-                diffs[field] = {"old": s_old, "new": s_new}
-
-    check_diff('username', payload.username, target.username)
-    check_diff('first_name', payload.first_name, target.first_name)
-    check_diff('last_name', payload.last_name, target.last_name)
-    if payload.role: check_diff('role', payload.role.value, target.role)
-    check_diff('is_active', payload.is_active, target.is_active)
-    check_diff('department_id', payload.department_id, target.department_uuid)
-    check_diff('position_id', payload.position_id, target.position_uuid)
-    check_diff('parent_id', payload.parent_id, target.parent_id)
+    old_state_dict = target.model_dump()
     
     # Update Basic Fields
     if payload.username is not None: target.username = payload.username
@@ -211,7 +191,7 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
     if payload.password: target.password_hash = get_password_hash(payload.password)
     if payload.role: target.role = payload.role.value
     if payload.is_active is not None: target.is_active = payload.is_active
-    if target.department_id is not None: target.department_uuid = payload.department_id
+    if payload.department_id is not None: target.department_uuid = payload.department_id
     if payload.position_id is not None: target.position_uuid = payload.position_id
     if payload.parent_id is not None: target.parent_id = payload.parent_id
 
@@ -262,23 +242,23 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
     # Audit Log
     from app.services.audit import generate_diff, log_action
     
-    # Capture final payload-based diffs more robustly using utility
-    # We use model_dump for the old state (captured before sync usually but we have it in memory)
-    # Actually, for User, the manual diff logic was already quite extensive. 
-    # Let's just ensure it's logged correctly.
+    # Capture final state for diffing using utility
+    new_state_dict = target.model_dump()
+    diffs = generate_diff(old_state_dict, new_state_dict)
     
-    await log_action(
-        session=session,
-        user_id=current_user.id,
-        action="UPDATE",
-        module="USUARIOS",
-        details={
-            "target_user_id": str(target.id),
-            "target_username": target.username,
-            "changes": diffs
-        },
-        ip_address=ip_address
-    )
+    if diffs:
+        await log_action(
+            session=session,
+            user_id=current_user.id,
+            action="UPDATE",
+            module="USUARIOS",
+            details={
+                "target_user_id": str(target.id),
+                "target_username": target.username,
+                "changes": diffs
+            },
+            ip_address=ip_address
+        )
     
     await session.commit()
     

@@ -22,7 +22,7 @@ async def create_holiday_endpoint(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    holiday_data: HolidayCreate
+    holiday_data: Annotated[HolidayCreate, Depends()]
 ):
     """Create a new holiday (RRHH or SUPERADMIN)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -102,7 +102,7 @@ async def update_holiday_endpoint(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     holiday_id: str,
-    holiday_data: HolidayUpdate
+    holiday_data: Annotated[HolidayUpdate, Depends()]
 ):
     """Update a holiday (RRHH or SUPERADMIN)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:

@@ -32,7 +32,7 @@ async def create_user(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    payload: UserCreate
+    payload: Annotated[UserCreate, Depends()]
 ):
     try:
         logging.info(f"CREATING USER request received. Payload: {payload.model_dump()}")
@@ -48,7 +48,7 @@ async def update_user(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     user_id: str,
-    payload: UserUpdate
+    payload: Annotated[UserUpdate, Depends()]
 ):
     logging.info(f"UPDATING USER {user_id} with payload: {payload.model_dump()}")
     return await UserService.update_user(session, user_id, payload, current_user, ip_address=request.client.host)

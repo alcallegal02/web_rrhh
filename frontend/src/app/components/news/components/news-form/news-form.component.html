@@ -1,57 +1,102 @@
-<div class="bg-inespasa-dark rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-blue-900/40 border border-blue-800/20 mb-12 animate-fadeIn"
+<div class="bg-white rounded-3xl p-6 lg:p-10 shadow-sm border border-gray-100 mb-6 animate-in fade-in slide-in-from-bottom-4 duration-500"
     id="newsForm">
-    <div class="flex items-center justify-between mb-10 pb-6 border-b border-white/10">
-        <h2 class="text-3xl font-black text-white flex items-center gap-3">
-            <span class="text-4xl flex items-center"><ng-icon name="lucidePencil"></ng-icon></span>
-            @if (initialData()) { Editar Noticia } @else { Publicar Noticia }
-        </h2>
+    <div class="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
+        <div class="flex items-center gap-4">
+            <div
+                class="h-10 w-10 rounded-xl bg-[#3C65AB] text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <ng-icon [name]="initialData() ? 'lucidePencil' : 'lucidePlus'" class="text-xl"></ng-icon>
+            </div>
+            <div>
+                <h2 class="text-lg font-black text-gray-900 tracking-tight">
+                    @if (initialData()) { Editar Noticia } @else { Publicar Nueva Noticia }
+                </h2>
+                <p class="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">Gestión de Contenidos
+                    Corporativos</p>
+            </div>
+        </div>
     </div>
 
     <form (ngSubmit)="onSubmit()" #newsForm="ngForm" class="space-y-10">
         <!-- Title and Cover -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            <div class="space-y-3">
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Título de la
-                    Noticia</label>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div class="lg:col-span-2 space-y-3">
+                <label
+                    class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 flex items-center justify-between">
+                    <span>Título de la Noticia</span>
+                    <div class="group relative flex items-center">
+                        <ng-icon name="lucideHelpCircle"
+                            class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                        <div
+                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                            Define el título que verán los usuarios en el tablón principal.
+                        </div>
+                    </div>
+                </label>
                 <input type="text" [ngModel]="form().title" (ngModelChange)="updateField('title', $event)" name="title"
-                    required placeholder="Escribe un título impactante..."
-                    class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all text-lg font-bold text-gray-800 placeholder:text-gray-300">
+                    required placeholder="Escribe un título impactante..." class="input-field-new text-lg font-bold">
             </div>
 
             <div class="space-y-3">
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Imagen de
-                    Portada</label>
-                <div
-                    class="flex items-center gap-6 p-2 bg-blue-900/20 rounded-2xl border border-dashed border-white/20">
-                    <div class="flex-1">
-                        <input type="file" (change)="onCoverSelected($event)" accept="image/*"
-                            class="file:mr-4 file:py-2 file:px-6 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:uppercase file:tracking-widest file:bg-white file:text-inespasa-dark hover:file:bg-blue-50 transition-all text-xs text-white/40 w-full cursor-pointer">
+                <label
+                    class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 flex items-center justify-between">
+                    <span>Imagen de Portada</span>
+                    <div class="group relative flex items-center">
+                        <ng-icon name="lucideHelpCircle"
+                            class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                        <div
+                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                            Esta imagen se usará como miniatura en el listado de noticias.
+                        </div>
                     </div>
-                    @if (coverImagePreview() || form().cover_image_url) {
+                </label>
+                <div class="relative group h-[60px]">
+                    <input type="file" (change)="onCoverSelected($event)" accept="image/*"
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
                     <div
-                        class="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg border-2 border-white/20 flex-none">
-                        <img [src]="coverImagePreview() || getFileUrl(form().cover_image_url)"
-                            class="w-full h-full object-cover">
+                        class="w-full h-full flex items-center justify-between px-4 bg-gray-50 border border-dashed border-gray-200 rounded-2xl group-hover:bg-white group-hover:border-inespasa-light/50 transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="text-gray-400 text-lg"><ng-icon name="lucideImage"></ng-icon></span>
+                            <span
+                                class="text-[10px] font-bold text-gray-500 uppercase tracking-widest truncate max-w-[120px]">
+                                {{ pendingCoverImage()?.name || 'Subir portada' }}
+                            </span>
+                        </div>
+                        @if (coverImagePreview() || form().cover_image_url) {
+                        <div class="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm flex-none">
+                            <img [src]="coverImagePreview() || getFileUrl(form().cover_image_url)"
+                                class="w-full h-full object-cover">
+                        </div>
+                        }
                     </div>
-                    }
                 </div>
             </div>
         </div>
 
         <!-- Summary -->
         <div class="space-y-3">
-            <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Entradilla (Breve
-                resumen)</label>
+            <label
+                class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 flex items-center justify-between">
+                <span>Entradilla (Breve resumen)</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Un resumen rápido que aparece debajo del título antes de abrir la noticia completa.
+                    </div>
+                </div>
+            </label>
             <textarea [ngModel]="form().summary" (ngModelChange)="updateField('summary', $event)" name="summary"
                 rows="2" placeholder="Describe brevemente de qué trata esta noticia..."
-                class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all italic text-gray-600 placeholder:text-gray-300"></textarea>
+                class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl italic text-gray-600 focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none placeholder:text-gray-300"></textarea>
         </div>
 
-        <!-- content -->
+        <!-- Content -->
         <div class="space-y-3">
-            <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Contenido de la
+            <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Contenido de la
                 Noticia</label>
-            <div class="rounded-2xl overflow-hidden border border-white/10 shadow-inner bg-white">
+            <div
+                class="rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm bg-white ring-offset-2 ring-inespasa-light/20 focus-within:ring-2 transition-all">
                 <app-rich-text-editor [ngModel]="form().content" (ngModelChange)="updateField('content', $event)"
                     name="content" [quillModules]="quillModules" [height]="'450px'"
                     [placeholder]="'Empieza a escribir aquí...'" (contentChange)="onEditorContentChange($event)"
@@ -62,90 +107,130 @@
         <!-- Status and Date -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="space-y-3">
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Estado de
-                    Publicación</label>
-                <div class="relative group">
+                <label
+                    class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 flex items-center justify-between">
+                    <span>Estado de Publicación</span>
+                    <div class="group relative flex items-center">
+                        <ng-icon name="lucideHelpCircle"
+                            class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                        <div
+                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                            Determina quién puede ver la noticia actualmente.
+                        </div>
+                    </div>
+                </label>
+                <div class="relative">
                     <select [ngModel]="form().status" (ngModelChange)="updateField('status', $event)" name="status"
                         required
-                        class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all font-bold appearance-none text-gray-800">
+                        class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-800 appearance-none focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none">
                         <option value="borrador">Borrador (Solo tú lo verás)</option>
                         <option value="publicada">Publicada (Visible para todos)</option>
                         <option value="archivada">Archivada (Oculta del tablón)</option>
                     </select>
-                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                        ▼
+                    <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
+                        <ng-icon name="lucideChevronDown"></ng-icon>
                     </div>
                 </div>
             </div>
             <div class="space-y-3">
-                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Programar
-                    publicación</label>
+                <label
+                    class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 flex items-center justify-between">
+                    <span>Programar publicación</span>
+                    <div class="group relative flex items-center">
+                        <ng-icon name="lucideHelpCircle"
+                            class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                        <div
+                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                            Establece una fecha y hora futura para que la noticia se publique automáticamente.
+                        </div>
+                    </div>
+                </label>
                 <input type="datetime-local" [ngModel]="form().publish_date"
                     (ngModelChange)="updateField('publish_date', $event)" name="publish_date"
-                    class="input-field !rounded-2xl border-white/10 bg-white focus:bg-white transition-all text-gray-800">
-                <p class="text-[10px] text-white/40 italic">Si no seleccionas nada, se publicará al momento de guardar
-                </p>
+                    class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-800 focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none">
+                <p class="text-[10px] text-gray-400 italic">Si se deja vacío, se publicará inmediatamente al guardar</p>
             </div>
         </div>
 
         <!-- File Upload Section -->
-        <div class="bg-blue-900/20 rounded-3xl p-8 border border-white/5 space-y-6">
+        <div class="bg-gray-50 rounded-[2.5rem] p-8 md:p-10 border border-gray-100 space-y-6">
             <div class="flex items-center justify-between">
-                <label
-                    class="flex items-center gap-1 text-[10px] font-black uppercase tracking-[0.2em] text-white/60"><ng-icon
-                        name="lucideFolderOpen"></ng-icon> Documentos
-                    Adjuntos</label>
+                <div class="flex items-center gap-2">
+                    <span class="text-inespasa text-lg"><ng-icon name="lucideFolderOpen"></ng-icon></span>
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-900">Documentos
+                        Adjuntos</label>
+                    <div class="group relative flex items-center">
+                        <ng-icon name="lucideHelpCircle"
+                            class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help ml-2"></ng-icon>
+                        <div
+                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                            Archivos descargables que los empleados podrán abrir junto con la noticia.
+                        </div>
+                    </div>
+                </div>
                 @if (uploading()) {
-                <span class="flex items-center gap-2 text-xs font-bold text-white animate-pulse">
-                    <span class="w-2 h-2 bg-white rounded-full"></span>
+                <span
+                    class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-inespasa animate-pulse">
                     Procesando archivos...
                 </span>
                 }
             </div>
 
             <div class="flex flex-col gap-6">
+                <!-- Dropzone Area -->
                 <div class="relative group">
                     <input type="file" multiple (change)="onFileSelected($event)" accept=".pdf,.doc,.docx,.txt,.rtf"
                         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" [disabled]="uploading()">
                     <div
-                        class="w-full py-10 border-2 border-dashed border-white/10 rounded-[1.5rem] bg-white/5 group-hover:bg-white/10 transition-all flex flex-col items-center justify-center gap-3">
-                        <span class="text-3xl flex items-center text-white/50"><ng-icon
-                                name="lucidePaperclip"></ng-icon></span>
-                        <span class="text-xs font-black uppercase tracking-widest text-white">Haz clic o arrastra
-                            documentos aquí</span>
-                        <span class="text-[10px] text-white/40 tracking-tight">PDF, DOC, DOCX, TXT o RTF (Máx.
-                            20MB)</span>
+                        class="w-full py-12 border-2 border-dashed border-gray-200 rounded-[2rem] bg-white group-hover:border-inespasa-light group-hover:bg-inespasa-light/5 transition-all flex flex-col items-center justify-center gap-3">
+                        <div
+                            class="h-14 w-14 rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center group-hover:bg-inespasa-light group-hover:text-white transition-all shadow-sm">
+                            <ng-icon name="lucidePaperclip" class="text-2xl"></ng-icon>
+                        </div>
+                        <div class="text-center">
+                            <span
+                                class="block text-[11px] font-black uppercase tracking-widest text-gray-600 group-hover:text-inespasa transition-colors">Arrastra
+                                documentos o haz clic aquí</span>
+                            <span class="text-[10px] text-gray-400 mt-1 block">PDF, Word, TXT o RTF (Máx. 20MB)</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex flex-wrap gap-4">
-                    <!-- Existing -->
+                <!-- Files List -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <!-- Existing Files -->
                     @for (att of form().attachments; track $index) {
                     @if (!isImage(att.file_url)) {
                     <div
-                        class="group flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl shadow-sm border border-white/5 hover:border-white/20 transition-all">
-                        <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
-                            class="text-xs text-white/80 font-bold hover:text-white transition-colors truncate max-w-[200px] flex items-center gap-1">
-                            <ng-icon name="lucidePaperclip"></ng-icon> {{ att.file_original_name || 'documento' }}
-                        </a>
+                        class="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm hover:border-inespasa-light/30 transition-all group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-inespasa"><ng-icon name="lucideFileText"></ng-icon></span>
+                            <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
+                                class="text-[11px] font-bold text-gray-700 hover:text-inespasa transition-colors truncate">
+                                {{ att.file_original_name || 'Documento' }}
+                            </a>
+                        </div>
                         <button type="button" (click)="removeExistingFile($index)"
-                            class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white transition-all text-xs"
-                            title="Eliminar archivo"><ng-icon name="lucideX"></ng-icon></button>
+                            class="h-7 w-7 rounded-lg bg-red-50 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
+                            <ng-icon name="lucideX"></ng-icon>
+                        </button>
                     </div>
                     }
                     }
 
-                    <!-- Pending -->
+                    <!-- Pending Files -->
                     @for (item of pendingAttachments(); track $index) {
                     <div
-                        class="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border border-white ring-2 ring-white/20 ring-offset-2 ring-offset-inespasa-dark animate-bounceIn">
-                        <button type="button" (click)="downloadLocalFile(item.file)"
-                            class="text-xs text-inespasa-dark font-black truncate max-w-[200px] flex items-center gap-1">
-                            <ng-icon name="lucideFolder"></ng-icon> {{ item.file.name }}
-                        </button>
+                        class="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border-2 border-inespasa-light/20 shadow-sm animate-bounceIn">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-inespasa"><ng-icon name="lucideLoader2"
+                                    class="animate-spin"></ng-icon></span>
+                            <span class="text-[11px] font-bold text-gray-900 truncate">{{ item.file.name }}</span>
+                        </div>
                         <button type="button" (click)="removePendingFile($index)"
-                            class="w-6 h-6 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all text-xs"
-                            title="Quitar archivo"><ng-icon name="lucideX"></ng-icon></button>
+                            class="h-7 w-7 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
+                            <ng-icon name="lucideX"></ng-icon>
+                        </button>
                     </div>
                     }
                 </div>
@@ -153,29 +238,29 @@
 
             @if (uploadError()) {
             <div
-                class="bg-red-500/10 text-red-400 p-4 rounded-xl text-xs font-bold flex items-center gap-2 animate-shake">
-                <ng-icon name="lucideTriangleAlert"></ng-icon> {{ uploadError() }}
+                class="bg-red-50 border border-red-100 text-red-600 px-6 py-4 rounded-2xl text-[11px] font-bold flex items-center gap-3 animate-shake">
+                <ng-icon name="lucideTriangleAlert" class="text-lg"></ng-icon>
+                {{ uploadError() }}
             </div>
             }
         </div>
 
         <!-- Form Actions -->
-        <div class="flex items-center gap-4 pt-6">
+        <div class="flex flex-col sm:flex-row items-center gap-4 pt-6 border-t border-gray-50">
             <button type="submit"
                 [disabled]="uploading() || !newsForm.valid || (totalUploadSize() + embeddedImagesSize()) > configService.maxNewsPayloadBytes"
-                class="group relative flex-1 md:flex-none flex items-center justify-center gap-3 bg-white text-inespasa-dark px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-black/20 hover:bg-blue-50 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100">
+                class="w-full sm:w-auto min-w-[200px] flex items-center justify-center gap-3 bg-[#3C65AB] text-white px-10 py-4 rounded-xl font-black uppercase tracking-widest text-xs shadow-xl shadow-blue-500/20 hover:bg-blue-800 hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all duration-300">
                 @if (!uploading()) {
-                <span class="text-lg flex items-center"><ng-icon name="lucideCheck"></ng-icon></span>
-                <span>@if (initialData()) { Actualizar } @else { Publicar Noticia }</span>
+                <ng-icon name="lucideCheck" class="text-lg"></ng-icon>
+                <span>@if (initialData()) { Guardar Cambios } @else { Publicar Noticia }</span>
                 } @else {
-                <span
-                    class="w-5 h-5 border-2 border-inespasa-dark/30 border-t-inespasa-dark rounded-full animate-spin"></span>
+                <div class="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 <span>Guardando...</span>
                 }
             </button>
             <button type="button" (click)="cancel.emit()" [disabled]="uploading()"
-                class="flex items-center gap-2 px-8 py-5 border-2 border-white/10 text-white/40 font-bold uppercase tracking-widest text-xs rounded-2xl hover:bg-white/5 hover:text-white transition-all active:scale-95">
-                Cancelar
+                class="w-full sm:w-auto px-10 py-4 bg-gray-50 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-gray-100 hover:text-gray-600 transition-all duration-300">
+                Cancelar Operación
             </button>
         </div>
     </form>

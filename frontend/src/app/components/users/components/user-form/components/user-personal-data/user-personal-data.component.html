@@ -30,18 +30,38 @@
 
     <div class="space-y-4">
         <div>
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Email
-                Corporativo</label>
+            <label
+                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1 flex items-center justify-between">
+                <span>Email Corporativo</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Dirección de correo oficial de la empresa. Utilizada para notificaciones del sistema.
+                    </div>
+                </div>
+            </label>
             <input class="input-field-new" [ngModel]="form().email" (ngModelChange)="updateField('email', $event)"
                 name="email" required type="email" placeholder="email@inespasa.com" />
         </div>
         <div>
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Nombre de
-                Usuario</label>
+            <label
+                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1 flex items-center justify-between">
+                <span>Nombre de Usuario</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Identificador único para el inicio de sesión (Login). Sigue el formato p.ej. nombre.apellido.
+                    </div>
+                </div>
+            </label>
             <input class="input-field-new" [ngModel]="form().username" (ngModelChange)="updateField('username', $event)"
                 name="username" required placeholder="p.ej. juan.perez" />
         </div>
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
                 <label
                     class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Nombre</label>
@@ -56,8 +76,18 @@
             </div>
         </div>
         <div>
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1">Acceso
-                (Contraseña)</label>
+            <label
+                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 ml-1 flex items-center justify-between">
+                <span>Acceso (Contraseña)</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Deja este campo vacío si no deseas cambiar la contraseña actual del empleado.
+                    </div>
+                </div>
+            </label>
             <input class="input-field-new" [ngModel]="form().password" (ngModelChange)="updateField('password', $event)"
                 name="password" [required]="!form().id" type="password"
                 [placeholder]="form().id ? '••••••••' : 'Indique contraseña...'" />

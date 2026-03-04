@@ -1,14 +1,24 @@
-<div class="flex flex-col h-[calc(100vh-120px)] lg:flex-row gap-6 overflow-hidden">
+<div class="flex flex-col h-auto lg:h-[calc(100vh-120px)] lg:flex-row gap-6 lg:overflow-hidden">
 
     <!-- Sidebar: Unified Directory -->
     <div
-        class="w-full lg:w-80 flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden shrink-0">
+        class="w-full lg:w-80 flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden shrink-0 order-2 lg:order-1">
         <!-- Sidebar Header -->
         <div class="p-4 bg-gray-50/50 border-b border-gray-100">
             <h2
-                class="text-sm font-black text-[#002855] uppercase tracking-widest mb-3 flex items-center justify-between">
-                <span>Directorio</span>
-                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px]">{{ users().length
+                class="text-xs font-black text-[#3C65AB] uppercase tracking-[0.2em] mb-3 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span>Directorio</span>
+                    <div class="group relative flex items-center">
+                        <ng-icon name="lucideHelpCircle"
+                            class="text-blue-400 hover:text-blue-500 transition-colors cursor-help size-3"></ng-icon>
+                        <div
+                            class="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                            Listado completo de la plantilla. Haz clic en un empleado para ver su expediente.
+                        </div>
+                    </div>
+                </div>
+                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-black">{{ users().length
                     }}</span>
             </h2>
             <div class="relative">
@@ -22,16 +32,17 @@
         </div>
 
         <!-- Sidebar List -->
-        <div class="flex-1 overflow-y-auto p-2 space-y-1">
+        <div class="flex-1 overflow-y-auto p-2 space-y-1 min-h-[300px] lg:min-h-0">
             <button (click)="onEdit(null!)"
-                class="w-full p-3 rounded-xl border-2 border-dashed border-gray-100 text-gray-400 hover:border-blue-200 hover:text-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2 text-xs font-bold mb-2">
-                <span>+</span> Nuevo Registro
+                class="w-full p-3 mb-4 rounded-xl bg-blue-50 text-[#3C65AB] border border-blue-100 hover:bg-[#3C65AB] hover:text-white hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest group">
+                <ng-icon name="lucideUserPlus" class="text-lg group-hover:scale-110 transition-transform"></ng-icon>
+                <span>Nuevo Registro</span>
             </button>
 
             @for (u of filteredUsersBySidebar(); track u.id) {
             <div (click)="onEdit(u)"
-                class="w-full p-3 rounded-xl cursor-pointer transition-all flex items-center gap-3 group"
-                [class]="activeUser()?.id === u.id ? 'bg-[#002855] text-white shadow-md' : 'hover:bg-gray-50 text-gray-700'">
+                class="w-full p-2.5 rounded-xl cursor-pointer transition-all flex items-center gap-3 group border border-transparent"
+                [class]="activeUser()?.id === u.id ? 'bg-[#3C65AB] text-white shadow-xl translate-x-1' : 'hover:bg-gray-50 hover:border-gray-100 text-gray-700'">
 
                 <div class="w-10 h-10 rounded-full shrink-0 overflow-hidden border-2"
                     [class]="activeUser()?.id === u.id ? 'border-white/20' : 'border-gray-100'">
@@ -67,7 +78,8 @@
     </div>
 
     <!-- Main Content Area -->
-    <div class="flex-1 overflow-y-auto bg-gray-50/30 rounded-2xl border border-dashed border-gray-200 p-2 lg:p-4">
+    <div
+        class="flex-1 lg:overflow-y-auto bg-gray-50/30 rounded-2xl border border-dashed border-gray-200 p-2 lg:p-4 order-1 lg:order-2">
         @if (activeUser()) {
         <div class="animate-in fade-in zoom-in duration-300">
             <app-user-form [initialForm]="activeUser()!" [roles]="allowedRoles()" [availableUsers]="users() || []"
@@ -79,27 +91,63 @@
             </app-user-form>
         </div>
         } @else {
-        <div class="h-full flex flex-col items-center justify-center text-center p-12">
-            <div
-                class="w-24 h-24 bg-white rounded-3xl shadow-xl border border-gray-100 flex items-center justify-center text-4xl mb-6 animate-bounce duration-[3s] text-blue-500">
-                <ng-icon name="lucideFolderOpen"></ng-icon>
+        <div
+            class="h-full flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
+            <!-- Decorative background element -->
+            <div class="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none">
+                <ng-icon name="lucideUsers" class="text-[20rem]"></ng-icon>
             </div>
-            <h2 class="text-2xl font-black text-[#002855] mb-2 tracking-tight">Gestión de Expedientes</h2>
-            <p class="text-gray-400 max-w-sm mb-8 text-sm leading-relaxed">
-                Seleccione un empleado del directorio lateral para visualizar o modificar su expediente, o cree uno
-                nuevo para incorporarlo a la plantilla.
+
+            <div class="relative">
+                <div
+                    class="w-32 h-32 bg-blue-50 rounded-[2.5rem] flex items-center justify-center text-5xl mb-8 text-blue-600 shadow-inner relative z-10 animate-slideUp">
+                    <ng-icon name="lucideFolderOpen"></ng-icon>
+                    <!-- Small badges around the main icon -->
+                    <div
+                        class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-2xl shadow-lg border border-gray-50 flex items-center justify-center text-xl text-emerald-500 animate-pulse">
+                        <ng-icon name="lucideSearch"></ng-icon>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-3xl font-black text-[#3C65AB] mb-4 tracking-tight animate-slideUp"
+                style="animation-delay: 0.1s;">
+                Gestión de Expedientes <span class="text-blue-500">Premium</span>
+            </h2>
+
+            <p class="text-gray-400 max-w-sm mb-10 text-sm leading-relaxed font-medium animate-slideUp"
+                style="animation-delay: 0.2s;">
+                Bienvenido al centro de administración de personal de <span
+                    class="text-[#3C65AB] font-black">INESPASA</span>.
+                Seleccione un perfil del directorio para gestionar su vinculación laboral, derechos y documentación.
             </p>
-            <div class="flex gap-4">
-                <div class="flex flex-col items-center gap-1 opacity-40">
-                    <ng-icon name="lucideUsers" class="text-lg"></ng-icon>
-                    <span class="text-[9px] font-black uppercase tracking-widest">{{ users().length }}
+
+            <div class="flex items-center gap-8 animate-slideUp" style="animation-delay: 0.3s;">
+                <div class="flex flex-col items-center gap-1.5 group">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all">
+                        <ng-icon name="lucideUsers" class="text-xl"></ng-icon>
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">{{ users().length }}
                         Empleados</span>
                 </div>
-                <div class="w-px h-8 bg-gray-200"></div>
-                <div class="flex flex-col items-center gap-1 opacity-40">
-                    <ng-icon name="lucideBuilding2" class="text-lg"></ng-icon>
-                    <span class="text-[9px] font-black uppercase tracking-widest">INESPASA RRHH</span>
+
+                <div class="w-px h-12 bg-gradient-to-b from-transparent via-gray-200 to-transparent"></div>
+
+                <div class="flex flex-col items-center gap-1.5 group">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all">
+                        <ng-icon name="lucideBuilding2" class="text-xl"></ng-icon>
+                    </div>
+                    <span class="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">RRHH Central</span>
                 </div>
+            </div>
+
+            <!-- Footer micro-hint -->
+            <div
+                class="mt-16 flex items-center gap-2 text-[10px] font-bold text-gray-300 uppercase tracking-widest animate-pulse">
+                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                Listo para administrar
             </div>
         </div>
         }

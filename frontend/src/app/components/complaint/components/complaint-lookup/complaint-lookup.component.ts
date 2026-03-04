@@ -1,12 +1,16 @@
 import { Component, signal, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideSearch, lucideShield } from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-complaint-lookup',
     imports: [CommonModule, FormsModule, NgIconComponent],
     templateUrl: './complaint-lookup.component.html',
+    providers: [
+        provideIcons({ lucideSearch, lucideShield })
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComplaintLookupComponent {

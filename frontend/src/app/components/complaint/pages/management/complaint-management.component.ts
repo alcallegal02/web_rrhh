@@ -8,13 +8,27 @@ import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-t
 import { ComplaintService } from '../../../../services/complaint.service';
 import { Complaint } from '../../../../models/app.models';
 import { QuillConfigModule } from 'ngx-quill';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  lucideScale, lucideClipboardType, lucideCalendarDays, lucideChevronRight,
+  lucideClock, lucidePaperclip, lucideDownload, lucideWrench,
+  lucideChevronDown, lucideCheck, lucideTrash2, lucideArrowLeft,
+  lucideHelpCircle
+} from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-complaint-management',
-  imports: [CommonModule, FormsModule, RichTextEditorComponent, QuillConfigModule, NgIconComponent],
+  imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIconComponent],
   templateUrl: './complaint-management.component.html',
   styleUrl: './complaint-management.component.scss',
+  providers: [
+    provideIcons({
+      lucideScale, lucideClipboardType, lucideCalendarDays, lucideChevronRight,
+      lucideClock, lucidePaperclip, lucideDownload, lucideWrench,
+      lucideChevronDown, lucideCheck, lucideTrash2, lucideArrowLeft,
+      lucideHelpCircle
+    })
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComplaintManagementComponent {
@@ -35,6 +49,15 @@ export class ComplaintManagementComponent {
     new_status: '',
     admin_notes: '',
     status_public_description: ''
+  };
+
+  quillModules = {
+    toolbar: [
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'color': [] }, { 'background': [] }],
+      ['link', 'clean']
+    ]
   };
 
   constructor() {
@@ -142,15 +165,28 @@ export class ComplaintManagementComponent {
 
   getStatusClass(status: string): string {
     const classes: { [key: string]: string } = {
-      'entregada': 'px-2 py-0.5 bg-gray-100 text-gray-800 rounded text-xs font-bold',
-      'pendiente': 'px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs font-bold',
-      'en_analisis': 'px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs font-bold',
-      'en_investigacion': 'px-2 py-0.5 bg-purple-100 text-purple-800 rounded text-xs font-bold',
-      'informacion_requerida': 'px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs font-bold',
-      'resuelta': 'px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs font-bold',
-      'desestimada': 'px-2 py-0.5 bg-red-100 text-red-800 rounded text-xs font-bold'
+      'entregada': 'bg-gray-50 text-gray-700 border-gray-200',
+      'pendiente': 'bg-amber-50 text-amber-700 border-amber-200',
+      'en_analisis': 'bg-blue-50 text-blue-700 border-blue-200',
+      'en_investigacion': 'bg-purple-50 text-purple-700 border-purple-200',
+      'informacion_requerida': 'bg-orange-50 text-orange-700 border-orange-200',
+      'resuelta': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'desestimada': 'bg-red-50 text-red-700 border-red-200'
     };
-    return classes[status] || 'px-2 py-0.5 bg-gray-100 text-gray-800 rounded text-xs font-bold';
+    return classes[status] || 'bg-gray-50 text-gray-700 border-gray-200';
+  }
+
+  getStatusStripeClass(status: string): string {
+    const classes: { [key: string]: string } = {
+      'entregada': 'bg-gray-300',
+      'pendiente': 'bg-amber-400',
+      'en_analisis': 'bg-blue-500',
+      'en_investigacion': 'bg-purple-500',
+      'informacion_requerida': 'bg-orange-500',
+      'resuelta': 'bg-emerald-500',
+      'desestimada': 'bg-red-500'
+    };
+    return classes[status] || 'bg-gray-300';
   }
 
   getFileUrl(path: string): string {

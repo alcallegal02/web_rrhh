@@ -7,7 +7,12 @@ import { ConvenioConfig } from '../../../../services/convenio.service';
 import { LeaveType } from '../../../../services/leave-type.service';
 import { DurationInputComponent } from '../../../shared/duration-input/duration-input.component';
 import { VacationUtils } from '../../vacation.utils';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucideCalendarDays, lucideBuilding2, lucideTriangleAlert, lucideInfo,
+    lucideFileText, lucideX, lucidePaperclip, lucideHourglass,
+    lucideUpload, lucideCheck, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 // We need a partial request type for new requests
 export interface VacationRequestDraft {
@@ -28,6 +33,13 @@ export interface VacationRequestDraft {
     selector: 'app-vacation-request-form',
     imports: [CommonModule, FormsModule, DurationInputComponent, NgIconComponent],
     templateUrl: './vacation-request-form.component.html',
+    providers: [
+        provideIcons({
+            lucideCalendarDays, lucideBuilding2, lucideTriangleAlert, lucideInfo,
+            lucideFileText, lucideX, lucidePaperclip, lucideHourglass,
+            lucideUpload, lucideCheck, lucideHelpCircle
+        })
+    ]
 })
 export class VacationRequestFormComponent {
     request = model<VacationRequestDraft>({

@@ -5,8 +5,12 @@
             <h3 class="font-bold text-gray-800 tracking-tight">Expediente Digital (Adjuntos)</h3>
         </div>
         <label
-            class="bg-[#002855] text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md cursor-pointer hover:bg-blue-900 transition-all flex items-center gap-2">
+            class="bg-[#3C65AB] text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md cursor-pointer hover:bg-blue-900 transition-all flex items-center gap-2 group relative">
             <ng-icon name="lucideUpload"></ng-icon> Subir Documentos
+            <div
+                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                Añade archivos escaneados o digitales al expediente del empleado (PDF, DOC, TXT).
+            </div>
             <input type="file" (change)="onUploadAttachments($event)" multiple accept=".pdf,.doc,.docx,.txt"
                 class="hidden" [disabled]="isLoading() || uploadingAttachments()">
         </label>

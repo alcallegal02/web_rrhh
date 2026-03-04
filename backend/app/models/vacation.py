@@ -2,6 +2,7 @@ from datetime import date, datetime
 from enum import Enum
 from uuid import UUID, uuid4
 
+from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
 
 
@@ -130,6 +131,8 @@ class VacationRequestCreate(SQLModel):
     child_name: str | None = None
     child_birthdate: date | None = None
     telework_percentage: float | None = None
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class VacationAttachmentResponse(SQLModel):
@@ -171,6 +174,8 @@ class VacationRequestResponse(SQLModel):
     user_name: str | None = None
     assigned_manager_name: str | None = None
     assigned_rrhh_name: str | None = None
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CategoryBalance(SQLModel):

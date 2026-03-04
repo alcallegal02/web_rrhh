@@ -6,13 +6,25 @@ import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-t
 import { CopyFieldComponent } from '../../../shared/copy-field/copy-field.component';
 import { ComplaintService } from '../../../../services/complaint.service';
 import { ConfigService } from '../../../../services/config';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucideFilePlus, lucideFolderOpen, lucidePaperclip, lucideFileText,
+    lucideX, lucideMail, lucideShieldCheck, lucideSend,
+    lucideCheck, lucideAlertOctagon, lucideSearch, lucideTriangleAlert, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-complaint-form',
     imports: [CommonModule, FormsModule, RichTextEditorComponent, CopyFieldComponent, NgIconComponent],
     templateUrl: './complaint-form.component.html',
     styleUrl: './complaint-form.component.scss',
+    providers: [
+        provideIcons({
+            lucideFilePlus, lucideFolderOpen, lucidePaperclip, lucideFileText,
+            lucideX, lucideMail, lucideShieldCheck, lucideSend,
+            lucideCheck, lucideAlertOctagon, lucideSearch, lucideTriangleAlert, lucideHelpCircle
+        })
+    ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComplaintFormComponent {

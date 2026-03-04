@@ -35,21 +35,21 @@ async def get_convenio_config_by_year(
 
 @router.post("/", response_model=ConvenioConfig)
 async def create_convenio_config(
+    request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    request: Request,
-    config_in: ConvenioConfigCreate
+    config_in: Annotated[ConvenioConfigCreate, Depends()]
 ):
     """Create a new convenio configuration (RRHH only)"""
     return await ConvenioService.create(session, config_in, current_user, request.client.host)
 
 @router.patch("/{id}", response_model=ConvenioConfig)
 async def update_convenio_config(
+    request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    request: Request,
     id: UUID,
-    config_in: ConvenioConfigUpdate
+    config_in: Annotated[ConvenioConfigUpdate, Depends()]
 ):
     """Update an existing convenio configuration (RRHH only)"""
     return await ConvenioService.update(session, id, config_in, current_user, request.client.host)

@@ -9,11 +9,21 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 xl:gap-8">
         <!-- 1. RESPONSABLE JERÁRQUICO (ORGANIGRAMA) -->
         <div class="space-y-3">
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Responsable Jerárquico
-                (Organigrama)</label>
+            <label
+                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
+                <span>Responsable Jerárquico (Organigrama)</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Superior directo en la estructura jerárquica de la empresa.
+                    </div>
+                </div>
+            </label>
 
             <div class="relative">
                 @let parent = selectedParent();
@@ -75,8 +85,18 @@
 
         <!-- 2. ENCARGADOS PERSONALES (GESTIÓN) -->
         <div class="space-y-3">
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Encargados Personales
-                (Gestión)</label>
+            <label
+                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
+                <span>Encargados Personales (Gestión)</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Personas con capacidad para autorizar solicitudes y gestionar el día a día del empleado.
+                    </div>
+                </div>
+            </label>
 
             <div class="relative" (focusout)="closeManagerDropdown()">
                 <input type="text" class="input-field-new pl-9 text-xs" [ngModel]="managerSearch()"
@@ -118,7 +138,18 @@
 
         <!-- 3. SEGUIMIENTO RRHH -->
         <div class="space-y-3">
-            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Seguimiento RRHH</label>
+            <label
+                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
+                <span>Seguimiento RRHH</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help size-3"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Personal de Recursos Humanos asignado al seguimiento administrativo de este empleado.
+                    </div>
+                </div>
+            </label>
 
             <div class="relative" (focusout)="closeRrhhDropdown()">
                 <input type="text" class="input-field-new pl-9 text-xs" [ngModel]="rrhhSearch()"

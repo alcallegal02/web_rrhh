@@ -1,14 +1,16 @@
-import { Component, input, output, inject, ChangeDetectionStrategy, ViewEncapsulation } from '@angular/core';
+import { Component, input, output, inject, ChangeDetectionStrategy, ViewEncapsulation, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../config/environment';
 import { News } from '../../../../models/app.models';
+import { HostListener } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FileUrlPipe } from '../../../../pipes/file-url.pipe';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
     lucideNewspaper, lucidePencil, lucideTrash2, lucideChevronRight,
-    lucidePaperclip, lucideCalendarDays
+    lucidePaperclip, lucideCalendarDays, lucideSend, lucideFileEdit, lucideArchive,
+    lucideChevronDown
 } from '@ng-icons/lucide';
 
 @Component({
@@ -17,7 +19,7 @@ import {
     templateUrl: './news-list.component.html',
     styleUrl: './news-list.component.scss',
     providers: [
-        provideIcons({ lucideNewspaper, lucidePencil, lucideTrash2, lucideChevronRight, lucidePaperclip, lucideCalendarDays })
+        provideIcons({ lucideNewspaper, lucidePencil, lucideTrash2, lucideChevronRight, lucidePaperclip, lucideCalendarDays, lucideSend, lucideFileEdit, lucideArchive, lucideChevronDown })
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
     encapsulation: ViewEncapsulation.None
@@ -25,7 +27,11 @@ import {
 export class NewsListComponent {
     newsList = input.required<News[]>();
     canManage = input<boolean>(false); // RRHH/Admin/Superadmin
-    layout = input<'grid' | 'list'>('grid');
+    layout = input<'grid' | 'list' | 'sidebar'>('sidebar');
+    editingId = input<string | null>(null);
+
+    // Custom Dropdown State
+    activeDropdownId = signal<string | null>(null);
 
     edit = output<News>();
     delete = output<string>();
@@ -84,5 +90,21 @@ export class NewsListComponent {
     onStatusChange(id: string, event: Event) {
         const target = event.target as HTMLSelectElement;
         this.statusChange.emit({ id, status: target.value });
+    }
+
+    toggleDropdown(id: string, event: Event): void {
+        event.stopPropagation();
+        this.activeDropdownId.update(current => current === id ? null : id);
+    }
+
+    @HostListener('document:click')
+    closeAllDropdowns(): void {
+        this.activeDropdownId.set(null);
+    }
+
+    selectStatus(id: string, status: string, event: Event): void {
+        event.stopPropagation();
+        this.statusChange.emit({ id, status });
+        this.activeDropdownId.set(null);
     }
 }

@@ -1,7 +1,18 @@
 <form (ngSubmit)="submit()" #requestForm="ngForm" class="space-y-5" [id]="uniqueIdPrefix() + 'Form'">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="md:col-span-2">
-            <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Tipo de Permiso</label>
+            <label
+                class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center justify-between">
+                <span>Tipo de Permiso</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Selecciona la categoría de tu solicitud. Los días disponibles se descuentan de tu bolsa anual.
+                    </div>
+                </div>
+            </label>
             <select [ngModel]="request().request_type" (ngModelChange)="updateRequestField('request_type', $event)"
                 name="type" required
                 class="input-field bg-gray-800 border-gray-700 text-white focus:ring-blue-500 w-full p-2 rounded">
@@ -55,8 +66,19 @@
         </div>
 
         <div>
-            <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Cantidad (Días o
-                HH:mm)</label>
+            <label
+                class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center justify-between">
+                <span>Cantidad (Días o HH:mm)</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Indica cuántos días o cuánto tiempo solicitas. Puedes alternar entre días completos y
+                        horas/minutos.
+                    </div>
+                </div>
+            </label>
 
             @if (request().request_type === 'maternidad_paternidad') {
             <div class="space-y-3">
@@ -145,7 +167,17 @@
 
         <div>
             <label [for]="uniqueIdPrefix() + 'StartDate'"
-                class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Fecha Inicio</label>
+                class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center justify-between">
+                <span>Fecha Inicio</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        El primer día de tu ausencia o permiso.
+                    </div>
+                </div>
+            </label>
             <input [id]="uniqueIdPrefix() + 'StartDate'" type="datetime-local" [ngModel]="request().start_date"
                 (ngModelChange)="updateRequestField('start_date', $event)" name="start" required
                 class="input-field bg-gray-800 border-gray-700 text-white w-full p-2 rounded">
@@ -154,7 +186,17 @@
         @if (!isEndDateOptional()) {
         <div>
             <label [for]="uniqueIdPrefix() + 'EndDate'"
-                class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Fecha Fin</label>
+                class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center justify-between">
+                <span>Fecha Fin</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        El último día de tu ausencia. El sistema calculará automáticamente la duración total.
+                    </div>
+                </div>
+            </label>
             <input [id]="uniqueIdPrefix() + 'EndDate'" type="datetime-local" [ngModel]="request().end_date"
                 (ngModelChange)="updateRequestField('end_date', $event)" name="end" required
                 class="input-field bg-gray-800 border-gray-700 text-white w-full p-2 rounded">
@@ -173,8 +215,19 @@
 
         <!-- File -->
         <div class="md:col-span-2">
-            <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Justificante /
-                Documento</label>
+            <label
+                class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center justify-between">
+                <span>Justificante / Documento</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-blue-400 hover:text-blue-500 transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Adjunta cualquier documento necesario (parte médico, justificante judicial, etc.) para validar
+                        tu solicitud.
+                    </div>
+                </div>
+            </label>
 
             <div class="space-y-3">
                 <!-- Pending Attachments (Not yet uploaded) -->

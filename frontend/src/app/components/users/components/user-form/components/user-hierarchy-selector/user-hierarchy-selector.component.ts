@@ -3,7 +3,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../../config/environment';
 import { UserSummary } from '../../user-form.models';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucideNetwork, lucideX, lucideSearch, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 // Re-export for convenience
 export { UserSummary };
@@ -12,6 +15,11 @@ export { UserSummary };
     selector: 'app-user-hierarchy-selector',
     imports: [CommonModule, FormsModule, NgIconComponent],
     templateUrl: './user-hierarchy-selector.component.html',
+    providers: [
+        provideIcons({
+            lucideNetwork, lucideX, lucideSearch, lucideHelpCircle
+        })
+    ]
 })
 export class UserHierarchySelectorComponent {
     // Inputs

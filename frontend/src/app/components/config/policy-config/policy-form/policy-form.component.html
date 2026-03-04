@@ -1,247 +1,381 @@
-<div class="container mx-auto p-6 max-w-2xl">
-    <div class="flex items-center mb-6">
-        <a routerLink="../" class="mr-4 text-gray-500 hover:text-gray-700 flex items-center gap-1">
-            <ng-icon name="lucideArrowLeft"></ng-icon> Volver
-        </a>
-        <h1 class="text-2xl font-bold text-gray-800">
-            {{ policyId() ? 'Editar Política' : 'Nueva Política' }}
-        </h1>
-    </div>
-
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="bg-white shadow-md rounded-lg p-6">
-        <!-- Slug & Name -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Nombre</label>
-                <input formControlName="name" type="text"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Slug (ID interno)</label>
-                <input formControlName="slug" type="text"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-50">
-            </div>
-        </div>
-
-        <!-- Description -->
-        <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2">Descripción</label>
-            <textarea formControlName="description" rows="2"
-                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
-        </div>
-
-        <!-- Duration Settings -->
-        <div class="border-t border-b border-gray-100 py-4 mb-4">
-            <h3 class="text-lg font-semibold mb-3 text-gray-700">Duración y Límites</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="p-6 bg-gray-50 min-h-screen">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header & Navigation -->
+        <div class="mb-10 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <a routerLink="../"
+                    class="group flex items-center justify-center w-12 h-12 rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-inespasa hover:border-inespasa-light/30 hover:shadow-lg transition-all active:scale-90">
+                    <ng-icon name="lucideArrowLeft" class="text-xl"></ng-icon>
+                </a>
                 <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Valor</label>
-                    <input formControlName="duration_value" type="number"
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                </div>
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Unidad</label>
-                    <select formControlName="duration_unit"
-                        class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                        <option value="days_work">Días Hábiles (Laborables)</option>
-                        <option value="days_natural">Días Naturales</option>
-                        <option value="weeks">Semanas</option>
-                        <option value="hours">Horas</option>
-                    </select>
+                    <h2 class="text-3xl font-black text-gray-900 tracking-tight leading-none">
+                        {{ policyId() ? 'Editar Política' : 'Nueva Política' }}
+                    </h2>
+                    <p class="text-gray-500 mt-1.5 text-sm font-bold flex items-center gap-1.5">
+                        <ng-icon name="lucideSettings" class="text-inespasa"></ng-icon>
+                        {{ policyId() ? 'Modificando parámetros de la política activa' : 'Definiendo nuevos derechos y
+                        obligaciones laborales' }}
+                    </p>
                 </div>
             </div>
-        </div>
 
-        <!-- Flags -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-            <div class="flex items-center">
-                <input formControlName="is_paid" type="checkbox" id="is_paid" class="h-5 w-5 text-blue-600">
-                <label for="is_paid" class="ml-2 text-gray-700 font-bold">Retribuido (Pagado)</label>
-            </div>
-
-            <div class="flex items-center">
-                <input formControlName="is_public_dashboard" type="checkbox" id="is_public_d"
-                    class="h-5 w-5 text-blue-600">
-                <label for="is_public_d" class="ml-2 text-gray-700 font-bold">Visible en Dashboard</label>
-            </div>
-
-            <div class="flex items-center">
-                <input formControlName="requires_justification" type="checkbox" id="req_just"
-                    class="h-5 w-5 text-blue-600">
-                <label for="req_just" class="ml-2 text-gray-700 font-bold">Requiere Justificante</label>
-            </div>
-        </div>
-
-        <!-- Advanced Rules -->
-        <div class="border-t border-b border-gray-100 py-4 mb-4 bg-gray-50 rounded px-4">
-            <h3 class="text-lg font-semibold mb-3 text-gray-700">Reglas Avanzadas (Maternidad/Paternidad)</h3>
-
-            <div class="mb-4 flex items-center">
-                <input formControlName="allow_split" type="checkbox" id="allow_split" class="h-5 w-5 text-blue-600">
-                <label for="allow_split" class="ml-2 text-gray-700 font-bold">Permitir disfrute fraccionado</label>
-            </div>
-
-            @if (form.get('allow_split')?.value) {
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4 pl-6 border-l-4 border-blue-200">
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Duración Obligatoria Inmediata</label>
-                    <input formControlName="mandatory_immediate_duration" type="number"
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        placeholder="Ej: 6 (semanas)">
-                    <span class="text-xs text-gray-500">Debe disfrutarse seguido tras el hecho.</span>
-                </div>
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Duración Mínima Fracción</label>
-                    <input formControlName="split_min_duration" type="number"
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        placeholder="Ej: 1 (semana)">
-                </div>
+            @if (isSystemDefault()) {
+            <div class="px-4 py-2 bg-amber-50 rounded-xl border border-amber-100 flex items-center gap-2">
+                <ng-icon name="lucideShield" class="text-amber-500"></ng-icon>
+                <span class="text-[10px] font-black text-amber-700 uppercase tracking-widest">Política del
+                    Sistema</span>
             </div>
             }
+        </div>
 
-            <!-- Recurrence & Lifecycle (Refactor 2026) -->
-            <div class="mt-6 border-t pt-4">
-                <h4 class="text-md font-semibold mb-3 text-gray-600">Ciclo de Vida y Recurrencia</h4>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Tipo de Reinicio</label>
-                        <select formControlName="reset_type"
-                            class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                            <option value="anual_calendario">Anual (Calendario)</option>
-                            <option value="anual_relativo">Anual (Relativo - Rolling Year)</option>
-                            <option value="por_evento">Por Evento (Sin ciclo anual)</option>
-                            <option value="sin_reinicio">Sin Reinicio (Bolsa Única)</option>
-                        </select>
-                    </div>
-
-                    @if (form.get('reset_type')?.value === 'anual_calendario') {
-                    <div class="flex gap-4">
-                        <div class="w-1/2">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Día Reinicio</label>
-                            <input formControlName="reset_day" type="number" min="1" max="31"
-                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        </div>
-                        <div class="w-1/2">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Mes Reinicio</label>
-                            <select formControlName="reset_month"
-                                class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                                <option [value]="1">Enero</option>
-                                <option [value]="2">Febrero</option>
-                                <option [value]="3">Marzo</option>
-                                <option [value]="4">Abril</option>
-                                <option [value]="5">Mayo</option>
-                                <option [value]="6">Junio</option>
-                                <option [value]="7">Julio</option>
-                                <option [value]="8">Agosto</option>
-                                <option [value]="9">Septiembre</option>
-                                <option [value]="10">Octubre</option>
-                                <option [value]="11">Noviembre</option>
-                                <option [value]="12">Diciembre</option>
-                            </select>
-                        </div>
-                    </div>
-                    }
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-8 pb-20">
+            <!-- Basic Information Card -->
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-8 opacity-[0.03] pointer-events-none">
+                    <ng-icon name="lucideInfo" class="text-9xl"></ng-icon>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Máx. Días / Periodo</label>
-                        <input formControlName="max_days_per_period" type="number" step="0.5"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <p class="text-xs text-gray-500 mt-1">0 = Sin límite</p>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Máx. Usos / Periodo</label>
-                        <input formControlName="max_usos_por_periodo" type="number"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Máx. por Día / Jornada</label>
-                        <input formControlName="max_duration_per_day" type="number" step="0.5"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                        <p class="text-xs text-gray-500 mt-1">Límite diario (Ej: 1h para Lactancia)</p>
-                    </div>
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-1.5 h-6 bg-inespasa rounded-full"></div>
+                    <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Información Básica</h3>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 bg-gray-50 p-3 rounded">
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Ventana de Validez</label>
-                        <div class="flex">
-                            <input formControlName="validity_window_value" type="number"
-                                class="shadow appearance-none border rounded-l w-2/3 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                placeholder="0">
-                            <select formControlName="validity_window_unit"
-                                class="shadow border rounded-r w-1/3 py-2 px-2 text-gray-700 bg-white">
-                                <option value="months">Meses</option>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
+                    <div class="space-y-2">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Nombre
+                            de la Política</label>
+                        <div class="relative">
+                            <input formControlName="name" type="text"
+                                class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-bold focus:ring-4 focus:ring-inespasa-light/20 transition-all outline-none border hover:border-inespasa-light/50"
+                                placeholder="Ej: Vacaciones Verano">
+                            <ng-icon name="lucideTags"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></ng-icon>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label
+                            class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                            <span>Slug (Identificador)</span>
+                            <div class="group relative flex items-center">
+                                <ng-icon name="lucideHelpCircle"
+                                    class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                                <div
+                                    class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                    Identificador único interno. No se puede cambiar una vez creado.
+                                </div>
+                            </div>
+                        </label>
+                        <div class="relative">
+                            <input formControlName="slug" type="text"
+                                class="w-full bg-gray-100/50 border-gray-100 text-gray-400 rounded-2xl p-4 font-mono text-sm focus:ring-0 transition-all outline-none border cursor-not-allowed"
+                                placeholder="vacaciones_estandar">
+                            <ng-icon name="lucideHistory"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></ng-icon>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 space-y-2">
+                        <label
+                            class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Descripción
+                            Detallada</label>
+                        <div class="relative">
+                            <textarea formControlName="description" rows="3"
+                                class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-medium focus:ring-4 focus:ring-inespasa-light/20 transition-all outline-none border hover:border-inespasa-light/50 resize-none"
+                                placeholder="Describe el propósito y condiciones de esta ausencia..."></textarea>
+                            <ng-icon name="lucideTextQuote" class="absolute right-4 top-4 text-gray-300"></ng-icon>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duration & Flags Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Duration Card -->
+                <div class="lg:col-span-7 bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-1.5 h-6 bg-amber-400 rounded-full"></div>
+                        <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Duración y Límites
+                        </h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label
+                                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Cantidad</label>
+                            <input formControlName="duration_value" type="number"
+                                class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-amber-400/20 transition-all outline-none border hover:border-amber-400/30">
+                        </div>
+                        <div class="space-y-2">
+                            <label
+                                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Unidad
+                                de Tiempo</label>
+                            <select formControlName="duration_unit"
+                                class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-bold focus:ring-4 focus:ring-amber-400/20 transition-all outline-none border hover:border-amber-400/30 appearance-none bg-no-repeat bg-[right_1rem_center] cursor-pointer">
+                                <option value="days_work">Días Hábiles</option>
+                                <option value="days_natural">Días Naturales</option>
                                 <option value="weeks">Semanas</option>
-                                <option value="days">Días</option>
+                                <option value="hours">Horas</option>
                             </select>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">Tiempo para disfrutar desde el evento/inicio.</p>
-                    </div>
-                    <div class="flex items-center mt-6">
-                        <input formControlName="is_accumulable" type="checkbox" id="is_accumulable"
-                            class="mr-2 h-4 w-4">
-                        <label for="is_accumulable" class="text-gray-700 text-sm font-bold">Acumulable</label>
 
-                        @if (form.get('is_accumulable')?.value) {
-                        <input formControlName="accumulable_years" type="number"
-                            class="ml-4 shadow border rounded w-20 py-1 px-2 text-gray-700" placeholder="Años">
-                        }
+                        <div class="md:col-span-2 space-y-4 pt-4">
+                            <div
+                                class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-md transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-500 flex items-center justify-center">
+                                        <ng-icon name="lucideScale"></ng-icon>
+                                    </div>
+                                    <span class="text-sm font-bold text-gray-700">Retribuido (Remunerado)</span>
+                                    <div class="group relative flex items-center">
+                                        <ng-icon name="lucideHelpCircle"
+                                            class="text-inespasa hover:text-emerald-500 transition-colors cursor-help"></ng-icon>
+                                        <div
+                                            class="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                            Indica si la ausencia es pagada por la empresa.
+                                        </div>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" formControlName="is_paid" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div
+                                class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-md transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-inespasa-light/10 text-inespasa flex items-center justify-center">
+                                        <ng-icon name="lucideLayoutDashboard"></ng-icon>
+                                    </div>
+                                    <span class="text-sm font-bold text-gray-700">Visible en Panel Público</span>
+                                    <div class="group relative flex items-center">
+                                        <ng-icon name="lucideHelpCircle"
+                                            class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                                        <div
+                                            class="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                            Permite que los empleados vean este tipo de ausencia en su panel de control.
+                                        </div>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" formControlName="is_public_dashboard" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-inespasa">
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div
+                                class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-md transition-all">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded-lg bg-amber-50 text-amber-500 flex items-center justify-center">
+                                        <ng-icon name="lucideFileText"></ng-icon>
+                                    </div>
+                                    <span class="text-sm font-bold text-gray-700">Justificante Obligatorio</span>
+                                    <div class="group relative flex items-center">
+                                        <ng-icon name="lucideHelpCircle"
+                                            class="text-inespasa hover:text-amber-500 transition-colors cursor-help"></ng-icon>
+                                        <div
+                                            class="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                            Si está activado, el empleado deberá adjuntar un documento para validar la
+                                            solicitud.
+                                        </div>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" formControlName="requires_justification"
+                                        class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Extensión por Viaje (Días)</label>
-                        <input formControlName="travel_extension_days" type="number"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <!-- Visuals & Preferences -->
+                <div
+                    class="lg:col-span-5 bg-inespasa-dark rounded-[32px] p-8 shadow-xl text-white relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                        <ng-icon name="lucidePalette" class="text-9xl"></ng-icon>
                     </div>
-                    <div>
-                        <label class="block text-gray-700 text-sm font-bold mb-2">Tipo Documento (Slug)</label>
-                        <input formControlName="requires_document_type" type="text" placeholder="Ej: medical_proof"
-                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-1.5 h-6 bg-white rounded-full"></div>
+                        <h3 class="text-[11px] font-black text-white/50 uppercase tracking-[0.2em]">Identidad Visual
+                        </h3>
+                    </div>
+
+                    <div class="space-y-8 mt-4">
+                        <div class="space-y-3">
+                            <label
+                                class="block text-[10px] font-black text-white/40 uppercase tracking-widest px-1">Color
+                                de Representación</label>
+                            <div class="flex items-center gap-4">
+                                <input formControlName="color" type="color"
+                                    class="h-14 w-14 border-0 p-1 rounded-2xl bg-white/10 cursor-pointer overflow-hidden backdrop-blur-sm">
+                                <input formControlName="color" type="text"
+                                    class="flex-1 bg-white/10 border-white/10 text-white rounded-2xl p-4 font-black focus:ring-2 focus:ring-white/20 transition-all outline-none border uppercase tracking-widest shadow-inner">
+                            </div>
+                        </div>
+
+                        <div class="p-6 bg-white/5 rounded-3xl border border-white/5 backdrop-blur-md">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-3">
+                                    <ng-icon name="lucideStar" class="text-yellow-400 text-xl"></ng-icon>
+                                    <span class="text-sm font-bold">Resaltar / Destacar</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" formControlName="is_featured" class="sr-only peer">
+                                    <div
+                                        class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-yellow-400">
+                                    </div>
+                                </label>
+                            </div>
+                            <p class="text-[10px] text-white/40 font-bold uppercase leading-relaxed tracking-wider">Las
+                                políticas destacadas aparecen en la parte superior del listado de solicitudes para el
+                                empleado.</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Modality & Child Age -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Modalidad</label>
-                <select formControlName="modality"
-                    class="shadow border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-white">
-                    <option value="presencial_ausente">Presencial / Ausente</option>
-                    <option value="teletrabajo">Teletrabajo</option>
-                    <option value="mixto">Mixto</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Límite Edad Hijo (Opcional)</label>
-                <input formControlName="limit_age_child" type="number" placeholder="Ej: 12"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            </div>
-        </div>
+            <!-- Advanced Lifecycle Card -->
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100">
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-1.5 h-6 bg-emerald-400 rounded-full"></div>
+                    <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Ciclo de Vida y Reglas
+                        Especiales</h3>
+                </div>
 
-        <!-- Visuals -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Color (Hex)</label>
-                <div class="flex">
-                    <input formControlName="color" type="color" class="h-10 w-10 border p-1 rounded mr-2">
-                    <input formControlName="color" type="text"
-                        class="shadow appearance-none border rounded flex-1 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <label
+                                class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                                <span>Reinicio de Bolsa</span>
+                                <div class="group relative flex items-center">
+                                    <ng-icon name="lucideHelpCircle"
+                                        class="text-inespasa hover:text-emerald-500 transition-colors cursor-help"></ng-icon>
+                                    <div
+                                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                        Determina cuándo se vuelve a poner a cero el contador de días disponibles.
+                                    </div>
+                                </div>
+                            </label>
+                            <select formControlName="reset_type"
+                                class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-bold focus:ring-4 focus:ring-emerald-400/20 transition-all outline-none border">
+                                <option value="anual_calendario">Anual (1 de Enero)</option>
+                                <option value="anual_relativo">Anual (Desde ingreso)</option>
+                                <option value="por_evento">Por Evento (Matrimonio, etc.)</option>
+                                <option value="sin_reinicio">Bolsa Única Permanente</option>
+                            </select>
+                        </div>
+
+                        <div
+                            class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                            <div class="flex items-center gap-3">
+                                <ng-icon name="lucideSplit" class="text-emerald-500"></ng-icon>
+                                <span class="text-sm font-bold text-gray-700">Disfrute Fraccionado</span>
+                                <div class="group relative flex items-center ml-2">
+                                    <ng-icon name="lucideHelpCircle"
+                                        class="text-inespasa hover:text-emerald-500 transition-colors cursor-help"></ng-icon>
+                                    <div
+                                        class="absolute left-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                        Permite solicitar la ausencia en periodos inferiores a la duración total (ej.
+                                        días sueltos).
+                                    </div>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" formControlName="allow_split" class="sr-only peer">
+                                <div
+                                    class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label
+                                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                                    <span>Máx. Días / Periodo</span>
+                                    <div class="group relative flex items-center">
+                                        <ng-icon name="lucideHelpCircle"
+                                            class="text-inespasa hover:text-emerald-500 transition-colors cursor-help"></ng-icon>
+                                        <div
+                                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                            Límite máximo de días que se pueden solicitar dentro del periodo de
+                                            reinicio.
+                                        </div>
+                                    </div>
+                                </label>
+                                <input formControlName="max_days_per_period" type="number"
+                                    class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-emerald-400/20 transition-all outline-none border">
+                            </div>
+                            <div class="space-y-2">
+                                <label
+                                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                                    <span>Uso diario máx.</span>
+                                    <div class="group relative flex items-center">
+                                        <ng-icon name="lucideHelpCircle"
+                                            class="text-inespasa hover:text-emerald-500 transition-colors cursor-help"></ng-icon>
+                                        <div
+                                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                            Límite de tiempo que se puede solicitar por cada día individual.
+                                        </div>
+                                    </div>
+                                </label>
+                                <input formControlName="max_duration_per_day" type="number"
+                                    class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-emerald-400/20 transition-all outline-none border">
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                            <div class="flex items-center gap-3 mb-2">
+                                <ng-icon name="lucideBaby" class="text-emerald-600"></ng-icon>
+                                <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Cuidado
+                                    de Hijos</span>
+                                <div class="group relative flex items-center ml-auto">
+                                    <ng-icon name="lucideHelpCircle"
+                                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                                    <div
+                                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                        Configuración específica para ausencias vinculadas a la edad del hijo (ej.
+                                        lactancia).
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-xs font-bold text-emerald-800/70">Límite edad:</span>
+                                <input formControlName="limit_age_child" type="number"
+                                    class="bg-white border-emerald-200 text-emerald-900 rounded-lg px-3 py-1.5 w-20 font-black shadow-sm outline-none focus:ring-2 focus:ring-emerald-400/50">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="flex items-center justify-end">
-            <button type="submit" [disabled]="form.invalid"
-                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition disabled:opacity-50">
-                {{ policyId() ? 'Guardar Cambios' : 'Crear Política' }}
-            </button>
-        </div>
-    </form>
+            <!-- Action Buttons -->
+            <div
+                class="fixed bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 px-6 py-4 bg-white/80 backdrop-blur-xl rounded-full border border-gray-100 shadow-2xl z-40 animate-slideUp">
+                <a routerLink="../"
+                    class="px-8 py-3 text-gray-400 font-black text-[11px] uppercase tracking-widest hover:text-gray-700 transition-all">Cancelar</a>
+                <button type="submit" [disabled]="form.invalid"
+                    class="inline-flex items-center gap-3 px-8 py-3 bg-inespasa text-white font-black text-[11px] uppercase tracking-widest rounded-full hover:bg-inespasa-dark transition-all shadow-xl shadow-inespasa-light/30 disabled:opacity-50 disabled:grayscale">
+                    <ng-icon name="lucideCheck" class="text-lg"></ng-icon>
+                    {{ policyId() ? 'Guardar Cambios' : 'Confirmar y Crear' }}
+                </button>
+            </div>
+        </form>
+    </div>
 </div>

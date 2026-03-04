@@ -3,7 +3,13 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DatePipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  lucideArrowLeft, lucideSearch, lucideLock, lucideFileText,
+  lucideDownload, lucideCalendar, lucideRefreshCw, lucideShieldCheck,
+  lucideScale, lucideInfo, lucideMessageSquare, lucideTriangleAlert,
+  lucideShield
+} from '@ng-icons/lucide';
 import { environment } from '../../../../config/environment';
 import { ConfigService } from '../../../../services/config';
 import { ComplaintService } from '../../../../services/complaint.service';
@@ -14,6 +20,14 @@ import { Complaint } from '../../../../models/app.models';
   imports: [CommonModule, FormsModule, DatePipe, NgIconComponent],
   templateUrl: './complaint-status.component.html',
   styleUrl: './complaint-status.component.scss',
+  providers: [
+    provideIcons({
+      lucideArrowLeft, lucideSearch, lucideLock, lucideFileText,
+      lucideDownload, lucideCalendar, lucideRefreshCw, lucideShieldCheck,
+      lucideScale, lucideInfo, lucideMessageSquare, lucideTriangleAlert,
+      lucideShield
+    })
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComplaintStatusComponent {
@@ -116,15 +130,15 @@ export class ComplaintStatusComponent {
 
   getStatusClass(status: string): string {
     const classes: { [key: string]: string } = {
-      'entregada': 'px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm',
-      'pendiente': 'px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm',
-      'en_analisis': 'px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm',
-      'en_investigacion': 'px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm',
-      'informacion_requerida': 'px-2 py-1 bg-orange-100 text-orange-800 rounded text-sm',
-      'resuelta': 'px-2 py-1 bg-green-100 text-green-800 rounded text-sm',
-      'desestimada': 'px-2 py-1 bg-red-100 text-red-800 rounded text-sm'
+      'entregada': 'bg-gray-50 text-gray-700 border-gray-200',
+      'pendiente': 'bg-amber-50 text-amber-700 border-amber-200',
+      'en_analisis': 'bg-blue-50 text-blue-700 border-blue-200',
+      'en_investigacion': 'bg-purple-50 text-purple-700 border-purple-200',
+      'informacion_requerida': 'bg-orange-50 text-orange-700 border-orange-200',
+      'resuelta': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+      'desestimada': 'bg-red-50 text-red-700 border-red-200'
     };
-    return classes[status] || 'px-2 py-1 bg-gray-100 text-gray-800 rounded text-sm';
+    return classes[status] || 'bg-gray-50 text-gray-700 border-gray-200';
   }
 
   goBack(): void {

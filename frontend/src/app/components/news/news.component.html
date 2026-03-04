@@ -1,33 +1,69 @@
-<div class="space-y-6 pb-8">
+<div class="flex flex-col lg:flex-row gap-4 lg:gap-6 h-auto lg:h-[calc(100vh-120px)] lg:overflow-hidden p-2 lg:p-0">
 
-    <!-- Page Header -->
-    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm px-8 py-6 flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <div
-                class="h-10 w-10 rounded-xl bg-inespasa text-white flex items-center justify-center shadow-lg shadow-inespasa-light/20">
-                <ng-icon name="lucideNewspaper" class="text-xl"></ng-icon>
+    <!-- Sidebar: News Directory -->
+    <div
+        class="w-full lg:w-80 flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden shrink-0 order-2 lg:order-1">
+        <!-- Sidebar Header -->
+        <div class="p-4 bg-gray-50/50 border-b border-gray-100">
+            <div class="flex items-center gap-3 mb-4">
+                <div
+                    class="h-8 w-8 rounded-lg bg-[#3C65AB] text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <ng-icon name="lucideNewspaper" class="text-lg"></ng-icon>
+                </div>
+                <div>
+                    <h2 class="text-sm font-black text-gray-900 tracking-tight">Directorio</h2>
+                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Noticias Publicadas</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-lg font-black text-gray-900 tracking-tight">Gestión de Noticias</h1>
-                <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">Portal de comunicación
-                    interna</p>
-            </div>
+
+            <!-- New News Button -->
+            <button (click)="resetForm()"
+                class="w-full p-3 mb-2 rounded-xl bg-blue-50 text-[#3C65AB] border border-blue-100 hover:bg-[#3C65AB] hover:text-white hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest group">
+                <ng-icon name="lucidePlus" class="text-lg group-hover:scale-110 transition-transform"></ng-icon>
+                <span>Nueva Noticia</span>
+            </button>
         </div>
-        <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-            {{ newsList().length }} {{ newsList().length === 1 ? 'noticia' : 'noticias' }}
+
+        <!-- Sidebar List -->
+        <div class="flex-1 overflow-y-auto p-2 space-y-1 min-h-[300px] lg:min-h-0">
+            <app-news-list [newsList]="newsList()" [editingId]="editingNewsId()"
+                [canManage]="authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()"
+                layout="sidebar" (edit)="onEdit($event)" (delete)="onDelete($event)"
+                (statusChange)="onStatusChange($event)">
+            </app-news-list>
+        </div>
+
+        <!-- Sidebar Footer -->
+        <div
+            class="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+            <span>Total</span>
+            <span class="bg-white px-2 py-0.5 rounded-md border border-gray-200 text-gray-600">{{ newsList().length
+                }}</span>
         </div>
     </div>
 
-    <!-- Create/Edit News Form (RRHH/Admin/Superadmin only) -->
-    @if (authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()) {
-    <app-news-form [initialData]="initialFormData()" (save)="onSave($event)" (cancel)="onCancel()">
-    </app-news-form>
-    }
-
-    <!-- News List -->
-    <app-news-list [newsList]="newsList()"
-        [canManage]="authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()" layout="list"
-        (edit)="onEdit($event)" (delete)="onDelete($event)" (statusChange)="onStatusChange($event)">
-    </app-news-list>
+    <!-- Main Content Area -->
+    <div
+        class="flex-1 lg:overflow-y-auto bg-gray-50/30 rounded-2xl border border-dashed border-gray-200 p-2 lg:p-4 order-1 lg:order-2">
+        <div class="animate-in fade-in zoom-in duration-300">
+            @if (authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()) {
+            <app-news-form [initialData]="initialFormData()" (save)="onSave($event)" (cancel)="onCancel()">
+            </app-news-form>
+            } @else {
+            <!-- Optional read-only view or selection prompt -->
+            <div class="h-full flex flex-col items-center justify-center p-12 text-center space-y-4">
+                <div
+                    class="h-20 w-20 rounded-3xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-200">
+                    <ng-icon name="lucideNewspaper" class="text-4xl"></ng-icon>
+                </div>
+                <div>
+                    <h3 class="text-lg font-black text-gray-900 tracking-tight">Selecciona una noticia</h3>
+                    <p class="text-xs text-gray-400 max-w-xs mx-auto">Elige una noticia del directorio de la izquierda
+                        para ver su contenido detallado.</p>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
 
 </div>

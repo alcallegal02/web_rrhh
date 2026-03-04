@@ -1,140 +1,281 @@
 @if (!submitted()) {
-<form (ngSubmit)="submitComplaint()" #complaintForm="ngForm" class="space-y-6">
-    <div>
-        <label for="title" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-            <ng-icon name="lucideClipboardList"></ng-icon> Título de la Denuncia
-        </label>
-        <input type="text" id="title" name="title" [ngModel]="title()" (ngModelChange)="title.set($event)" required
-            placeholder="Ej: Problema con..." class="input-field" />
-    </div>
-    <div>
-        <label for="description" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-            <ng-icon name="lucideFileEdit"></ng-icon> Descripción Detallada
-        </label>
-        <app-rich-text-editor [ngModel]="description()" (ngModelChange)="description.set($event)"
-            (contentChange)="onEditorContentChange($event)" name="description" [quillModules]="quillModules"
-            [height]="'300px'" [placeholder]="'Describe tu denuncia de manera detallada...'"
-            [uploadUrl]="'/upload/image-anonymous'" [module]="'complaints'" required></app-rich-text-editor>
-        <p class="text-xs text-gray-500 mt-2">Sé lo más específico posible para facilitar la revisión</p>
+<div class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 animate-fadeIn">
+    <div class="flex items-center justify-between mb-10 pb-6 border-b border-gray-100">
+        <div class="flex items-center gap-4">
+            <div
+                class="h-12 w-12 rounded-2xl bg-inespasa text-white flex items-center justify-center shadow-lg shadow-inespasa-light/20">
+                <ng-icon name="lucideFilePlus" class="text-2xl"></ng-icon>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black text-gray-900 tracking-tight">Nueva Denuncia</h2>
+                <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">Formulario de registro
+                    seguro</p>
+            </div>
+        </div>
     </div>
 
-    <!-- Document Upload -->
-    <div class="border-t pt-4 border-gray-100">
-        <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1"><ng-icon
-                name="lucidePaperclip"></ng-icon> Adjuntar Documentos (PDF, DOC,
-            Imágenes)</label>
-        <div class="flex flex-col gap-3">
-            <input type="file" (change)="onFilesSelected($event)" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                class="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 text-sm text-gray-500" />
+    <form (ngSubmit)="submitComplaint()" #complaintForm="ngForm" class="space-y-10">
+        <!-- Title -->
+        <div class="space-y-3">
+            <label
+                class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 flex items-center justify-between">
+                <span>Título de la Denuncia</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Proporciona un título breve que identifique el motivo de tu denuncia.
+                    </div>
+                </div>
+            </label>
+            <input type="text" id="title" name="title" [ngModel]="title()" (ngModelChange)="title.set($event)" required
+                placeholder="Ej: Irregularidad en..."
+                class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-lg font-bold text-gray-800 focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none placeholder:text-gray-300" />
+        </div>
 
-            @if (selectedFiles().length > 0) {
-            <div class="flex flex-wrap gap-2">
-                @for (fileObj of selectedFiles(); track $index) {
-                @if (!isImage(fileObj.file.name)) {
-                <div
-                    class="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-100 text-sm">
-                    <span class="truncate max-w-[200px]">{{ fileObj.file.name }}</span>
-                    <span class="text-[10px] opacity-70">({{ (fileObj.file.size / 1024 / 1024).toFixed(2)
-                        }}MB)</span>
-                    <button type="button" (click)="removeFile($index)"
-                        class="hover:text-red-500 font-bold ml-1">×</button>
+        <!-- Description -->
+        <div class="space-y-3">
+            <label
+                class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 flex items-center justify-between">
+                <span>Descripción Detallada</span>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Explica los hechos de forma clara y objetiva. Puedes incluir fechas, lugares y personas
+                        involucradas.
+                    </div>
+                </div>
+            </label>
+            <div
+                class="rounded-[2rem] overflow-hidden border border-gray-100 shadow-sm bg-white ring-offset-2 ring-inespasa-light/20 focus-within:ring-2 transition-all">
+                <app-rich-text-editor [ngModel]="description()" (ngModelChange)="description.set($event)"
+                    (contentChange)="onEditorContentChange($event)" name="description" [quillModules]="quillModules"
+                    [height]="'350px'" [placeholder]="'Describe tu denuncia de manera detallada...'"
+                    [uploadUrl]="'/upload/image-anonymous'" [module]="'complaints'" required></app-rich-text-editor>
+            </div>
+            <p class="text-[10px] text-gray-400 italic">Sé lo más específico posible para facilitar la revisión interna
+            </p>
+        </div>
+
+        <!-- Document Upload -->
+        <div class="bg-gray-50 rounded-[2.5rem] p-8 md:p-10 border border-gray-100 space-y-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-inespasa text-lg"><ng-icon name="lucideFolderOpen"></ng-icon></span>
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-900">Documentos
+                        Adjuntos</label>
+                    <div class="group relative flex items-center">
+                        <ng-icon name="lucideHelpCircle"
+                            class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help ml-2"></ng-icon>
+                        <div
+                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                            Puedes adjuntar pruebas (PDF, fotos, documentos) que respalden tu denuncia.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-6">
+                <!-- Dropzone Area -->
+                <div class="relative group">
+                    <input type="file" (change)="onFilesSelected($event)" multiple
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" [disabled]="loading()">
+                    <div
+                        class="w-full py-10 border-2 border-dashed border-gray-200 rounded-[2rem] bg-white group-hover:border-inespasa-light group-hover:bg-inespasa-light/5 transition-all flex flex-col items-center justify-center gap-3">
+                        <div
+                            class="h-14 w-14 rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center group-hover:bg-inespasa-light group-hover:text-white transition-all shadow-sm">
+                            <ng-icon name="lucidePaperclip" class="text-2xl"></ng-icon>
+                        </div>
+                        <div class="text-center">
+                            <span
+                                class="block text-[11px] font-black uppercase tracking-widest text-gray-600 group-hover:text-inespasa transition-colors">Arrastra
+                                documentos o haz clic aquí</span>
+                            <span class="text-[10px] text-gray-400 mt-1 block">PDF, Word, JPG o PNG (Máx. {{
+                                configService.limits().maxComplaintPayloadMB }}MB)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Files List -->
+                @if (selectedFiles().length > 0) {
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    @for (fileObj of selectedFiles(); track $index) {
+                    @if (!isImage(fileObj.file.name)) {
+                    <div
+                        class="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm hover:border-inespasa-light/30 transition-all group">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <span class="text-inespasa"><ng-icon name="lucideFileText"></ng-icon></span>
+                            <span class="text-[11px] font-bold text-gray-700 truncate max-w-[150px]">{{
+                                fileObj.file.name }}</span>
+                        </div>
+                        <button type="button" (click)="removeFile($index)"
+                            class="h-7 w-7 rounded-lg bg-red-50 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
+                            <ng-icon name="lucideX"></ng-icon>
+                        </button>
+                    </div>
+                    }
+                    }
                 </div>
                 }
+
+                @if (selectedFiles().length > 0 || embeddedImagesSize() > 0) {
+                <div class="text-[10px] font-black text-gray-400 uppercase tracking-tighter flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full"
+                        [class.bg-inespasa]="(totalSelectedSize() + embeddedImagesSize()) < configService.maxComplaintPayloadBytes"
+                        [class.bg-red-500]="(totalSelectedSize() + embeddedImagesSize()) >= configService.maxComplaintPayloadBytes"></span>
+                    Peso total: {{ ((totalSelectedSize() + embeddedImagesSize()) / 1024 / 1024).toFixed(2) }}MB / {{
+                    configService.limits().maxComplaintPayloadMB }}MB
+                </div>
                 }
             </div>
-            }
+        </div>
 
-            @if (selectedFiles().length > 0 || embeddedImagesSize() > 0) {
-            <div class="text-[10px] text-gray-500 italic mt-2">
-                Peso total seleccionado: {{ ((totalSelectedSize() + embeddedImagesSize()) / 1024 /
-                1024).toFixed(2) }}MB / {{ configService.limits().maxComplaintPayloadMB }}MB
-                @if (embeddedImagesSize() > 0) {
-                <span class="text-blue-600">(incluye {{ (embeddedImagesSize() / 1024 / 1024).toFixed(2) }}MB de
-                    imágenes embebidas)</span>
+        <!-- Optional Email -->
+        <div class="bg-blue-50/30 rounded-[2.5rem] p-8 md:p-10 border border-blue-100/50 space-y-6">
+            <div class="flex items-center gap-2">
+                <span class="text-inespasa text-lg"><ng-icon name="lucideMail"></ng-icon></span>
+                <label class="text-[10px] font-black uppercase tracking-[0.2em] text-inespasa-dark">Correo Electrónico
+                    (Opcional)</label>
+                <div class="group relative flex items-center">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help ml-2"></ng-icon>
+                    <div
+                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                        Si lo deseas, introduce tu email para recibir una copia de tus claves de seguimiento. No se
+                        guardará en el sistema.
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="relative group">
+                    <input type="email" id="optionalEmail" name="optionalEmail" [ngModel]="optionalEmail()"
+                        (ngModelChange)="optionalEmail.set($event)" placeholder="tu@email.com (para recibir las claves)"
+                        class="w-full pl-14 pr-6 py-4 bg-white border border-blue-100 rounded-2xl font-bold text-gray-800 focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none placeholder:text-gray-300"
+                        #emailInput="ngModel" email />
+                    <div
+                        class="absolute left-6 top-1/2 -translate-y-1/2 text-blue-200 group-focus-within:text-inespasa transition-colors">
+                        <ng-icon name="lucideMail" class="text-xl"></ng-icon>
+                    </div>
+                </div>
+
+                @if (emailInput.invalid && emailInput.dirty) {
+                <p class="text-xs text-red-500 font-bold px-4">Por favor, introduce un formato de correo válido.</p>
                 }
+
+                <div class="flex items-start gap-4 p-4 bg-white/50 rounded-2xl border border-blue-100/30 shadow-sm">
+                    <div class="h-8 w-8 rounded-xl bg-inespasa text-white flex items-center justify-center flex-none">
+                        <ng-icon name="lucideShieldCheck"></ng-icon>
+                    </div>
+                    <p class="text-[11px] text-blue-800/70 leading-relaxed italic">
+                        <strong class="text-inespasa-dark">Privacidad Garantizada:</strong> Este correo se usará
+                        exclusivamente para enviarte las claves y será eliminado de forma inmediata de nuestros
+                        registros tras el envío.
+                    </p>
+                </div>
             </div>
-            }
+        </div>
 
-            <p class="text-[10px] text-gray-400 flex items-start gap-1">
-                <ng-icon name="lucideLightbulb" class="mt-0.5 text-base"></ng-icon> <span>Puedes subir varios archivos.
-                    Máximo global: {{ configService.limits().maxComplaintPayloadMB
-                    }}MB. Formatos permitidos: PDF, Word, JPG, PNG.</span>
+        <!-- Form Actions -->
+        <div class="flex flex-col sm:flex-row items-center gap-4 pt-4">
+            <button type="submit" [disabled]="loading() || !complaintForm.valid"
+                class="w-full sm:w-auto min-w-[240px] flex items-center justify-center gap-3 bg-inespasa text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-inespasa-light/30 hover:bg-inespasa-dark hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all">
+                @if (!loading()) {
+                <ng-icon name="lucideSend" class="text-lg"></ng-icon>
+                <span>Enviar Denuncia Anónima</span>
+                } @else {
+                <div class="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Procesando...</span>
+                }
+            </button>
+            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                Tu identidad permanecerá protegida
             </p>
         </div>
-    </div>
-
-    <!-- Email Opcional -->
-    <div class="border-t pt-6 border-gray-100">
-        <label for="optionalEmail" class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
-            <ng-icon name="lucideMail"></ng-icon> Correo Electrónico (Opcional)
-        </label>
-        <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <ng-icon name="lucideMail" class="w-5 h-5 text-gray-400"></ng-icon>
-            </div>
-            <input type="email" id="optionalEmail" name="optionalEmail" [ngModel]="optionalEmail()"
-                (ngModelChange)="optionalEmail.set($event)" placeholder="tu@email.com (para recibir las claves)"
-                class="input-field pl-10" #emailInput="ngModel" email />
-        </div>
-        @if (emailInput.invalid && emailInput.dirty) {
-        <p class="text-xs text-red-500 mt-1">Por favor, introduce un formato de correo válido.</p>
-        }
-        <div class="mt-3 flex items-start gap-2 bg-blue-50/50 p-3 rounded-lg border border-blue-100">
-            <ng-icon name="lucideShield" class="text-blue-500 mt-0.5"></ng-icon>
-            <p class="text-[11px] text-blue-800 leading-relaxed">
-                <strong>Dato opcional.</strong> Este correo se usará exclusivamente para enviarte las claves y
-                será eliminado de forma inmediata.
-                No se almacenará en nuestros registros para garantizar tu anonimato.
-            </p>
-        </div>
-    </div>
-    <button type="submit" [disabled]="loading() || !complaintForm.valid"
-        class="btn-primary w-full flex items-center justify-center gap-2">
-        @if (!loading()) {
-        <ng-icon name="lucideSend"></ng-icon> <span>Enviar Denuncia</span>
-        } @else {
-        <span class="flex items-center justify-center gap-2">
-            <ng-icon name="lucideLoaderCircle" class="animate-spin text-xl"></ng-icon>
-            Enviando...
-        </span>
-        }
-    </button>
-</form>
-}
-
-@if (submitted() && complaintCode()) {
-<div class="text-center">
-    <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-8 mb-6">
-        <ng-icon name="lucideCheck" class="text-6xl mb-4 text-green-500"></ng-icon>
-        <h2 class="text-2xl font-bold text-green-800 mb-4">Denuncia Enviada Exitosamente</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <app-copy-field [label]="'Código de Seguimiento'" [value]="complaintCode()"></app-copy-field>
-
-            <app-copy-field [label]="'Clave de Seguridad'" [value]="complaintToken()"
-                [isSensitive]="true"></app-copy-field>
-        </div>
-        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mb-6 text-left">
-            <p class="text-sm text-yellow-800 font-semibold mb-2 flex items-center gap-1"><ng-icon
-                    name="lucideTriangleAlert"></ng-icon> ¡MUY IMPORTANTE!</p>
-            <p class="text-sm text-yellow-700">
-                Guarda <strong>ambos códigos</strong> en un lugar seguro. Necesitarás tanto el código de
-                seguimiento como la clave de seguridad para consultar el estado.
-                <br>
-                <strong>No podrás recuperarlos si los pierdes.</strong>
-            </p>
-        </div>
-        <button (click)="goToStatus()" class="btn-primary flex items-center justify-center gap-2">
-            <ng-icon name="lucideSearch"></ng-icon> Consultar Estado Ahora
-        </button>
-    </div>
+    </form>
 </div>
 }
 
-@if (error()) {
-<div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
-    <div class="flex items-center">
-        <ng-icon name="lucideTriangleAlert" class="text-red-500 mr-2 text-xl"></ng-icon>
-        <p class="text-sm text-red-700 font-medium">{{ error() }}</p>
+<!-- Success View -->
+@if (submitted() && complaintCode()) {
+<div
+    class="bg-white rounded-[3rem] p-10 md:p-16 shadow-2xl shadow-emerald-500/10 border-2 border-emerald-100 animate-fadeIn text-center">
+    <div
+        class="inline-flex items-center justify-center w-24 h-24 bg-emerald-500 text-white rounded-3xl mb-8 shadow-xl shadow-emerald-500/30 transform rotate-3">
+        <ng-icon name="lucideCheck" class="text-5xl"></ng-icon>
     </div>
+
+    <h2 class="text-3xl font-black text-gray-900 mb-2 tracking-tight">Denuncia Registrada</h2>
+    <p class="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em] mb-10">Tu solicitud ha sido procesada
+        con éxito</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        <div class="group">
+            <div class="flex items-center justify-center gap-2 mb-1">
+                <app-copy-field [label]="'Código de Seguimiento'" [value]="complaintCode()"></app-copy-field>
+                <div class="group relative flex items-center mt-6">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal text-center">
+                        Usa este código junto con la clave de seguridad para consultar el estado de tu denuncia.
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="group">
+            <div class="flex items-center justify-center gap-2 mb-1">
+                <app-copy-field [label]="'Clave de Seguridad'" [value]="complaintToken()"
+                    [isSensitive]="true"></app-copy-field>
+                <div class="group relative flex items-center mt-6">
+                    <ng-icon name="lucideHelpCircle"
+                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
+                    <div
+                        class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal text-center">
+                        Esta clave es secreta y única. Guárdala bien para poder acceder a tu denuncia más tarde.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-amber-50 rounded-[2rem] p-8 border border-amber-100 text-left mb-10 relative overflow-hidden">
+        <div class="relative z-10 flex items-start gap-4">
+            <div
+                class="h-10 w-10 flex-none rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
+                <ng-icon name="lucideTriangleAlert" class="text-xl"></ng-icon>
+            </div>
+            <div>
+                <h4 class="text-amber-800 font-black uppercase tracking-widest text-xs mb-2">¡Acción Requerida!</h4>
+                <p class="text-amber-700/80 text-sm leading-relaxed">
+                    Guarda <strong>ambos códigos</strong> ahora. Por seguridad y anonimato, <span
+                        class="text-amber-900 font-bold underline decoration-amber-300">no podremos recuperarlos</span>
+                    si los pierdes. Los necesitarás para consultar cualquier actualización.
+                </p>
+            </div>
+        </div>
+        <div class="absolute -right-4 -bottom-4 text-amber-500/10 transform -rotate-12 pointer-events-none">
+            <ng-icon name="lucideAlertOctagon" class="text-[120px]"></ng-icon>
+        </div>
+    </div>
+
+    <button (click)="goToStatus()"
+        class="w-full flex items-center justify-center gap-3 bg-gray-900 text-white px-10 py-6 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-gray-900/20 hover:bg-gray-800 hover:scale-[1.02] active:scale-95 transition-all">
+        <ng-icon name="lucideSearch" class="text-lg"></ng-icon>
+        <span>Ir al Panel de Seguimiento</span>
+    </button>
+</div>
+}
+
+<!-- Error Feedback -->
+@if (error()) {
+<div
+    class="mt-8 bg-red-50 border border-red-100 text-red-600 px-6 py-4 rounded-2xl text-[11px] font-bold flex items-center gap-3 animate-shake shadow-sm">
+    <ng-icon name="lucideTriangleAlert" class="text-lg"></ng-icon>
+    {{ error() }}
 </div>
 }

@@ -7,7 +7,7 @@ import {
     lucideCalendar, lucideFileText, lucideTags, lucideClipboardList, lucideSun,
     lucideZap, lucidePlusCircle, lucideEdit3, lucideTrash2, lucideLogIn,
     lucideShieldAlert, lucideKey, lucideActivity, lucideDatabase,
-    lucideCalendarRange, lucideClock, lucideHistory, lucideRefreshCw
+    lucideCalendarRange, lucideClock, lucideHistory, lucideRefreshCw, lucideHelpCircle
 } from '@ng-icons/lucide';
 
 @Component({
@@ -20,7 +20,7 @@ import {
             lucideCalendar, lucideFileText, lucideTags, lucideClipboardList, lucideSun,
             lucideZap, lucidePlusCircle, lucideEdit3, lucideTrash2, lucideLogIn,
             lucideShieldAlert, lucideKey, lucideActivity, lucideDatabase,
-            lucideCalendarRange, lucideClock, lucideHistory, lucideRefreshCw
+            lucideCalendarRange, lucideClock, lucideHistory, lucideRefreshCw, lucideHelpCircle
         })
     ],
     changeDetection: ChangeDetectionStrategy.OnPush

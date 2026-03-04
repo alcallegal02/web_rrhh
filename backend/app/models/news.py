@@ -57,7 +57,6 @@ class News(SQLModel, table=True):
         except ValueError:
             return NewsStatus.BORRADOR
 
-
 class NewsCreate(SQLModel):
     title: str
     summary: str | None = None
@@ -66,6 +65,8 @@ class NewsCreate(SQLModel):
     status: str = "borrador"
     publish_date: datetime | None = None
     attachments: list[dict] | None = None
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class NewsUpdate(SQLModel):

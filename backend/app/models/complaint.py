@@ -61,6 +61,8 @@ class ComplaintCreate(SQLModel):
     file_path: str | None = None
     file_original_name: str | None = None
     attachments: list[dict] | None = None
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ComplaintResponse(SQLModel):

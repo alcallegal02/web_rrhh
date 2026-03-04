@@ -3,12 +3,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserFormModel } from '../../user-form.component';
 import { environment } from '../../../../../../config/environment';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucideCamera, lucideUser, lucideImagePlus, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-user-personal-data',
     imports: [CommonModule, FormsModule, NgIconComponent],
     templateUrl: './user-personal-data.component.html',
+    providers: [
+        provideIcons({
+            lucideCamera, lucideUser, lucideImagePlus, lucideHelpCircle
+        })
+    ]
 })
 export class UserPersonalDataComponent {
     // Inputs

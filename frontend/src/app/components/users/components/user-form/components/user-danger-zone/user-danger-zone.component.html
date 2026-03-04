@@ -5,16 +5,34 @@
     <div class="flex gap-2">
         @if (isActive()) {
         <button type="button"
-            class="flex-1 bg-white text-orange-600 border border-orange-200 hover:bg-orange-50 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
-            (click)="deactivate.emit()"><ng-icon name="lucideBan"></ng-icon> Baja Temporal</button>
+            class="flex-1 bg-white text-orange-600 border border-orange-200 hover:bg-orange-50 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 group relative"
+            (click)="deactivate.emit()">
+            <ng-icon name="lucideBan"></ng-icon> Baja Temporal
+            <div
+                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                Mantiene el expediente pero deshabilita el acceso del empleado al sistema.
+            </div>
+        </button>
         } @else {
         <button type="button"
-            class="flex-1 bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
-            (click)="activate.emit()"><ng-icon name="lucideCheck"></ng-icon> Reactivar Alta</button>
+            class="flex-1 bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 group relative"
+            (click)="activate.emit()">
+            <ng-icon name="lucideCheck"></ng-icon> Reactivar Alta
+            <div
+                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                Restablece el acceso y la vigencia del contrato del empleado.
+            </div>
+        </button>
         }
         <button type="button"
-            class="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1"
-            (click)="delete.emit()"><ng-icon name="lucideTrash"></ng-icon> Eliminar Definitivo</button>
+            class="bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 group relative"
+            (click)="delete.emit()">
+            <ng-icon name="lucideTrash"></ng-icon> Eliminar Definitivo
+            <div
+                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                ¡CUIDADO! Esta acción borra todos los datos del empleado y no es reversible.
+            </div>
+        </button>
     </div>
 </div>
 }

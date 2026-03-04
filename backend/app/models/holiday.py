@@ -3,6 +3,7 @@ from datetime import datetime
 from enum import Enum
 from uuid import UUID, uuid4
 
+from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
 
 
@@ -32,6 +33,8 @@ class HolidayCreate(SQLModel):
     name: str
     description: str | None = None
     holiday_type: HolidayType
+    
+    model_config = ConfigDict(from_attributes=True)
 
 
 class HolidayUpdate(SQLModel):
@@ -50,4 +53,6 @@ class HolidayResponse(SQLModel):
     created_by: str
     created_at: datetime
     updated_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
 

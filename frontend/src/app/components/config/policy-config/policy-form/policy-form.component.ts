@@ -5,14 +5,33 @@ import { form, field } from '../../../../utils/signal-forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PolicyService, PermissionPolicy, PermissionPolicyCreate, DurationUnit, Modality, PolicyResetType } from '../../../../services/policy.service';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { computed, effect } from '@angular/core';
+import { computed, effect, ChangeDetectionStrategy } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucideArrowLeft, lucideSave, lucideInfo, lucideCalendar,
+    lucideClock, lucideSettings, lucideUser, lucideBaby,
+    lucideSplit, lucideInfinity, lucideHistory, lucideDatabase,
+    lucideCheck, lucideTrash2, lucidePalette, lucideTextQuote,
+    lucideLayoutDashboard, lucideScale, lucideZap, lucideShield,
+    lucideTags, lucideFileText, lucideStar, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-policy-form',
     imports: [CommonModule, ReactiveFormsModule, RouterModule, NgIconComponent],
-    templateUrl: './policy-form.component.html'
+    templateUrl: './policy-form.component.html',
+    providers: [
+        provideIcons({
+            lucideArrowLeft, lucideSave, lucideInfo, lucideCalendar,
+            lucideClock, lucideSettings, lucideUser, lucideBaby,
+            lucideSplit, lucideInfinity, lucideHistory, lucideDatabase,
+            lucideCheck, lucideTrash2, lucidePalette, lucideTextQuote,
+            lucideLayoutDashboard, lucideScale, lucideZap, lucideShield,
+            lucideTags, lucideFileText, lucideStar, lucideHelpCircle
+        })
+    ],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PolicyFormComponent {
     private policyService = inject(PolicyService);
@@ -96,7 +115,7 @@ export class PolicyFormComponent {
                     .replace(/\s+/g, '_');
                 this.form.get('slug')?.setValue(slug);
             }
-        }, { allowSignalWrites: true });
+        });
     }
 
     async onSubmit() {

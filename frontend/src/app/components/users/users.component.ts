@@ -8,11 +8,21 @@ import { UserService, UserResponse } from '../../services/user.service';
 import { environment } from '../../config/environment';
 import { ConvenioService, ConvenioConfig } from '../../services/convenio.service';
 import { UserFormComponent, UserFormModel } from './components/user-form/user-form.component';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  lucideSearch, lucideUser, lucideUserPlus, lucideSave, lucideX,
+  lucideFolderOpen, lucideUsers, lucideBuilding2, lucideHelpCircle
+} from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-users',
   imports: [CommonModule, UserFormComponent, FormsModule, NgIconComponent],
+  providers: [
+    provideIcons({
+      lucideSearch, lucideUser, lucideUserPlus, lucideSave, lucideX,
+      lucideFolderOpen, lucideUsers, lucideBuilding2, lucideHelpCircle
+    })
+  ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -65,7 +75,14 @@ export class UsersComponent implements OnInit {
   });
 
   // Current Form State
-  activeUser = signal<UserFormModel | null>(null); // If null, list view. If present, form view.
+  activeUser = signal<UserFormModel | null>(null);
+
+  ngOnInit() {
+    this.loadUsers();
+    this.fetchConvenioConfig();
+    // Initialize with empty form by default
+    this.activeUser.set({ ...this.emptyForm });
+  }
 
   // Empty form template
   emptyForm: UserFormModel = {
@@ -86,10 +103,6 @@ export class UsersComponent implements OnInit {
     percentage_jornada: 1.0
   };
 
-  ngOnInit() {
-    this.loadUsers();
-    this.fetchConvenioConfig();
-  }
 
   getFileUrl(path: string | null | undefined): string {
     if (!path) return '';
@@ -129,7 +142,7 @@ export class UsersComponent implements OnInit {
   }
 
   onCancel() {
-    this.activeUser.set(null);
+    this.activeUser.set({ ...this.emptyForm });
   }
 
   // File Uploads (handled at parent because it interacts with Service)
@@ -212,7 +225,7 @@ export class UsersComponent implements OnInit {
         await firstValueFrom(this.userService.createUser(payload));
       }
 
-      this.activeUser.set(null); // Return to list
+      this.activeUser.set({ ...this.emptyForm }); // Return to creation view
       this.loadUsers();
     } catch (err: any) {
       console.error(err);
@@ -231,7 +244,7 @@ export class UsersComponent implements OnInit {
     this.loading.set(true);
     this.userService.deleteUser(u.id).subscribe({
       next: () => {
-        this.activeUser.set(null);
+        this.activeUser.set({ ...this.emptyForm });
         this.loading.set(false);
         // WS updates list or reload
         this.loadUsers();
@@ -250,7 +263,7 @@ export class UsersComponent implements OnInit {
     if (!confirm('¿Baja usuario?')) return;
 
     await firstValueFrom(this.userService.updateUser(u.id, { is_active: false }));
-    this.activeUser.set(null);
+    this.activeUser.set({ ...this.emptyForm });
     this.loadUsers();
   }
 
@@ -276,7 +289,7 @@ export class UsersComponent implements OnInit {
     // I'll implement simple activation logic: set active=true, save.
 
     await firstValueFrom(this.userService.updateUser(u.id, { is_active: true }));
-    this.activeUser.set(null);
+    this.activeUser.set({ ...this.emptyForm });
     this.loadUsers();
   }
 

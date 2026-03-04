@@ -1,75 +1,147 @@
-<div class="space-y-6 pb-8">
-    <div>
-        <h1 class="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-2"><ng-icon name="lucideScale"></ng-icon>
-            Gestión de Denuncias</h1>
-        <p class="text-gray-600 font-medium">Panel de administración para el cumplimiento de la Ley 2/2023</p>
+<div class="space-y-8 pb-12 animate-fadeIn">
+    <!-- Header Area -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="space-y-2">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-12 h-12 rounded-2xl bg-inespasa text-white flex items-center justify-center shadow-xl shadow-inespasa-light/20">
+                    <ng-icon name="lucideScale" class="text-2xl"></ng-icon>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-black text-gray-900 tracking-tight">Gestión de Denuncias</h1>
+                    <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">Control de
+                        cumplimiento Ley 2/2023</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <div class="px-6 py-3 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
+                <span class="text-[10px] font-black uppercase tracking-widest text-gray-400">Total Expedientes</span>
+                <span class="text-lg font-black text-inespasa">{{ complaints().length }}</span>
+            </div>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Complaint List -->
-        <div class="lg:col-span-1 space-y-4 max-h-[calc(100vh-250px)] overflow-y-auto pr-2 custom-scrollbar">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- Complaint List (Sidebar) -->
+        <div
+            class="lg:col-span-4 space-y-4 max-h-[calc(100vh-220px)] overflow-y-auto pr-2 custom-scrollbar lg:sticky lg:top-24">
             @if (loading()) {
-            <div class="text-center py-10">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
-                <p class="mt-2 text-sm text-gray-500">Cargando denuncias...</p>
+            <div class="text-center py-20 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm animate-pulse">
+                <div
+                    class="h-10 w-10 border-4 border-inespasa/20 border-t-inespasa rounded-full animate-spin mx-auto mb-4">
+                </div>
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargando...</p>
             </div>
             } @else if (complaints().length === 0) {
-            <div class="card text-center py-10 bg-gray-50 border-dashed border-2">
-                <p class="text-gray-500">No hay denuncias registradas</p>
+            <div class="bg-white rounded-[2.5rem] p-12 text-center border-2 border-dashed border-gray-100 opacity-60">
+                <div class="text-4xl text-gray-200 mb-4"><ng-icon name="lucideClipboardType"></ng-icon></div>
+                <p class="text-xs font-black uppercase tracking-widest text-gray-400">Sin denuncias</p>
             </div>
             } @else {
-            @for (c of complaints(); track c.id) {
-            <div (click)="selectComplaint(c)"
-                [class]="'card cursor-pointer transition-all hover:shadow-md border-l-4 ' + (selectedComplaint()?.id === c.id ? 'border-orange-500 bg-orange-50' : 'border-gray-300 hover:border-orange-300')">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-mono font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{{ c.code
-                        }}</span>
-                    <span [class]="getStatusClass(c.status)">{{ getStatusLabel(c.status) }}</span>
+            <div class="space-y-3">
+                @for (c of complaints(); track c.id) {
+                <div (click)="selectComplaint(c)"
+                    [class]="'group relative p-5 bg-white rounded-2xl border transition-all cursor-pointer overflow-hidden ' + 
+                    (selectedComplaint()?.id === c.id ? 'border-inespasa ring-4 ring-inespasa-light/10 shadow-lg' : 'border-gray-100 hover:border-inespasa-light/50 hover:shadow-md')">
+
+                    <!-- Status Stripe -->
+                    <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-all"
+                        [class]="getStatusStripeClass(c.status)"></div>
+
+                    <div class="pl-2 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span
+                                class="text-[9px] font-mono font-black text-inespasa bg-inespasa-light/10 px-2 py-0.5 rounded shadow-sm">{{
+                                c.code }}</span>
+                            <span [class]="getStatusClass(c.status)"
+                                class="text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border shadow-sm">
+                                {{ getStatusLabel(c.status) }}
+                            </span>
+                        </div>
+
+                        <h3
+                            class="font-bold text-gray-800 text-sm line-clamp-2 leading-tight group-hover:text-inespasa transition-colors">
+                            {{ c.title }}</h3>
+
+                        <div
+                            class="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-gray-50 mt-2">
+                            <span class="flex items-center gap-1 font-bold uppercase tracking-tighter">
+                                <ng-icon name="lucideCalendarDays" class="text-xs"></ng-icon>
+                                {{ c.created_at | date:'dd MMM, yyyy' }}
+                            </span>
+                            <ng-icon name="lucideChevronRight"
+                                class="text-gray-300 transform group-hover:translate-x-1 transition-transform"></ng-icon>
+                        </div>
+                    </div>
                 </div>
-                <h3 class="font-bold text-gray-800 truncate">{{ c.title }}</h3>
-                <p class="text-xs text-gray-500 mt-2">{{ c.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
+                }
             </div>
-            }
             }
         </div>
 
-        <!-- Complaint Details & Action -->
-        <div class="lg:col-span-2">
+        <!-- Complaint Details (Detail Area) -->
+        <div class="lg:col-span-8 min-w-0">
             @let selected = selectedComplaint();
             @if (selected) {
-            <div class="space-y-6">
-                <div class="card bg-white shadow-lg border-2 border-orange-100">
-                    <div class="flex justify-between items-start mb-6 border-b pb-4">
-                        <div>
-                            <h2 class="text-2xl font-bold text-gray-800">{{ selected.title }}</h2>
-                            <p class="text-sm text-blue-600 font-mono mt-1">Código de seguimiento: {{ selected.code }}
+            <div class="space-y-8 animate-fadeIn">
+                <!-- Info Section -->
+                <div class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100">
+                    <div
+                        class="flex flex-col md:flex-row justify-between items-start gap-6 mb-10 pb-8 border-b border-gray-100">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-black text-inespasa tracking-[0.3em] uppercase">Expediente
+                                    {{ selected.code }}</span>
+                            </div>
+                            <h2 class="text-3xl font-black text-gray-900 tracking-tight leading-tight">{{ selected.title
+                                }}</h2>
+                            <p
+                                class="text-xs text-gray-400 font-bold uppercase tracking-wider flex items-center gap-2 mt-2">
+                                <ng-icon name="lucideClock" class="text-inespasa text-sm"></ng-icon>
+                                Recibida el {{ selected.created_at | date:'dd/MM/yyyy HH:mm' }}
                             </p>
                         </div>
-                        <span [class]="getStatusClass(selected.status)" class="text-base px-4 py-1.5">
+                        <span [class]="getStatusClass(selected.status)"
+                            class="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] border-2 shadow-sm">
                             {{ getStatusLabel(selected.status) }}
                         </span>
                     </div>
 
-                    <div class="space-y-6">
-                        <div>
-                            <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Descripción de la
-                                Denuncia</h4>
-                            <div class="bg-gray-50 p-4 rounded-lg border text-gray-700 leading-relaxed news-content"
+                    <div class="space-y-10">
+                        <!-- Description -->
+                        <div class="space-y-4">
+                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Descripción
+                                de la Denuncia</h4>
+                            <div class="bg-gray-50/50 p-8 rounded-[2rem] border border-gray-100 text-gray-700 leading-loose news-content shadow-inner"
                                 [innerHTML]="getSafeHtml(selected.description)">
                             </div>
                         </div>
 
                         <!-- Attachments -->
                         @if (selected.attachments && selected.attachments.length > 0) {
-                        <div>
-                            <h4 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Archivos Adjuntos
-                            </h4>
-                            <div class="flex flex-wrap gap-2">
+                        <div class="space-y-4">
+                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Documentos
+                                y Evidencias</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 @for (att of selected.attachments; track att.id) {
                                 <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
-                                    class="inline-flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-lg border border-orange-200 hover:bg-orange-100 transition-colors">
-                                    <span><ng-icon name="lucidePaperclip"></ng-icon> {{ att.file_original_name || 'Ver
-                                        archivo' }}</span>
+                                    class="group flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl transition-all hover:shadow-lg hover:border-inespasa-light/30">
+                                    <div
+                                        class="h-12 w-12 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 group-hover:bg-inespasa group-hover:text-white group-hover:scale-105 transition-all shadow-sm">
+                                        <ng-icon name="lucidePaperclip" class="text-xl"></ng-icon>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p
+                                            class="text-xs font-bold text-gray-700 truncate group-hover:text-inespasa transition-colors">
+                                            {{ att.file_original_name || 'Ver archivo' }}</p>
+                                        <p
+                                            class="text-[9px] font-black text-gray-400 uppercase tracking-tighter mt-0.5">
+                                            Click para descargar</p>
+                                    </div>
+                                    <ng-icon name="lucideDownload"
+                                        class="text-gray-300 opacity-0 group-hover:opacity-100 transition-all"></ng-icon>
                                 </a>
                                 }
                             </div>
@@ -78,78 +150,153 @@
                     </div>
                 </div>
 
-                <!-- Admin Actions Form -->
-                <div class="card bg-gradient-to-br from-indigo-50 to-blue-50 border-2 border-indigo-100">
-                    <h3 class="text-xl font-bold text-indigo-900 mb-6 flex items-center">
-                        <ng-icon name="lucideWrench" class="mr-2"></ng-icon> Acciones de Gestión
-                    </h3>
+                <!-- Admin Action Area -->
+                <div
+                    class="bg-gray-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-gray-900/10 border border-gray-800 relative overflow-hidden">
+                    <!-- Decor -->
+                    <div
+                        class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none">
+                    </div>
 
-                    <form (ngSubmit)="updateStatus()" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="relative z-10 space-y-10">
+                        <div class="flex items-center gap-4 border-b border-white/10 pb-6">
+                            <div class="w-10 h-10 rounded-xl bg-inespasa text-white flex items-center justify-center">
+                                <ng-icon name="lucideWrench" class="text-xl"></ng-icon>
+                            </div>
                             <div>
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Nuevo Estado</label>
-                                <select [(ngModel)]="editData.new_status" name="status" class="input-field bg-white">
-                                    <option value="pendiente">Pendiente</option>
-                                    <option value="en_analisis">En Análisis</option>
-                                    <option value="en_investigacion">En Investigación</option>
-                                    <option value="informacion_requerida">Información Requerida</option>
-                                    <option value="resuelta">Resuelta</option>
-                                    <option value="desestimada">Desestimada</option>
-                                </select>
+                                <h3 class="text-xl font-black text-white tracking-tight">Acciones de Gestión</h3>
+                                <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">
+                                    Respuesta oficial y cambio de estado</p>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">
-                                Información Pública para el Denunciante
-                                <span class="font-normal text-xs text-blue-600 ml-2">(Transparencia Ley 2/2023)</span>
-                            </label>
-                            <textarea [(ngModel)]="editData.status_public_description" name="public_desc" rows="3"
-                                placeholder="Ej: Se ha procedido a la apertura de una investigación interna..."
-                                class="input-field bg-white"></textarea>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-bold text-gray-700 mb-2">Notas Resolución / Respuesta
-                                Interna</label>
-                            <app-rich-text-editor [(ngModel)]="editData.admin_notes" name="admin_notes"
-                                [height]="'250px'"
-                                [placeholder]="'Indique aquí los detalles de la resolución o respuesta...'"></app-rich-text-editor>
-                        </div>
-
-                        <button type="submit" [disabled]="submitting()"
-                            class="btn-primary w-full bg-indigo-600 hover:bg-indigo-700 shadow-lg flex items-center justify-center gap-2">
-                            @if (submitting()) {
-                            <ng-icon name="lucideLoaderCircle" class="animate-spin text-xl"></ng-icon>
-                            <span>Actualizando...</span>
-                            } @else {
-                            <span class="flex items-center gap-1"><ng-icon name="lucideCheck"></ng-icon> Guardar Cambios
-                                y Notificar Estado</span>
-                            }
-                        </button>
-                    </form>
-
-                    <div class="mt-8 pt-6 border-t border-indigo-200">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="text-sm font-bold text-red-600 uppercase tracking-wider">Zona de Peligro</h4>
-                                <p class="text-xs text-gray-500">Eliminar permanentemente esta denuncia y sus archivos
-                                </p>
+                        <form (ngSubmit)="updateStatus()" class="space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="space-y-3">
+                                    <label
+                                        class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 flex items-center justify-between">
+                                        <span>Estado del Expediente</span>
+                                        <div class="group relative flex items-center mr-4">
+                                            <ng-icon name="lucideHelpCircle"
+                                                class="text-inespasa hover:text-inespasa-light transition-colors cursor-help"></ng-icon>
+                                            <div
+                                                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal shadow-xl">
+                                                Actualiza el estado actual de la investigación. Cada cambio queda
+                                                registrado en la auditoría.
+                                            </div>
+                                        </div>
+                                    </label>
+                                    <div class="relative">
+                                        <select [(ngModel)]="editData.new_status" name="status"
+                                            class="w-full pl-6 pr-12 py-4 bg-white/10 border border-white/10 rounded-2xl font-bold text-white focus:bg-white/20 focus:ring-4 focus:ring-inespasa/20 transition-all outline-none appearance-none cursor-pointer">
+                                            <option value="pendiente" class="text-gray-900">Pendiente</option>
+                                            <option value="en_analisis" class="text-gray-900">En Análisis</option>
+                                            <option value="en_investigacion" class="text-gray-900">En Investigación
+                                            </option>
+                                            <option value="informacion_requerida" class="text-gray-900">Información
+                                                Requerida</option>
+                                            <option value="resuelta" class="text-gray-900">Resuelta</option>
+                                            <option value="desestimada" class="text-gray-900">Desestimada</option>
+                                        </select>
+                                        <ng-icon name="lucideChevronDown"
+                                            class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></ng-icon>
+                                    </div>
+                                </div>
                             </div>
-                            <button (click)="deleteComplaint()" [disabled]="submitting()"
-                                class="flex items-center gap-2 text-red-600 hover:text-red-700 font-bold px-4 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition-all shadow-sm">
-                                <ng-icon name="lucideTrash2"></ng-icon>
-                                {{ submitting() ? 'Eliminando...' : 'Eliminar Denuncia' }}
+
+                            <div class="space-y-3">
+                                <label
+                                    class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">
+                                    <div class="flex items-center justify-between mr-4">
+                                        <span>Comunicación al Denunciante</span>
+                                        <div class="group relative flex items-center">
+                                            <ng-icon name="lucideHelpCircle"
+                                                class="text-inespasa hover:text-inespasa-light transition-colors cursor-help"></ng-icon>
+                                            <div
+                                                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal shadow-xl">
+                                                Este mensaje será visible para el denunciante al consultar su código.
+                                                Úsalo para informar sobre el avance del caso.
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span
+                                        class="text-inespasa lowercase font-bold tracking-normal ml-1 italic">(Transparencia
+                                        Ley 2/2023)</span>
+                                </label>
+                                <textarea [(ngModel)]="editData.status_public_description" name="public_desc" rows="3"
+                                    placeholder="Ej: Se ha procedido a la apertura de una investigación interna..."
+                                    class="w-full px-8 py-5 bg-white/10 border border-white/10 rounded-[2rem] text-sm text-white focus:bg-white/20 focus:ring-4 focus:ring-inespasa/20 transition-all outline-none placeholder:text-gray-600"></textarea>
+                            </div>
+
+                            <div class="space-y-3">
+                                <label
+                                    class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 flex items-center justify-between">
+                                    <span>Resolución Interna</span>
+                                    <div class="group relative flex items-center mr-4">
+                                        <ng-icon name="lucideHelpCircle"
+                                            class="text-inespasa hover:text-inespasa-light transition-colors cursor-help"></ng-icon>
+                                        <div
+                                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal shadow-xl">
+                                            Detalles técnicos, pruebas y conclusiones finales que solo el equipo de
+                                            cumplimiento podrá ver.
+                                        </div>
+                                    </div>
+                                </label>
+                                <div
+                                    class="rounded-[2rem] overflow-hidden border border-white/10 bg-white/5 focus-within:ring-4 ring-inespasa/20 transition-all">
+                                    <app-rich-text-editor [(ngModel)]="editData.admin_notes" name="admin_notes"
+                                        [height]="'250px'"
+                                        [placeholder]="'Indique aquí los detalles confidenciales de la resolución...'"
+                                        [quillModules]="quillModules"></app-rich-text-editor>
+                                </div>
+                                <p class="text-[10px] text-gray-500 italic ml-4">Esta respuesta solo será visible
+                                    internamente en el panel de gestión.</p>
+                            </div>
+
+                            <button type="submit" [disabled]="submitting()"
+                                class="w-full flex items-center justify-center gap-3 bg-inespasa text-white px-10 py-6 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-inespasa-light/10 hover:bg-inespasa-dark hover:scale-[1.01] active:scale-95 disabled:opacity-50 transition-all">
+                                @if (submitting()) {
+                                <div class="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin">
+                                </div>
+                                <span>Actualizando Expediente...</span>
+                                } @else {
+                                <ng-icon name="lucideCheck" class="text-lg"></ng-icon>
+                                <span>Guardar Cambios y Notificar</span>
+                                }
                             </button>
+                        </form>
+
+                        <!-- Danger Zone -->
+                        <div class="pt-8 border-t border-white/5 mt-10">
+                            <div
+                                class="flex flex-col sm:flex-row items-center justify-between gap-6 p-8 rounded-[2rem] bg-red-500/5 border border-red-500/10">
+                                <div>
+                                    <h4 class="text-xs font-black text-red-500 uppercase tracking-widest mb-1">Zona de
+                                        Gestión Crítica</h4>
+                                    <p class="text-[10px] text-gray-500 font-medium">La eliminación es permanente y
+                                        afectará a todos los adjuntos.</p>
+                                </div>
+                                <button (click)="deleteComplaint()" [disabled]="submitting()"
+                                    class="group flex items-center gap-3 text-red-500 font-black uppercase tracking-widest text-[10px] hover:text-white hover:bg-red-500 px-6 py-4 rounded-xl border border-red-500/20 transition-all shadow-sm">
+                                    <ng-icon name="lucideTrash2"
+                                        class="text-base group-hover:scale-110 transition-transform"></ng-icon>
+                                    Eliminar por completo
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             } @else {
-            <div class="card h-full flex flex-col items-center justify-center py-20 bg-gray-50 border-dashed border-2">
-                <ng-icon name="lucideArrowLeft" class="text-6xl mb-4 text-gray-300"></ng-icon>
-                <p class="text-xl font-bold text-gray-400">Selecciona una denuncia para empezar</p>
-                <p class="text-gray-400 mt-2">Podrás ver los detalles y actualizar su estado</p>
+            <!-- Empty State -->
+            <div
+                class="h-full min-h-[500px] flex flex-col items-center justify-center bg-white rounded-[2.5rem] border-2 border-dashed border-gray-100 p-12 text-center animate-fadeIn">
+                <div class="w-24 h-24 rounded-3xl bg-gray-50 flex items-center justify-center mb-8 text-gray-200">
+                    <ng-icon name="lucideArrowLeft" class="text-5xl"></ng-icon>
+                </div>
+                <h3 class="text-2xl font-black text-gray-300 tracking-tight">Gestión Inactiva</h3>
+                <p class="text-gray-400 mt-2 max-w-xs text-sm">Selecciona una denuncia del listado lateral para
+                    visualizar su cronología y tomar acciones.</p>
             </div>
             }
         </div>

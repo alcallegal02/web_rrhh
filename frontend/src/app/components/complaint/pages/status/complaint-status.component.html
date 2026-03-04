@@ -1,154 +1,257 @@
-<div class="max-w-3xl mx-auto pb-8">
-    <div class="card">
-        <div class="text-center mb-8">
+<div class="max-w-4xl mx-auto pb-12 animate-fadeIn">
+    <!-- Header / Nav -->
+    <div class="flex items-center justify-between mb-8">
+        <button (click)="goBack()"
+            class="group flex items-center gap-3 text-gray-400 hover:text-inespasa font-black uppercase tracking-widest text-[10px] transition-all">
+            <span
+                class="w-10 h-10 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:bg-inespasa group-hover:text-white group-hover:border-inespasa transition-all">
+                <ng-icon name="lucideArrowLeft"></ng-icon>
+            </span>
+            <span>Volver al inicio</span>
+        </button>
+    </div>
+
+    <div
+        class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden">
+        <!-- Accent -->
+        <div class="absolute top-0 right-0 w-32 h-32 bg-inespasa/5 rounded-full -mr-16 -mt-16"></div>
+
+        <div class="text-center mb-12">
             <div
-                class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-4 shadow-lg text-white">
-                <ng-icon name="lucideSearch" class="text-4xl"></ng-icon>
+                class="inline-flex items-center justify-center w-20 h-20 bg-gray-900 text-white rounded-[1.5rem] mb-6 shadow-xl shadow-gray-900/10 transform rotate-3">
+                <ng-icon name="lucideSearch" class="text-3xl"></ng-icon>
             </div>
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Consulta de Denuncia</h1>
-            <p class="text-gray-600">Ingresa tu código para ver el estado</p>
+            <h1 class="text-3xl md:text-4xl font-black text-gray-900 mb-2 tracking-tight">Consulta de Denuncia</h1>
+            <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Seguimiento de expedientes
+                anónimos</p>
         </div>
 
         @if (!complaint() && !loading()) {
-        <div class="mb-8 space-y-4">
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1"><ng-icon
-                        name="lucideKey"></ng-icon> Código de Seguimiento</label>
-                <input type="text" [ngModel]="code()" (ngModelChange)="updateCode($event)"
-                    placeholder="Ej: HJK2-8L92-K1M5-P7Z2"
-                    class="w-full input-field text-center font-mono text-lg tracking-wider text-sm" />
+        <div class="max-w-xl mx-auto space-y-8 animate-slideUp">
+            <div class="space-y-6">
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Código de
+                        Seguimiento</label>
+                    <input type="text" [ngModel]="code()" (ngModelChange)="updateCode($event)"
+                        placeholder="HJK2-8L92-K1M5-P7Z2"
+                        class="w-full px-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] font-mono text-center tracking-widest text-lg text-gray-800 focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none placeholder:text-gray-200" />
+                </div>
+                <div class="space-y-3">
+                    <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">Clave de
+                        Seguridad</label>
+                    <input type="text" [ngModel]="token()" (ngModelChange)="updateToken($event)"
+                        (keyup.enter)="loadComplaint()" placeholder="M9J2L7H8K3P1"
+                        class="w-full px-8 py-5 bg-gray-50 border border-gray-100 rounded-[2rem] font-mono text-center tracking-widest text-lg text-gray-800 focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none placeholder:text-gray-200" />
+                </div>
             </div>
-            <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1"><ng-icon
-                        name="lucideShield"></ng-icon> Clave de Seguridad</label>
-                <input type="text" [ngModel]="token()" (ngModelChange)="updateToken($event)"
-                    (keyup.enter)="loadComplaint()" placeholder="Ej: M9J2L7H8K3P1"
-                    class="w-full input-field text-center font-mono text-lg tracking-wider text-sm" />
+
+            <div
+                class="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 text-center relative overflow-hidden group">
+                <div class="relative z-10 flex flex-col items-center gap-2">
+                    <span class="text-inespasa text-xl"><ng-icon name="lucideShield"></ng-icon></span>
+                    <p class="text-[10px] text-blue-800/60 font-medium leading-relaxed italic max-w-xs">
+                        El sistema limita los intentos fallidos por seguridad. Asegúrate de que los códigos coincidan
+                        exactamente.
+                    </p>
+                </div>
             </div>
-            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <p class="text-xs text-gray-500 text-center italic flex items-start justify-center gap-1">
-                    <ng-icon name="lucideShield" class="mt-0.5 text-base"></ng-icon> <span>El sistema de seguridad
-                        limita los intentos fallidos. <br>
-                        Se requiere precisión absoluta para acceder a la denuncia.</span>
-                </p>
-            </div>
-            <button (click)="loadComplaint()" [disabled]="!code() || !token()" class="btn-primary w-full py-4 text-lg">
-                Consultar Seguimiento
+
+            <button (click)="loadComplaint()" [disabled]="!code() || !token()"
+                class="w-full flex items-center justify-center gap-3 bg-inespasa text-white px-10 py-6 rounded-[2rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-inespasa-light/30 hover:bg-inespasa-dark hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all">
+                <ng-icon name="lucideSearch" class="text-lg"></ng-icon>
+                <span>Consultar Expediente</span>
             </button>
         </div>
         }
 
         @if (loading()) {
-        <div class="text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p class="text-gray-600 font-medium">Cargando información...</p>
+        <div class="text-center py-20 animate-pulse">
+            <div
+                class="inline-block h-16 w-16 border-4 border-inespasa/20 border-t-inespasa rounded-full animate-spin mb-6">
+            </div>
+            <p class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Verificando credenciales...</p>
         </div>
         }
 
         @if (complaint()) {
-        <div class="space-y-6">
-            <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-100">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <ng-icon name="lucideClipboardList" class="mr-2"></ng-icon>
-                    {{ complaint()!.title }}
-                </h2>
-                <div class="text-gray-700 leading-relaxed news-content"
-                    [innerHTML]="getSafeHtml(complaint()!.description)"></div>
-                <!-- Attachments -->
-                @if (complaint()?.attachments && (complaint()?.attachments?.length || 0) > 0) {
-                <div class="mt-8 border-t pt-6">
-                    <h3 class="text-sm font-bold text-gray-800 mb-4 flex items-center">
-                        <ng-icon name="lucidePaperclip" class="mr-2"></ng-icon> Documentos Adjuntos
-                    </h3>
-                    <div class="space-y-3">
-                        @for (att of complaint()?.attachments; track att.id) {
-                        @if (!isImage(att.file_url)) {
-                        <a [href]="getFileUrl(att.file_url, att.file_original_name)" target="_blank"
-                            class="flex items-center p-3 bg-gray-50 border border-gray-100 rounded-xl hover:bg-blue-50 hover:border-blue-200 transition-all group">
-                            <div
-                                class="w-10 h-10 bg-white rounded-lg flex items-center justify-center mr-3 border border-gray-100 group-hover:scale-110 transition-transform">
-                                <ng-icon name="lucideFile" class="text-xl"></ng-icon>
+        <div class="space-y-10 animate-fadeIn">
+            <!-- Main Tracking Card -->
+            <div class="bg-gray-50 rounded-[2.5rem] p-8 md:p-12 border border-gray-100">
+                <div
+                    class="flex flex-col md:flex-row justify-between items-start gap-6 mb-10 pb-8 border-b border-gray-200/50">
+                    <div class="space-y-2">
+                        <span class="text-[10px] font-black uppercase tracking-[0.3em] text-inespasa">Expediente
+                            Registrado</span>
+                        <h2 class="text-3xl font-black text-gray-900 tracking-tight">{{ complaint()!.title }}</h2>
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="px-3 py-1 bg-white rounded-lg border border-gray-200 text-[11px] font-mono font-bold text-gray-500">{{
+                                complaint()!.code }}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Estado de la
+                            Denuncia</span>
+                        <span [class]="getStatusClass(complaint()!.status)"
+                            class="px-6 py-2.5 rounded-2xl text-sm font-black uppercase tracking-widest border-2 shadow-sm">
+                            {{ getStatusLabel(complaint()!.status) }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    <!-- Content -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div>
+                            <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4 ml-1">
+                                Contenido Original</h4>
+                            <div class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm text-gray-700 leading-relaxed news-content"
+                                [innerHTML]="getSafeHtml(complaint()!.description)"></div>
+                        </div>
+
+                        <!-- Attachments -->
+                        @if (complaint()?.attachments && (complaint()?.attachments?.length || 0) > 0) {
+                        <div class="space-y-4">
+                            <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4 ml-1">
+                                Documentación Aportada</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                @for (att of complaint()?.attachments; track att.id) {
+                                @if (!isImage(att.file_url)) {
+                                <a [href]="getFileUrl(att.file_url, att.file_original_name)" target="_blank"
+                                    class="flex items-center p-4 bg-white border border-gray-100 rounded-2xl hover:bg-white hover:border-inespasa-light/30 hover:shadow-lg transition-all group">
+                                    <div
+                                        class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mr-4 border border-gray-100 group-hover:bg-inespasa group-hover:text-white group-hover:border-inespasa transition-all shadow-sm">
+                                        <ng-icon name="lucideFileText" class="text-xl"></ng-icon>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <p
+                                            class="text-xs font-bold text-gray-700 truncate group-hover:text-inespasa transition-colors">
+                                            {{ att.file_original_name || 'Archivo' }}</p>
+                                        <p class="text-[9px] font-black uppercase tracking-tighter text-gray-400">
+                                            Descargar documento</p>
+                                    </div>
+                                    <ng-icon name="lucideDownload"
+                                        class="text-gray-300 opacity-0 group-hover:opacity-100 transition-all"></ng-icon>
+                                </a>
+                                }
+                                }
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-700 truncate">{{ att.file_original_name ||
-                                    'Archivo adjunto' }}</p>
-                                <p class="text-[10px] text-gray-400">Clic para descargar / previsualizar</p>
+                        </div>
+                        }
+                    </div>
+
+                    <!-- Metadata -->
+                    <div class="space-y-6">
+                        <div class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
+                            <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Cronología</h4>
+
+                            <div class="space-y-6">
+                                <div class="flex gap-4">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-none border border-gray-100">
+                                        <ng-icon name="lucideCalendar" class="text-gray-400"></ng-icon>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">
+                                            Registro</p>
+                                        <p class="text-xs font-bold text-gray-700">{{ complaint()!.created_at |
+                                            date:'dd/MM/yyyy HH:mm' }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-4">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-none border border-gray-100">
+                                        <ng-icon name="lucideRefreshCw" class="text-gray-400"></ng-icon>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">
+                                            Último Cambio</p>
+                                        <p class="text-xs font-bold text-gray-700">{{ complaint()!.updated_at |
+                                            date:'dd/MM/yyyy HH:mm' }}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <ng-icon name="lucideDownload"
-                                class="text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></ng-icon>
-                        </a>
-                        }
-                        }
+                        </div>
+
+                        <!-- Feedback Box -->
+                        <div
+                            class="bg-inespasa rounded-[2rem] p-8 text-white shadow-xl shadow-inespasa-light/20 relative overflow-hidden group">
+                            <div class="relative z-10">
+                                <ng-icon name="lucideShieldCheck"
+                                    class="text-3xl mb-4 group-hover:scale-110 transition-transform"></ng-icon>
+                                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] opacity-70 mb-2">Canal RRHH
+                                </h4>
+                                <p class="text-xs font-medium leading-relaxed italic">Tu denuncia está siendo tratada
+                                    con la máxima confidencialidad bajo la Ley 2/2023.</p>
+                            </div>
+                            <div class="absolute -right-8 -bottom-8 opacity-10">
+                                <ng-icon name="lucideScale" class="text-[120px]"></ng-icon>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resolution / Admin Response -->
+            @if (complaint()!.status_public_description || complaint()!.admin_response) {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                @if (complaint()!.status_public_description) {
+                <div class="bg-blue-50/50 rounded-[2.5rem] p-10 border border-blue-100 shadow-sm animate-slideUp">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-inespasa text-white flex items-center justify-center">
+                            <ng-icon name="lucideInfo" class="text-xl"></ng-icon>
+                        </div>
+                        <h3 class="text-lg font-black text-gray-900 tracking-tight">Información de Seguimiento</h3>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-blue-100/50 text-sm text-gray-700 leading-relaxed italic whitespace-pre-line">
+                        {{ complaint()!.status_public_description }}
+                    </div>
+                </div>
+                }
+
+                @if (complaint()!.admin_response) {
+                <div class="bg-emerald-50/50 rounded-[2.5rem] p-10 border border-emerald-100 shadow-sm animate-slideUp">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
+                            <ng-icon name="lucideMessageSquare" class="text-xl"></ng-icon>
+                        </div>
+                        <h3 class="text-lg font-black text-gray-900 tracking-tight">Respuesta Final</h3>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-2xl border border-emerald-100/50 text-sm text-gray-700 leading-relaxed font-bold italic whitespace-pre-line">
+                        {{ complaint()!.admin_response }}
                     </div>
                 </div>
                 }
             </div>
-
-            <div class="card bg-gray-50">
-                <div class="flex items-center justify-between mb-4">
-                    <p class="text-sm font-semibold text-gray-700">Estado Actual:</p>
-                    <span [class]="getStatusClass(complaint()!.status)">{{ getStatusLabel(complaint()!.status) }}</span>
-                </div>
-                <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200 text-sm">
-                    <div>
-                        <p class="text-gray-500 mb-1 flex items-center gap-1"><ng-icon
-                                name="lucideCalendarDays"></ng-icon> Fecha de creación</p>
-                        <p class="font-medium text-gray-700">{{ complaint()!.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-gray-500 mb-1 flex items-center gap-1"><ng-icon name="lucideRefreshCw"></ng-icon>
-                            Última actualización</p>
-                        <p class="font-medium text-gray-700">{{ complaint()!.updated_at | date:'dd/MM/yyyy HH:mm' }}</p>
-                    </div>
-                </div>
-            </div>
-
-            @if (complaint()!.status_public_description) {
-            <div class="card bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
-                <div class="flex items-center mb-3">
-                    <ng-icon name="lucideInfo" class="text-2xl mr-2"></ng-icon>
-                    <p class="text-lg font-bold text-gray-800">Información de Seguimiento</p>
-                </div>
-                <p
-                    class="text-gray-700 bg-white p-4 rounded-lg border border-blue-200 whitespace-pre-line leading-relaxed">
-                    {{ complaint()!.status_public_description }}
-                </p>
-            </div>
             }
 
-            @if (complaint()!.admin_response) {
-            <div class="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
-                <div class="flex items-center mb-3">
-                    <ng-icon name="lucideMessageSquare" class="text-2xl mr-2"></ng-icon>
-                    <p class="text-lg font-bold text-gray-800">Respuesta de Administración</p>
-                </div>
-                <p
-                    class="text-gray-700 bg-white p-4 rounded-lg border border-green-200 whitespace-pre-line leading-relaxed">
-                    {{ complaint()!.admin_response }}
-                </p>
-            </div>
-            }
-
-            <div class="flex gap-4">
-                <button (click)="goBack()" class="btn-secondary flex-1 flex items-center justify-center gap-2">
-                    <ng-icon name="lucideArrowLeft"></ng-icon> Volver
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6">
+                <button (click)="goBack()"
+                    class="flex-1 flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-400 px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:text-gray-900 hover:border-gray-900 hover:bg-gray-50 transition-all">
+                    <ng-icon name="lucideArrowLeft"></ng-icon> Volver al portal
                 </button>
-                <button (click)="reset()" class="btn-primary flex-1 flex items-center justify-center gap-2">
+                <button (click)="reset()"
+                    class="flex-1 flex items-center justify-center gap-3 bg-gray-900 text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-gray-800 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-gray-900/10">
                     <ng-icon name="lucideRefreshCw"></ng-icon> Nueva Consulta
                 </button>
             </div>
         </div>
         }
 
+        <!-- Error State -->
         @if (error()) {
-        <div class="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
-            <div class="flex items-center">
-                <ng-icon name="lucideTriangleAlert" class="text-red-500 mr-2 text-xl"></ng-icon>
-                <div>
-                    <p class="text-sm font-semibold text-red-700 mb-1">Error</p>
-                    <p class="text-sm text-red-600">{{ error() }}</p>
-                </div>
+        <div class="mt-8 bg-red-50 border border-red-100 text-red-600 p-8 rounded-[2rem] text-center animate-shake">
+            <div class="inline-flex items-center justify-center w-14 h-14 bg-red-100 text-red-500 rounded-2xl mb-4">
+                <ng-icon name="lucideTriangleAlert" class="text-2xl"></ng-icon>
             </div>
+            <h3 class="text-lg font-black uppercase tracking-widest mb-2">Error de Acceso</h3>
+            <p class="text-sm font-medium opacity-80">{{ error() }}</p>
+            <button (click)="reset()"
+                class="mt-6 text-xs font-black uppercase tracking-[0.2em] text-red-600 hover:underline">Reintentar con
+                otros códigos</button>
         </div>
         }
     </div>

@@ -1,28 +1,62 @@
-<div class="card bg-white mt-8 border-2 border-blue-100">
-    <div class="flex items-center mb-4">
-        <ng-icon name="lucideSearch" class="text-3xl mr-3"></ng-icon>
-        <h2 class="text-xl font-bold text-gray-800">¿Ya tienes una denuncia?</h2>
+<div
+    class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 animate-fadeIn h-full">
+    <div class="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+        <div class="flex items-center gap-4">
+            <div
+                class="h-10 w-10 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg shadow-gray-900/10 transform -rotate-2">
+                <ng-icon name="lucideSearch" class="text-xl"></ng-icon>
+            </div>
+            <div>
+                <h2 class="text-xl font-black text-gray-900 tracking-tight tracking-tight">Consultar Estado</h2>
+                <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">Acceso al seguimiento
+                    de denuncias</p>
+            </div>
+        </div>
     </div>
-    <p class="text-gray-600 mb-6">Si ya has enviado una denuncia anteriormente, puedes consultar su estado aquí
-        utilizando tu código de seguimiento y clave de seguridad.</p>
 
-    <div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-6 rounded">
-        <p class="text-xs text-blue-800 flex items-start gap-1">
-            <ng-icon name="lucideShield" class="mt-0.5 text-base"></ng-icon> <span><strong>Seguridad activa:</strong>
-                Este sistema detecta y bloquea automáticamente intentos de
-                acceso no autorizados mediante fuerza bruta.</span>
-        </p>
+    <p class="text-gray-500 text-sm leading-relaxed mb-8">
+        Si ya has enviado una denuncia anteriormente, puedes consultar su estado actual utilizando tus claves de acceso
+        únicas generadas durante el registro.
+    </p>
+
+    <div class="bg-blue-50/50 rounded-2xl p-6 border border-blue-100 mb-8 relative overflow-hidden">
+        <div class="relative z-10 flex items-start gap-4">
+            <div
+                class="h-8 w-8 flex-none rounded-xl bg-inespasa text-white flex items-center justify-center shadow-md shadow-inespasa-light/20">
+                <ng-icon name="lucideShield" class="text-lg"></ng-icon>
+            </div>
+            <div>
+                <h4 class="text-inespasa-dark font-black uppercase tracking-widest text-[10px] mb-1">Entorno Seguro</h4>
+                <p class="text-blue-800/60 text-[11px] leading-relaxed italic">
+                    <strong class="text-inespasa">Seguridad activa:</strong> El sistema detecta y bloquea
+                    automáticamente intentos de acceso no autorizados mediante fuerza bruta para proteger la privacidad.
+                </p>
+            </div>
+        </div>
     </div>
 
-    <div class="flex flex-col md:flex-row gap-3">
-        <input type="text" [ngModel]="code()" (ngModelChange)="code.set($event)"
-            placeholder="Código (Ej: HJK2-8L92-K1M5-P7Z2)"
-            class="flex-1 input-field font-mono text-center tracking-wider text-sm" />
-        <input type="text" [ngModel]="token()" (ngModelChange)="token.set($event)"
-            placeholder="Clave (Ej: M9J2L7H8K3P1)"
-            class="flex-1 input-field font-mono text-center tracking-wider text-sm" (keyup.enter)="onLookup()" />
-        <button (click)="onLookup()" [disabled]="!code() || !token()" class="btn-secondary px-8">
-            Consultar
-        </button>
+    <div class="space-y-6">
+        <div class="space-y-2">
+            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 ml-2">Código de
+                Seguimiento</label>
+            <input type="text" [ngModel]="code()" (ngModelChange)="code.set($event)" placeholder="HJK2-8L92..."
+                class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-mono text-center tracking-widest text-sm text-gray-800 focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none placeholder:text-gray-300" />
+        </div>
+
+        <div class="space-y-2">
+            <label class="block text-[9px] font-black uppercase tracking-widest text-gray-400 ml-2">Clave de
+                Seguridad</label>
+            <input type="text" [ngModel]="token()" (ngModelChange)="token.set($event)" placeholder="M9J2L7H8..."
+                class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-mono text-center tracking-widest text-sm text-gray-800 focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none placeholder:text-gray-300"
+                (keyup.enter)="onLookup()" />
+        </div>
+
+        <div class="pt-2">
+            <button (click)="onLookup()" [disabled]="!code() || !token()"
+                class="w-full flex items-center justify-center gap-3 bg-inespasa text-white px-8 py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-inespasa-light/30 hover:bg-inespasa-dark hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all">
+                <ng-icon name="lucideSearch" class="text-lg"></ng-icon>
+                <span>Consultar Estado</span>
+            </button>
+        </div>
     </div>
 </div>

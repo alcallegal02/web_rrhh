@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
@@ -76,10 +76,10 @@ def _map_request_response(req: VacationRequest) -> VacationRequestResponse:
 
 @router.post("", response_model=VacationRequestResponse)
 async def create_request(
-    request_data: VacationRequestCreate,
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
-    session: Annotated[AsyncSession, Depends(get_session)]
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request_data: Annotated[VacationRequestCreate, Depends()]
 ):
     """Create a new vacation request (as draft)"""
     new_request = await create_vacation_request(session, str(current_user.id), request_data, ip_address=request.client.host)
@@ -88,11 +88,11 @@ async def create_request(
 
 @router.put("/{request_id}", response_model=VacationRequestResponse)
 async def update_request(
-    request_data: VacationRequestCreate,
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    request_id: str
+    request_id: str,
+    request_data: Annotated[VacationRequestCreate, Depends()]
 ):
     """Update a vacation request (draft only)"""
     updated_request = await update_vacation_request(session, request_id, request_data, str(current_user.id), ip_address=request.client.host)
@@ -169,7 +169,7 @@ async def reject_request_manager(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     request_id: str,
-    reason: str
+    reason: Annotated[str, Form()]
 ):
     """Reject a vacation request as manager"""
     result = await reject_by_manager(session, request_id, str(current_user.id), reason, ip_address=request.client.host)
@@ -226,7 +226,7 @@ async def reject_request_rrhh(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     request_id: str,
-    reason: str
+    reason: Annotated[str, Form()]
 ):
     """Reject a vacation request as RRHH"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
