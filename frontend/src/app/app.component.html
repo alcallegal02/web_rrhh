@@ -12,9 +12,9 @@
             (toggleSidebarCollapse)="toggleSidebarCollapse()"></app-header>
 
         <!-- Main Scrollable Area -->
-        <main class="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth" [class.p-4]="!isLoginPage()"
-            [class.md:p-6]="!isLoginPage()" [class.lg:p-8]="!isLoginPage()">
-            <div [class.max-w-7xl]="!isLoginPage()" [class.mx-auto]="!isLoginPage()" [class.w-full]="!isLoginPage()">
+        <main class="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth" [class.p-2]="!isLoginPage()"
+            [class.md:p-4]="!isLoginPage()">
+            <div [class.max-w-none]="!isLoginPage()" [class.mx-auto]="!isLoginPage()" [class.w-full]="!isLoginPage()">
                 <router-outlet></router-outlet>
             </div>
         </main>

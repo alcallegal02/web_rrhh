@@ -49,7 +49,7 @@ export class NewsArchiveComponent {
     private wsService = inject(WebSocketService);
 
     newsResource = rxResource({
-        stream: () => this.newsService.getAllNews(100, 0, 'publicada')
+        stream: () => this.newsService.getAllNews(100, 0, ['publicada'])
     });
 
     publishedNews = computed(() => {

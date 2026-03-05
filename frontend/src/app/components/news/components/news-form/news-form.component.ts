@@ -281,6 +281,26 @@ export class NewsFormComponent {
 
 
             this.save.emit(this.form());
+            this.uploading.set(false);
+
+            // Si es una creación (no hay id), limpiamos el formulario manualmente
+            if (!this.form().id) {
+                this.form.set({
+                    title: '',
+                    summary: '',
+                    content: '',
+                    cover_image_url: '',
+                    status: 'borrador',
+                    publish_date: '',
+                    attachments: []
+                });
+                this.pendingAttachments.set([]);
+                this.pendingCoverImage.set(null);
+                this.coverImagePreview.set(null);
+                this.totalUploadSize.set(0);
+                this.embeddedImagesSize.set(0);
+                this.uploadError.set('');
+            }
 
         } catch (e: any) {
             this.uploadError.set(e.message || 'Error al subir archivos');

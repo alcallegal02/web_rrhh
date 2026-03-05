@@ -7,15 +7,22 @@ import { Holiday, HolidayType, HolidayCreate, HolidayUpdate } from '../../interf
 import { HolidayCalendarComponent } from './components/holiday-calendar/holiday-calendar.component';
 import { HolidayListComponent } from './components/holiday-list/holiday-list.component';
 import { HolidayFormComponent } from './components/holiday-form/holiday-form.component';
-import { NgIconComponent } from '@ng-icons/core';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+    lucideCalendarDays, lucideChevronLeft, lucideChevronRight,
+    lucidePlus, lucideTrash2, lucidePencil, lucideInfo
+} from '@ng-icons/lucide';
 
-type ViewMode = 'calendar' | 'list';
+// Previous ViewMode type removed as unified layout is now used
 
 @Component({
     selector: 'app-calendar-config',
     imports: [CommonModule, FormsModule, HolidayCalendarComponent, HolidayListComponent, HolidayFormComponent, NgIconComponent],
     templateUrl: './calendar-config.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        provideIcons({ lucideCalendarDays, lucideChevronLeft, lucideChevronRight, lucidePlus, lucideTrash2, lucidePencil, lucideInfo })
+    ]
 })
 export class CalendarConfigComponent {
     selectedYear = signal(new Date().getFullYear());
@@ -27,7 +34,6 @@ export class CalendarConfigComponent {
 
     holidays = computed(() => this.holidaysResource.value() ?? []);
     loading = computed(() => this.holidaysResource.isLoading());
-    viewMode = signal<ViewMode>('calendar');
 
     // Selected state for Modal
     selectedHoliday = signal<Holiday | null>(null);
@@ -50,12 +56,7 @@ export class CalendarConfigComponent {
     openCreateModal(dateStr?: string) {
         this.selectedHoliday.set(null); // Create mode
         if (dateStr) {
-            // Ensure date string is YYYY-MM-DD
-            const d = new Date(dateStr);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            this.initialDateForNew.set(`${year}-${month}-${day}`);
+            this.initialDateForNew.set(dateStr);
         } else {
             this.initialDateForNew.set('');
         }
@@ -79,7 +80,11 @@ export class CalendarConfigComponent {
         if (day.holiday) {
             this.openEditModal(day.holiday);
         } else {
-            this.openCreateModal(day.date.toISOString());
+            const d = day.date;
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const date = String(d.getDate()).padStart(2, '0');
+            this.openCreateModal(`${year}-${month}-${date}`);
         }
     }
 

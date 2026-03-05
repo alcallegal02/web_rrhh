@@ -41,7 +41,7 @@ export class HolidayCalendarComponent {
 
             for (let day = 1; day <= lastDay.getDate(); day++) {
                 const date = new Date(year, month, day);
-                const dateStr = date.toISOString().split('T')[0];
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const isWeekend = date.getDay() === 0 || date.getDay() === 6;
                 const holiday = this.holidays().find(h => h.date === dateStr);
 
@@ -76,9 +76,9 @@ export class HolidayCalendarComponent {
             }
         }
 
-        if (day.isWeekend) return 'bg-gray-100 text-gray-400 cursor-default';
-        if (day.isToday) return 'ring-2 ring-indigo-500 text-indigo-600 font-extrabold cursor-pointer hover:bg-indigo-50';
+        if (day.isWeekend) return 'bg-gray-50 text-gray-300 cursor-default';
+        if (day.isToday) return 'ring-2 ring-[#3C65AB] text-[#3C65AB] font-black cursor-pointer bg-blue-50/50';
 
-        return 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer transition-colors';
+        return 'text-gray-600 hover:bg-blue-50 hover:text-[#3C65AB] cursor-pointer transition-all duration-300 font-medium';
     }
 }

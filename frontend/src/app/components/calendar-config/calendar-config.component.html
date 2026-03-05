@@ -1,65 +1,74 @@
-<div class="px-6 py-6 min-h-screen bg-slate-50">
-    <div class="max-w-[1400px] mx-auto">
-        <!-- Header & Controls -->
-        <div
-            class="mb-8 flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-            <h2
-                class="text-2xl font-bold text-gray-800 mb-4 sm:mb-0 bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent flex items-center gap-2">
-                <ng-icon name="lucideCalendarDays" class="text-indigo-600 flex items-center text-3xl"></ng-icon>
-                Calendario Laboral
-            </h2>
+<div class="flex flex-col lg:flex-row gap-4 h-full lg:overflow-hidden">
 
-            <div class="flex items-center space-x-6">
-                <!-- Year Selector -->
-                <div class="flex items-center bg-slate-100 rounded-lg p-1">
+    <!-- Sidebar: Holiday Directory -->
+    <div
+        class="w-full lg:w-1/4 min-w-[320px] max-w-[450px] flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden shrink-0 order-2 lg:order-1">
+        <!-- Sidebar Header -->
+        <div class="p-4 bg-gray-50/50 border-b border-gray-100">
+            <div class="flex items-center gap-3 mb-6">
+                <div
+                    class="h-8 w-8 rounded-lg bg-[#3C65AB] text-white flex items-center justify-center shadow-lg shadow-blue-500/20">
+                    <ng-icon name="lucideCalendarDays" class="text-lg"></ng-icon>
+                </div>
+                <div>
+                    <h2 class="text-sm font-black text-gray-900 tracking-tight">Calendario</h2>
+                    <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Festivos {{ selectedYear() }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Year Selector & Controls -->
+            <div class="space-y-3">
+                <div
+                    class="flex items-center justify-between bg-white rounded-xl p-1 border border-gray-100 shadow-inner">
                     <button (click)="changeYear(-1)"
-                        class="p-2 hover:bg-white rounded-md transition duration-150 text-gray-600 hover:text-indigo-600 shadow-sm flex items-center justify-center">
+                        class="p-2 hover:bg-blue-50 rounded-lg transition duration-200 text-gray-400 hover:text-[#3C65AB] active:scale-90">
                         <ng-icon name="lucideChevronLeft"></ng-icon>
                     </button>
-                    <span class="mx-4 text-xl font-bold text-gray-700 font-mono">{{ selectedYear() }}</span>
+                    <span class="text-base font-black text-gray-700 font-mono">{{ selectedYear() }}</span>
                     <button (click)="changeYear(1)"
-                        class="p-2 hover:bg-white rounded-md transition duration-150 text-gray-600 hover:text-indigo-600 shadow-sm flex items-center justify-center">
+                        class="p-2 hover:bg-blue-50 rounded-lg transition duration-200 text-gray-400 hover:text-[#3C65AB] active:scale-90">
                         <ng-icon name="lucideChevronRight"></ng-icon>
                     </button>
                 </div>
 
-                <!-- View Switcher -->
-                <div class="flex bg-slate-100 rounded-lg p-1">
-                    <button (click)="viewMode.set('calendar')"
-                        [class]="viewMode() === 'calendar' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                        class="px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2">
-                        <ng-icon name="lucideLayoutGrid"></ng-icon> Calendario
-                    </button>
-                    <button (click)="viewMode.set('list')"
-                        [class]="viewMode() === 'list' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-                        class="px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center gap-2">
-                        <ng-icon name="lucideList"></ng-icon> Lista
-                    </button>
-                </div>
-
                 <button (click)="openCreateModal()"
-                    class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm font-medium flex items-center gap-2">
-                    <ng-icon name="lucidePlus"></ng-icon> Nuevo
+                    class="w-full p-3 rounded-xl bg-blue-50 text-[#3C65AB] border border-blue-100 hover:bg-[#3C65AB] hover:text-white hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest group">
+                    <ng-icon name="lucidePlus" class="text-lg group-hover:scale-110 transition-transform"></ng-icon>
+                    <span>Nuevo Festivo</span>
                 </button>
             </div>
         </div>
 
-        <!-- Content -->
-        @if (loading()) {
-        <div class="flex justify-center p-12">
-            <ng-icon name="lucideLoaderCircle"
-                class="animate-spin text-4xl text-indigo-600 flex items-center"></ng-icon>
+        <!-- Sidebar List (Directory) -->
+        <div class="flex-1 overflow-y-auto p-2 space-y-1 min-h-[300px] lg:min-h-0 bg-white">
+            @if (loading()) {
+            <div class="flex flex-col items-center justify-center p-12 opacity-30 gap-3">
+                <div class="h-8 w-8 border-2 border-[#3C65AB] border-t-transparent rounded-full animate-spin"></div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-[#3C65AB]">Cargando...</span>
+            </div>
+            } @else {
+            <app-holiday-list [holidays]="holidays()" (edit)="openEditModal($event)" (delete)="onDelete($event)">
+            </app-holiday-list>
+            }
         </div>
-        } @else {
-        @if (viewMode() === 'calendar') {
+
+        <!-- Sidebar Footer -->
+        <div
+            class="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+            <span>Total Festivos</span>
+            <span class="bg-white px-2 py-1 rounded-md border border-gray-200 text-[#3C65AB] font-black">{{
+                holidays().length }}</span>
+        </div>
+    </div>
+
+    <!-- Main Content: Full Calendar Grid -->
+    <div
+        class="flex-1 lg:overflow-y-auto bg-gray-100/30 rounded-2xl border-2 border-dashed border-gray-200 p-2 lg:p-6 order-1 lg:order-2">
         <app-holiday-calendar [holidays]="holidays()" [year]="selectedYear()" (dayClick)="onDayClick($event)">
         </app-holiday-calendar>
-        } @else {
-        <app-holiday-list [holidays]="holidays()" (edit)="openEditModal($event)" (delete)="onDelete($event)">
-        </app-holiday-list>
-        }
-        }
     </div>
+
 </div>
 
 <!-- Modal Form -->

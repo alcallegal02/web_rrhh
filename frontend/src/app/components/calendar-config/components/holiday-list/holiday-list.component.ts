@@ -1,12 +1,17 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Holiday, HolidayType } from '../../../../interfaces/holiday.interface';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucidePencil, lucideTrash2, lucideInfo } from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-holiday-list',
-    imports: [CommonModule, DatePipe],
+    imports: [CommonModule, DatePipe, NgIconComponent],
     templateUrl: './holiday-list.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    providers: [
+        provideIcons({ lucidePencil, lucideTrash2, lucideInfo })
+    ]
 })
 export class HolidayListComponent {
     holidays = input.required<Holiday[]>();

@@ -1,3 +1,4 @@
+from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,7 +11,9 @@ from app.models.news import News, NewsStatus
 async def get_all_news(
     session: AsyncSession,
     user_role: str | None = None,
-    status: str | None = None,
+    statuses: list[str] | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     limit: int = 20,
     offset: int = 0
 ) -> list[News]:
@@ -25,12 +28,19 @@ async def get_all_news(
     if not is_privileged:
         # Employees MUST ONLY see published news
         query = query.where(News.status == NewsStatus.PUBLICADA.value)
-    elif status:
-        # Admins can filter by a specific status if requested
-        query = query.where(News.status == status)
+    elif statuses:
+        # Admins can filter by multiple statuses if requested
+        query = query.where(News.status.in_(statuses))
+
+    # Date range filtering (on publish_date)
+    if start_date:
+        query = query.where(News.publish_date >= start_date)
+    if end_date:
+        query = query.where(News.publish_date <= end_date)
         
     # Ordering: published first if no specific admin ordering is needed
-    if not is_privileged or status == NewsStatus.PUBLICADA.value:
+    # If "publicada" is among the requested statuses (or it's an employee), we order by publish_date
+    if not is_privileged or (statuses and NewsStatus.PUBLICADA.value in statuses):
         query = query.order_by(News.publish_date.desc(), News.created_at.desc())
     else:
         query = query.order_by(News.created_at.desc())

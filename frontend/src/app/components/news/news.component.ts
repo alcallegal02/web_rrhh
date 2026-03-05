@@ -12,14 +12,14 @@ import { environment } from '../../config/environment';
 import { NewsListComponent } from './components/news-list/news-list.component';
 import { NewsFormComponent, NewsFormModel } from './components/news-form/news-form.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { lucideNewspaper } from '@ng-icons/lucide';
+import { lucideNewspaper, lucideFilter, lucideX, lucideChevronDown, lucideSend, lucideFileEdit, lucideArchive } from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-news',
   imports: [CommonModule, NewsListComponent, NewsFormComponent, NgIconComponent],
   templateUrl: './news.component.html',
   styleUrl: './news.component.scss',
-  providers: [provideIcons({ lucideNewspaper })],
+  providers: [provideIcons({ lucideNewspaper, lucideFilter, lucideX, lucideChevronDown, lucideSend, lucideFileEdit, lucideArchive })],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NewsComponent {
@@ -28,9 +28,26 @@ export class NewsComponent {
   private newsService = inject(NewsService);
   private wsService = inject(WebSocketService);
 
+  // Filters
+  filterStatus = signal<string[]>([]);
+  filterStartDate = signal<string>('');
+  filterEndDate = signal<string>('');
+
+  statusOptions = [
+    { value: 'borrador', label: 'Borrador', icon: 'lucideFileEdit', color: 'gray' },
+    { value: 'publicada', label: 'Publicada', icon: 'lucideSend', color: 'emerald' },
+    { value: 'archivada', label: 'Archivada', icon: 'lucideArchive', color: 'amber' }
+  ];
+
   // Data
   newsListResource = rxResource({
-    stream: () => this.newsService.getAllNews(100)
+    stream: () => this.newsService.getAllNews(
+      100,
+      0,
+      this.filterStatus().length > 0 ? this.filterStatus() : undefined,
+      this.filterStartDate() || undefined,
+      this.filterEndDate() || undefined
+    )
   });
   newsList = computed(() => this.newsListResource.value() || []);
   loading = signal(false);
@@ -164,5 +181,34 @@ export class NewsComponent {
   resetForm(): void {
     this.editingNewsId.set(null);
     this.initialFormData.set(null);
+  }
+
+  // --- Filter Actions ---
+  toggleFilterStatus(status: string): void {
+    this.filterStatus.update(current => {
+      if (current.includes(status)) {
+        return current.filter(s => s !== status);
+      } else {
+        return [...current, status];
+      }
+    });
+  }
+
+  isFilterStatusSelected(status: string): boolean {
+    return this.filterStatus().includes(status);
+  }
+
+  setFilterStartDate(date: string): void {
+    this.filterStartDate.set(date);
+  }
+
+  setFilterEndDate(date: string): void {
+    this.filterEndDate.set(date);
+  }
+
+  clearFilters(): void {
+    this.filterStatus.set([]);
+    this.filterStartDate.set('');
+    this.filterEndDate.set('');
   }
 }

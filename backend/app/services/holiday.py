@@ -34,7 +34,7 @@ async def create_holiday(
             "id": str(holiday.id),
             "name": holiday.name,
             "date": str(holiday.date),
-            "is_national": holiday.is_national
+            "holiday_type": holiday.holiday_type
         },
         ip_address=ip_address
     )

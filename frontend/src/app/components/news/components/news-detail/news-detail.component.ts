@@ -46,7 +46,7 @@ export class NewsDetailComponent implements OnInit {
     });
 
     otherNewsResource = rxResource({
-        stream: () => this.newsService.getAllNews(6, 0, 'publicada')
+        stream: () => this.newsService.getAllNews(6, 0, ['publicada'])
     });
 
     news = computed(() => this.newsResource.value() || null);

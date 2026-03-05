@@ -62,7 +62,7 @@ export class DashboardComponent {
   });
 
   allNewsResource = rxResource({
-    stream: () => this.newsService.getAllNews(10, 0, 'publicada')
+    stream: () => this.newsService.getAllNews(10, 0, ['publicada'])
   });
 
   // State

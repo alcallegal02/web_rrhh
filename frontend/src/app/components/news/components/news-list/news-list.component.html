@@ -31,16 +31,6 @@
                     <ng-icon name="lucideNewspaper" class="text-3xl"></ng-icon>
                 </div>
                 }
-                <!-- Modern Status Overaly (bottom-right) -->
-                <div class="absolute bottom-1.5 right-1.5 h-6 w-6 rounded-lg border-2 border-white shadow-md flex items-center justify-center transition-transform group-hover:scale-110"
-                    [class.bg-emerald-500]="news.status === 'publicada'"
-                    [class.bg-gray-400]="news.status === 'borrador'" [class.bg-amber-500]="news.status === 'archivada'">
-                    @if (news.status === 'publicada') { <ng-icon name="lucideSend"
-                        class="text-[12px] text-white"></ng-icon> }
-                    @else if (news.status === 'borrador') { <ng-icon name="lucideFileEdit"
-                        class="text-[12px] text-white"></ng-icon> }
-                    @else { <ng-icon name="lucideArchive" class="text-[12px] text-white"></ng-icon> }
-                </div>
             </div>
 
             <!-- Enhanced Main Info -->
@@ -65,18 +55,6 @@
             <div class="relative flex-1">
                 <button (click)="toggleDropdown(news.id, $event)"
                     class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-gray-100 bg-white shadow-sm hover:border-blue-200 hover:shadow-md transition-all group/btn">
-                    <div class="flex-none flex items-center justify-center h-5 w-5 rounded-lg shadow-sm"
-                        [class.bg-emerald-50]="news.status === 'publicada'"
-                        [class.text-emerald-500]="news.status === 'publicada'"
-                        [class.bg-gray-50]="news.status === 'borrador'"
-                        [class.text-gray-400]="news.status === 'borrador'"
-                        [class.bg-amber-50]="news.status === 'archivada'"
-                        [class.text-amber-500]="news.status === 'archivada'">
-                        @if (news.status === 'publicada') { <ng-icon name="lucideSend" class="text-[11px]"></ng-icon> }
-                        @else if (news.status === 'borrador') { <ng-icon name="lucideFileEdit"
-                            class="text-[11px]"></ng-icon> }
-                        @else { <ng-icon name="lucideArchive" class="text-[11px]"></ng-icon> }
-                    </div>
                     <span class="flex-1 text-[11px] font-black uppercase tracking-wider text-gray-600 text-left">
                         {{ news.status === 'publicada' ? 'Publicada' : news.status === 'borrador' ? 'Borrador' :
                         'Archivada' }}

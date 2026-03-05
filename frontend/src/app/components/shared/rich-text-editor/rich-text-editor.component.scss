@@ -16,12 +16,29 @@
 :host ::ng-deep .ql-toolbar {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem;
-    /* Reduced gap for tigher packing */
-    padding: 0.5rem !important;
+    gap: 0.15rem;
+    /* Even tighter packing */
+    padding: 0.35rem !important;
+    /* Reduced padding */
     border-bottom: 2px solid #e5e7eb !important;
     background-color: #fff;
-    /* Ensure contrast */
+}
+
+/* Global toolbar button sizing */
+:host ::ng-deep .ql-toolbar button {
+    width: 28px !important;
+    height: 24px !important;
+    /* Slightly shorter */
+    padding: 2px 4px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+:host ::ng-deep .ql-toolbar button svg {
+    width: 16px !important;
+    /* Smaller icons */
+    height: 16px !important;
 }
 
 /* Adjust format groups spacing */
@@ -30,11 +47,22 @@
     margin-bottom: 0.25rem !important;
     display: flex;
     align-items: center;
+    border-right: 1px solid #f3f4f6;
+    /* Subtle separator */
+    padding-right: 0.25rem;
 }
 
-/* Fix Picker Labels on Mobile */
+:host ::ng-deep .ql-toolbar .ql-formats:last-child {
+    border-right: none;
+}
+
+/* Fix Picker Labels */
 :host ::ng-deep .ql-snow .ql-picker-label {
     padding-left: 0.25rem;
+    font-size: 11px !important;
+    height: 24px !important;
+    display: flex !important;
+    align-items: center;
 }
 
 /* Mobile Specific Optimizations (< 640px) */

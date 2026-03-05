@@ -1,10 +1,10 @@
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-6">
     @for (month of calendarMonths(); track month.month) {
     <div
-        class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow">
-        <!-- Header -->
-        <div class="bg-gradient-to-r from-slate-50 to-white px-4 py-3 border-b border-slate-100">
-            <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide text-center">
+        class="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-500 group">
+        <!-- Month Header -->
+        <div class="bg-gray-50/50 px-4 py-3.5 border-b border-gray-100 flex items-center justify-center">
+            <h3 class="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">
                 {{ month.name }}
             </h3>
         </div>
@@ -12,21 +12,21 @@
         <!-- Days Grid -->
         <div class="p-4">
             <!-- Weekday Labels -->
-            <div class="grid grid-cols-7 mb-2 text-center">
-                <span class="text-[10px] font-bold text-gray-400">L</span>
-                <span class="text-[10px] font-bold text-gray-400">M</span>
-                <span class="text-[10px] font-bold text-gray-400">X</span>
-                <span class="text-[10px] font-bold text-gray-400">J</span>
-                <span class="text-[10px] font-bold text-gray-400">V</span>
-                <span class="text-[10px] font-bold text-gray-400 text-red-300">S</span>
-                <span class="text-[10px] font-bold text-gray-400 text-red-300">D</span>
+            <div class="grid grid-cols-7 mb-3 text-center">
+                <span class="text-[9px] font-black text-gray-300 uppercase">Lu</span>
+                <span class="text-[9px] font-black text-gray-300 uppercase">Ma</span>
+                <span class="text-[9px] font-black text-gray-300 uppercase">Mi</span>
+                <span class="text-[9px] font-black text-gray-300 uppercase">Ju</span>
+                <span class="text-[9px] font-black text-gray-300 uppercase">Vi</span>
+                <span class="text-[9px] font-black text-red-200 uppercase">Sa</span>
+                <span class="text-[9px] font-black text-red-200 uppercase">Do</span>
             </div>
 
             <!-- Days -->
-            <div class="grid grid-cols-7 gap-1 text-center text-xs">
+            <div class="grid grid-cols-7 gap-1 text-center">
                 @for (day of month.days; track $index) {
                 <div (click)="dayClick.emit(day)"
-                    [className]="'aspect-square flex items-center justify-center rounded-lg ' + getDayClass(day)">
+                    [className]="'aspect-square flex items-center justify-center rounded-xl text-[11px] transition-all ' + getDayClass(day)">
                     {{ day.day || '' }}
                 </div>
                 }

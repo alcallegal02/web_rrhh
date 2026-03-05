@@ -30,13 +30,26 @@ export class NewsService {
         return this.http.get<News>(`${this.apiUrl}/${id}`);
     }
 
-    getAllNews(limit = 20, offset = 0, status?: string): Observable<News[]> {
+    getAllNews(limit = 20, offset = 0, status?: string[], startDate?: string, endDate?: string): Observable<News[]> {
         const params: any = { limit: limit.toString(), offset: offset.toString() };
-        if (status) {
-            params.status = status;
+
+        if (startDate) {
+            params.start_date = startDate;
+        }
+        if (endDate) {
+            params.end_date = endDate;
         }
 
-        return this.http.get<News[]>(this.apiUrl, { params });
+        let url = this.apiUrl;
+        const queryParams = new URLSearchParams();
+        Object.keys(params).forEach(key => queryParams.append(key, params[key]));
+
+        if (status && status.length > 0) {
+            status.forEach(s => queryParams.append('status', s));
+        }
+
+        const finalUrl = `${url}?${queryParams.toString()}`;
+        return this.http.get<News[]>(finalUrl);
     }
 
     createNews(news: NewsCreate): Observable<News> {

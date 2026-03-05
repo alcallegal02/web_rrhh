@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated
 from typing import Optional
 
@@ -30,7 +31,7 @@ async def create_news_item(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    news_data: Annotated[NewsCreate, Depends()]
+    news_data: NewsCreate
 ):
     """Create a new news item (RRHH/admin/superadmin)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -47,7 +48,9 @@ async def create_news_item(
 async def get_news(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    status: Annotated[str | None, Query(description="Filter by status: borrador, publicada, archivada")] = None,
+    status: Annotated[list[str] | None, Query(description="Filter by status: borrador, publicada, archivada")] = None,
+    start_date: Annotated[datetime | None, Query()] = None,
+    end_date: Annotated[datetime | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0
 ):
@@ -55,7 +58,9 @@ async def get_news(
     news_list = await get_all_news(
         session, 
         user_role=current_user.role, 
-        status=status,
+        statuses=status,
+        start_date=start_date,
+        end_date=end_date,
         limit=limit, 
         offset=offset
     )
@@ -138,7 +143,7 @@ async def update_news_item(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     news_id: str,
-    news_data: Annotated[NewsUpdate, Depends()]
+    news_data: NewsUpdate
 ):
     """Update a news item (RRHH/superadmin)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:

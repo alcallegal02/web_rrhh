@@ -82,7 +82,10 @@ export class RichTextEditorComponent implements OnDestroy, ControlValueAccessor 
   writeValue(value: string): void {
     const newValue = value || '';
 
-    if (this.isUserTyping || (this.quillEditor && this.quillEditor.hasFocus())) {
+    // Allow clearing even if focused
+    const isReset = newValue === '';
+
+    if (!isReset && (this.isUserTyping || (this.quillEditor && this.quillEditor.hasFocus()))) {
       return;
     }
 
