@@ -183,6 +183,12 @@ class User(SQLModel, table=True):
         "lazy": "selectin",
         "foreign_keys": "User.parent_id"
     })
+
+    # Permissions & Notifications
+    can_manage_complaints: bool = Field(default=False, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("false")))
+    notif_own_requests: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
+    notif_managed_requests: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
+    notif_complaints: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
     
     @property
     def role_enum(self) -> UserRole:
@@ -233,6 +239,11 @@ class UserCreate(SQLModel):
     bolsa_horas_hours: float = 0
     horas_sindicales_days: float = 0
     horas_sindicales_hours: float = 0
+    
+    can_manage_complaints: bool = False
+    notif_own_requests: bool = True
+    notif_managed_requests: bool = True
+    notif_complaints: bool = True
 
 
 class UserUpdate(SQLModel):
@@ -273,6 +284,11 @@ class UserUpdate(SQLModel):
     bolsa_horas_hours: float | None = None
     horas_sindicales_days: float | None = None
     horas_sindicales_hours: float | None = None
+    
+    can_manage_complaints: bool | None = None
+    notif_own_requests: bool | None = None
+    notif_managed_requests: bool | None = None
+    notif_complaints: bool | None = None
 
 
 class UserLogin(SQLModel):
@@ -331,6 +347,11 @@ class UserResponse(SQLModel):
     bolsa_horas_hours: float | None = 0
     horas_sindicales_days: float | None = 0
     horas_sindicales_hours: float | None = 0
+    
+    can_manage_complaints: bool = False
+    notif_own_requests: bool = True
+    notif_managed_requests: bool = True
+    notif_complaints: bool = True
 
 
 class Token(SQLModel):

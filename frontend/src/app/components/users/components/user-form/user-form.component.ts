@@ -13,6 +13,7 @@ export { UserFormModel };
 // Import modular components
 import { UserPersonalDataComponent } from './components/user-personal-data/user-personal-data.component';
 import { UserContractInfoComponent } from './components/user-contract-info/user-contract-info.component';
+import { UserPermissionsNotificationsComponent } from './components/user-permissions-notifications/user-permissions-notifications.component';
 import { UserHierarchySelectorComponent } from './components/user-hierarchy-selector/user-hierarchy-selector.component';
 import { UserAllowancesTableComponent } from './components/user-allowances-table/user-allowances-table.component';
 import { UserAttachmentsComponent } from './components/user-attachments/user-attachments.component';
@@ -29,6 +30,7 @@ import {
         FormsModule,
         UserPersonalDataComponent,
         UserContractInfoComponent,
+        UserPermissionsNotificationsComponent,
         UserHierarchySelectorComponent,
         UserAllowancesTableComponent,
         UserAttachmentsComponent,
@@ -76,7 +78,11 @@ export class UserFormComponent {
         photo_url: '',
         managers: [],
         rrhh_ids: [],
-        attachments: []
+        attachments: [],
+        can_manage_complaints: false,
+        notif_own_requests: true,
+        notif_managed_requests: true,
+        notif_complaints: true
     } as UserFormModel);
 
     previewProfilePicUrl = signal<string | null>(null);

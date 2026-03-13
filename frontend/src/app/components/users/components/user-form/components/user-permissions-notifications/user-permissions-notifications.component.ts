@@ -1,0 +1,24 @@
+import { Component, input, output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideShieldCheck, lucideBell } from '@ng-icons/lucide';
+import { UserFormModel } from '../../user-form.models';
+
+@Component({
+  selector: 'app-user-permissions-notifications',
+  standalone: true,
+  imports: [CommonModule, FormsModule, NgIconComponent],
+  providers: [
+    provideIcons({ lucideShieldCheck, lucideBell })
+  ],
+  templateUrl: './user-permissions-notifications.component.html'
+})
+export class UserPermissionsNotificationsComponent {
+  form = input.required<UserFormModel>();
+  fieldChange = output<{ field: string, value: any }>();
+
+  updateField(field: string, value: any): void {
+    this.fieldChange.emit({ field, value });
+  }
+}

@@ -1,0 +1,102 @@
+<div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 hover:shadow-2xl transition-all group overflow-hidden relative">
+    <!-- Elem. decorativo -->
+    <div class="absolute top-0 right-0 w-32 h-32 bg-[#3C65AB]/5 rounded-full -mr-16 -mt-16 transition-transform group-hover:scale-110"></div>
+    
+    <div class="flex items-center gap-4 mb-8 relative">
+        <div class="bg-[#3C65AB] text-white p-3 rounded-xl shadow-lg shadow-blue-100">
+            <ng-icon name="lucideShieldCheck" class="text-2xl"></ng-icon>
+        </div>
+        <div>
+            <h3 class="text-xl font-black text-gray-900 tracking-tight">Privilegios y Centro de Alertas</h3>
+            <p class="text-gray-500 text-sm font-medium">Define qué puede gestionar el usuario y cómo recibe la información.</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 relative">
+        <!-- SECCIÓN 1: Permisos Especiales -->
+        @if (form().role === 'rrhh' || form().role === 'superadmin') {
+        <div class="space-y-6">
+            <h4 class="text-xs font-black uppercase tracking-[0.2em] text-[#3C65AB] flex items-center gap-2">
+                <span class="w-8 h-px bg-blue-200"></span> Control de Acceso Crítico
+            </h4>
+            
+            <div class="space-y-4">
+                <div class="flex items-start gap-4 p-4 rounded-xl border-2 border-gray-50 hover:border-blue-100 hover:bg-blue-50/30 transition-all group/item">
+                    <!-- Switch Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer mt-1">
+                        <input type="checkbox" 
+                               [ngModel]="form().can_manage_complaints"
+                               (ngModelChange)="updateField('can_manage_complaints', $event)"
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3C65AB]"></div>
+                    </label>
+
+                    <div class="space-y-1">
+                        <span class="block text-sm font-bold text-gray-900 group-hover/item:text-[#3C65AB] transition-colors">Administrador de Canal Ético</span>
+                        <p class="text-xs text-gray-500 leading-relaxed font-medium italic">Otorga acceso total a la visualización y gestión de denuncias anónimas dentro del módulo de compliance.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
+
+        <!-- SECCIÓN 2: Notificaciones -->
+        <div class="space-y-6">
+            <h4 class="text-xs font-black uppercase tracking-[0.2em] text-[#3C65AB] flex items-center gap-2">
+                <span class="w-8 h-px bg-blue-200"></span> Canales de Notificación
+            </h4>
+            
+            <div class="grid gap-4">
+                <!-- Propias -->
+                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-gray-200 transition-all group/notif">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-gray-700 group-hover/notif:text-[#3C65AB]">Estado de mis solicitudes</span>
+                        <span class="text-[10px] text-gray-400 uppercase font-black tracking-wider">Ausencias personales</span>
+                    </div>
+                    <!-- Switch Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               [ngModel]="form().notif_own_requests"
+                               (ngModelChange)="updateField('notif_own_requests', $event)"
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3C65AB]"></div>
+                    </label>
+                </div>
+
+                <!-- De equipo -->
+                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-gray-200 transition-all group/notif">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-gray-700 group-hover/notif:text-[#3C65AB]">Solicitudes de mi equipo</span>
+                        <span class="text-[10px] text-gray-400 uppercase font-black tracking-wider">Gestión de subordinados</span>
+                    </div>
+                    <!-- Switch Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               [ngModel]="form().notif_managed_requests"
+                               (ngModelChange)="updateField('notif_managed_requests', $event)"
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3C65AB]"></div>
+                    </label>
+                </div>
+
+                <!-- De denuncias -->
+                @if (form().role === 'rrhh' || form().role === 'superadmin' || form().can_manage_complaints) {
+                <div class="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 hover:border-gray-200 transition-all group/notif">
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-gray-700 group-hover/notif:text-[#3C65AB]">Nuevas denuncias recibidas</span>
+                        <span class="text-[10px] text-gray-400 uppercase font-black tracking-wider">Compliance RRHH</span>
+                    </div>
+                    <!-- Switch Toggle -->
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               [ngModel]="form().notif_complaints"
+                               (ngModelChange)="updateField('notif_complaints', $event)"
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3C65AB]"></div>
+                    </label>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

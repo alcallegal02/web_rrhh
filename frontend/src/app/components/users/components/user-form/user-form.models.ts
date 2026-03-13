@@ -18,6 +18,12 @@ export interface UserFormModel {
     managers: string[];
     rrhh_ids: string[];
     attachments: { file_url: string, file_original_name: string }[];
+    
+    // Permissions & Notifications
+    can_manage_complaints?: boolean;
+    notif_own_requests?: boolean;
+    notif_managed_requests?: boolean;
+    notif_complaints?: boolean;
 
     // Rights
     vac_days?: number;

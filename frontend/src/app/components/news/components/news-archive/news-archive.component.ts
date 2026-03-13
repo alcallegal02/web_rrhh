@@ -2,7 +2,7 @@ import { Component, signal, computed, inject, ChangeDetectionStrategy } from '@a
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NewsService } from '../../../../services/news.service';
-import { WebSocketService } from '../../../../services/websocket.service';
+import { WebSocketService, WebSocketMessage } from '../../../../services/websocket.service';
 import { AuthService } from '../../../../services/auth.service';
 import { News } from '../../../../models/app.models';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -62,7 +62,7 @@ export class NewsArchiveComponent {
     });
 
     constructor() {
-        this.wsService.messages().forEach((msg: { type: string; data: any }) => {
+        this.wsService.messages().forEach((msg: WebSocketMessage) => {
             if (msg.type === 'db_update' && msg.data.table === 'news') {
                 this.newsResource.reload();
             }

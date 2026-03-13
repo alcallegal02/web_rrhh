@@ -5,7 +5,8 @@ import { environment } from '../config/environment';
 
 export interface WebSocketMessage {
   type: string;
-  data: any;
+  data?: any;
+  id?: string;
 }
 
 @Injectable({

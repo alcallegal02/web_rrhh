@@ -38,8 +38,8 @@ async def create_convenio_config(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    config_in: Annotated[ConvenioConfigCreate, Depends()]
-):
+    config_in: ConvenioConfigCreate
+    ):
     """Create a new convenio configuration (RRHH only)"""
     return await ConvenioService.create(session, config_in, current_user, request.client.host)
 
@@ -49,7 +49,7 @@ async def update_convenio_config(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     id: UUID,
-    config_in: Annotated[ConvenioConfigUpdate, Depends()]
-):
+    config_in: ConvenioConfigUpdate
+    ):
     """Update an existing convenio configuration (RRHH only)"""
     return await ConvenioService.update(session, id, config_in, current_user, request.client.host)

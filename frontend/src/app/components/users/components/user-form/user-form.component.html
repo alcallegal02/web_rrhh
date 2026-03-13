@@ -67,6 +67,10 @@
                     (contractTypeChange)="onContractTypeChange($event)"
                     (expirationDateChange)="onExpirationDateChange($event)">
                 </app-user-contract-info>
+
+                <app-user-permissions-notifications [form]="form()"
+                    (fieldChange)="updateField($event.field, $event.value)">
+                </app-user-permissions-notifications>
             </div>
         </div>
 

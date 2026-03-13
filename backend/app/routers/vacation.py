@@ -79,8 +79,8 @@ async def create_request(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    request_data: Annotated[VacationRequestCreate, Depends()]
-):
+    request_data: VacationRequestCreate
+    ):
     """Create a new vacation request (as draft)"""
     new_request = await create_vacation_request(session, str(current_user.id), request_data, ip_address=request.client.host)
     return _map_request_response(new_request)
@@ -92,8 +92,8 @@ async def update_request(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     request_id: str,
-    request_data: Annotated[VacationRequestCreate, Depends()]
-):
+    request_data: VacationRequestCreate
+    ):
     """Update a vacation request (draft only)"""
     updated_request = await update_vacation_request(session, request_id, request_data, str(current_user.id), ip_address=request.client.host)
     return _map_request_response(updated_request)

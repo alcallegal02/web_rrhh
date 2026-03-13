@@ -86,6 +86,31 @@ async def create_complaint_endpoint(
         if email:
             background_tasks.add_task(send_credentials_email, email, complaint.code, complaint.access_token)
 
+        # 5. Notify Admins/RRHH with notification preference active
+        from app.utils.email import send_complaint_notification
+        from sqlmodel import select, or_, and_
+        
+        # Get users to notify: 
+        # (Is Superadmin OR (Is RRHH AND can_manage_complaints)) AND notif_complaints is True
+        stmt = select(User).where(
+            and_(
+                User.is_active == True,
+                User.notif_complaints == True,
+                or_(
+                    User.role == UserRole.SUPERADMIN.value,
+                    and_(
+                        User.role == UserRole.RRHH.value,
+                        User.can_manage_complaints == True
+                    )
+                )
+            )
+        )
+        result = await session.execute(stmt)
+        users_to_notify = result.scalars().all()
+        
+        for admin_user in users_to_notify:
+            background_tasks.add_task(send_complaint_notification, admin_user.email, complaint.code, complaint.title)
+
         # Broadcast create event
         from app.websocket.manager import websocket_manager
         # Prepare public safe data (Admin view needs it all, public view limited)
@@ -155,17 +180,26 @@ async def get_complaint(
     return ComplaintResponse.model_validate(complaint)
 
 
+def _ensure_complaint_admin(user: User):
+    """Checks if the user has permission to manage complaints (Superadmin or RRHH with permission)"""
+    if user.role_enum == UserRole.SUPERADMIN:
+        return
+    if user.role_enum == UserRole.RRHH and user.can_manage_complaints:
+        return
+    
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="No tienes permiso para gestionar denuncias."
+    )
+
+
 @router.get("/admin/all", response_model=list[ComplaintResponse])
 async def get_all_complaints_endpoint(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
-    """Get all complaints (RRHH/Superadmin only)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH/Superadmin can view all complaints"
-        )
+    """Get all complaints (RRHH with permission/Superadmin only)"""
+    _ensure_complaint_admin(current_user)
     
     complaints = await get_all_complaints(session)
     return [ComplaintResponse.model_validate(c) for c in complaints]
@@ -181,12 +215,8 @@ async def update_status_endpoint(
     admin_notes: str | None = Form(None),
     status_public_description: str | None = Form(None)
 ):
-    """Update complaint status (RRHH/Superadmin only)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH/Superadmin can update complaint status"
-        )
+    """Update complaint status (RRHH with permission/Superadmin only)"""
+    _ensure_complaint_admin(current_user)
     
     # Validate status
     allowed_statuses = [s.value for s in ComplaintStatus]
@@ -235,12 +265,8 @@ async def delete_complaint_endpoint(
     session: Annotated[AsyncSession, Depends(get_session)],
     complaint_id: UUID
 ):
-    """Delete a complaint and all its files (RRHH/Superadmin only)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH/Superadmin can delete complaints"
-        )
+    """Delete a complaint and all its files (RRHH with permission/Superadmin only)"""
+    _ensure_complaint_admin(current_user)
     
     success = await delete_complaint(
         session, 

@@ -1,9 +1,10 @@
 from datetime import datetime
 from enum import Enum
+from typing import List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import ConfigDict
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class ComplaintStatus(str, Enum):
@@ -33,7 +34,7 @@ class ComplaintAttachment(SQLModel, table=True):
     file_original_name: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
-    # complaint: "Complaint" = Relationship(back_populates="attachments")
+    complaint: "Complaint" = Relationship(back_populates="attachments")
 
 
 class Complaint(SQLModel, table=True):
@@ -52,7 +53,7 @@ class Complaint(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
-    # attachments: List["ComplaintAttachment"] = Relationship(back_populates="complaint", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    attachments: List["ComplaintAttachment"] = Relationship(back_populates="complaint", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 
 class ComplaintCreate(SQLModel):

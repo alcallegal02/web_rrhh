@@ -118,6 +118,10 @@ async def create_user(session: AsyncSession, payload: UserCreate, current_user: 
         created_by=current_user.id,
         updated_by=current_user.id,
         parent_id=payload.parent_id,
+        can_manage_complaints=payload.can_manage_complaints,
+        notif_own_requests=payload.notif_own_requests,
+        notif_managed_requests=payload.notif_managed_requests,
+        notif_complaints=payload.notif_complaints,
         # Allowances
         **extract_allowance_fields(payload)
     )
@@ -194,6 +198,10 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
     if payload.department_id is not None: target.department_uuid = payload.department_id
     if payload.position_id is not None: target.position_uuid = payload.position_id
     if payload.parent_id is not None: target.parent_id = payload.parent_id
+    if payload.can_manage_complaints is not None: target.can_manage_complaints = payload.can_manage_complaints
+    if payload.notif_own_requests is not None: target.notif_own_requests = payload.notif_own_requests
+    if payload.notif_managed_requests is not None: target.notif_managed_requests = payload.notif_managed_requests
+    if payload.notif_complaints is not None: target.notif_complaints = payload.notif_complaints
 
     # Photo
     if payload.photo_url is not None:

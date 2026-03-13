@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { NewsService } from '../../services/news.service';
-import { WebSocketService } from '../../services/websocket.service';
+import { WebSocketService, WebSocketMessage } from '../../services/websocket.service';
 import { News } from '../../models/app.models';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { environment } from '../../config/environment';
@@ -57,8 +57,7 @@ export class NewsComponent {
   initialFormData = signal<NewsFormModel | null>(null);
 
   constructor() {
-    this.wsService.messages().forEach((msg: { type: string; data: any }) => {
-      if (msg.type === 'db_update' && msg.data.table === 'news') {
+    this.wsService.messages().forEach((msg: WebSocketMessage) => {      if (msg.type === 'db_update' && msg.data.table === 'news') {
         this.newsListResource.reload();
       }
     });

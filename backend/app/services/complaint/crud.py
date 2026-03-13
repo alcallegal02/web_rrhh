@@ -137,8 +137,9 @@ async def create_complaint(
     await session.commit()
     
     # Reload with attachments
+    from sqlalchemy.orm import selectinload
     result = await session.execute(
-        select(Complaint).where(Complaint.id == complaint.id) # .options(selectinload(Complaint.attachments))
+        select(Complaint).where(Complaint.id == complaint.id).options(selectinload(Complaint.attachments))
     )
     complaint = result.scalar_one()
     
@@ -211,7 +212,15 @@ async def update_complaint_status(
     )
     
     await session.commit()
-    await session.refresh(complaint)
+    
+    # Reload with attachments to avoid Lazy Loading errors in response
+    from sqlalchemy.orm import selectinload
+    result = await session.execute(
+        select(Complaint)
+        .where(Complaint.id == complaint.id)
+        .options(selectinload(Complaint.attachments))
+    )
+    complaint = result.scalar_one()
     
     return complaint
 

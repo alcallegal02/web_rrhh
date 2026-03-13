@@ -39,7 +39,13 @@ export class ComplaintManagementComponent {
   // Computed signal from service
   complaints = computed(() => this.complaintService.complaints());
 
-  selectedComplaint = signal<Complaint | null>(null);
+  selectedComplaintId = signal<string | null>(null);
+  selectedComplaint = computed(() => {
+    const id = this.selectedComplaintId();
+    if (!id) return null;
+    return this.complaints().find(c => c.id === id) || null;
+  });
+
   loading = signal(false);
   submitting = signal(false);
 
@@ -80,7 +86,7 @@ export class ComplaintManagementComponent {
   }
 
   selectComplaint(c: Complaint): void {
-    this.selectedComplaint.set(c);
+    this.selectedComplaintId.set(c.id);
     this.editData = {
       new_status: c.status,
       admin_notes: c.admin_response || '',
@@ -114,7 +120,6 @@ export class ComplaintManagementComponent {
         // selectedComplaint is a separate signal.
         // If we want the detail view to update, we should maybe selecting by ID from the list compute?
         // For now, let's update selectedComplaint manually for immediate feedback or just set it.
-        this.selectedComplaint.set(updated);
         this.submitting.set(false);
         alert('Estado actualizado correctamente');
       },
@@ -137,7 +142,7 @@ export class ComplaintManagementComponent {
       this.complaintService.deleteComplaint(complaint.id).subscribe({
         next: () => {
           alert('Denuncia eliminada correctamente');
-          this.selectedComplaint.set(null);
+          this.selectedComplaintId.set(null);
           // this.loadComplaints(); // WS Handle
           this.submitting.set(false);
         },

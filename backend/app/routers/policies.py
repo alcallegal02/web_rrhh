@@ -84,8 +84,8 @@ async def create_policy(
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
     admin: Annotated[User, Depends(ensure_admin)],
-    policy_data: Annotated[PermissionPolicyCreate, Depends()]
-):
+    policy_data: PermissionPolicyCreate
+    ):
     """Create a new permission policy"""
     # Check slug uniqueness
     existing = await session.execute(select(PermissionPolicy).where(PermissionPolicy.slug == policy_data.slug))
@@ -120,7 +120,7 @@ async def update_policy(
     session: Annotated[AsyncSession, Depends(get_session)],
     admin: Annotated[User, Depends(ensure_admin)],
     policy_id: str,
-    policy_data: Annotated[PermissionPolicyUpdate, Depends()]
+    policy_data: PermissionPolicyUpdate
 ):
     """Update a permission policy"""
     policy = await session.get(PermissionPolicy, UUID(policy_id))

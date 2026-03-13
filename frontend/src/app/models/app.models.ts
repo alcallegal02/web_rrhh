@@ -7,6 +7,10 @@ export interface User {
     created_at?: string;
     updated_at?: string;
     attachments?: any[]; // Using any[] to avoid circular dependency for now, or define UserAttachment
+    can_manage_complaints?: boolean;
+    notif_own_requests?: boolean;
+    notif_managed_requests?: boolean;
+    notif_complaints?: boolean;
 }
 
 export interface NewsAttachment {

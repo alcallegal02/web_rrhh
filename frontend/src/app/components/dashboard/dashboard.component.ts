@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { WebSocketService } from '../../services/websocket.service';
+import { WebSocketService, WebSocketMessage } from '../../services/websocket.service';
 import { NewsService } from '../../services/news.service';
 import { News, VacationRequest } from '../../models/app.models';
 import { VacationService, PolicyBalance } from '../../services/vacation.service';
@@ -92,8 +92,7 @@ export class DashboardComponent {
 
     this.checkLatestNews();
 
-    this.wsService.messages().forEach((msg: { type: string; data: any }) => {
-      if (msg.type === 'vacation_status_change') {
+    this.wsService.messages().forEach((msg: WebSocketMessage) => {      if (msg.type === 'vacation_status_change') {
         this.pendingRequestsResource.reload();
         this.myRequestsResource.reload();
         this.vacationDataResource.reload();

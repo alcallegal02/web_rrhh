@@ -69,6 +69,15 @@ export class StoreService {
             case 'db_update':
                 this.handleDbUpdate(message.data);
                 break;
+            case 'COMPLAINT_CREATED':
+                this.addComplaint(message.data);
+                break;
+            case 'COMPLAINT_UPDATED':
+                this.updateComplaint(message.data);
+                break;
+            case 'COMPLAINT_DELETED':
+                this.removeComplaint(message.id || message.data?.id);
+                break;
             case 'new_news': // Legacy support during migration
             case 'vacation_status_change':
                 // Handle specific legacy events if needed, or map them to generic updates
@@ -103,5 +112,40 @@ export class StoreService {
 
     setComplaints(items: Complaint[]) {
         this._state.update(s => ({ ...s, complaints: { items, lastUpdated: new Date() } }));
+    }
+
+    addComplaint(item: Complaint) {
+        this._state.update(s => {
+            const exists = s.complaints.items.find(i => i.id === item.id);
+            if (exists) return s;
+            return {
+                ...s,
+                complaints: {
+                    items: [item, ...s.complaints.items],
+                    lastUpdated: new Date()
+                }
+            };
+        });
+    }
+
+    updateComplaint(item: Complaint) {
+        this._state.update(s => ({
+            ...s,
+            complaints: {
+                items: s.complaints.items.map(i => i.id === item.id ? item : i),
+                lastUpdated: new Date()
+            }
+        }));
+    }
+
+    removeComplaint(id: string) {
+        if (!id) return;
+        this._state.update(s => ({
+            ...s,
+            complaints: {
+                items: s.complaints.items.filter(i => i.id !== id),
+                lastUpdated: new Date()
+            }
+        }));
     }
 }
