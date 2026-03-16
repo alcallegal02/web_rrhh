@@ -16,7 +16,7 @@ from app.utils.upload_security import check_upload_quota
 
 class UploadService:
     @staticmethod
-    async def send_to_media_service(file: UploadFile, module: str, upload_type: str) -> dict:
+    async def send_to_media_service(file: UploadFile, module: str, upload_type: str, entity_id: str | None = None) -> dict:
         """Proxy execution to the isolated Media Fortress"""
         media_service_url = os.getenv("MEDIA_SERVICE_URL", "http://media:8000")
         url = f"{media_service_url}/upload/file"
@@ -29,6 +29,9 @@ class UploadService:
             async with httpx.AsyncClient() as client:
                 files = {'file': (file.filename, content, file.content_type)}
                 data = {'module': module, 'type': upload_type}
+                if entity_id:
+                    data['entity_id'] = entity_id
+                    
                 response = await client.post(url, files=files, data=data)
                 
                 if response.status_code != 200:
@@ -71,14 +74,24 @@ class UploadService:
         return content, "dat" # Extension handled by media service
 
     @classmethod
-    async def process_upload(cls, session, user_id, ip_address, file: UploadFile, module: str, upload_type: str, anonymous: bool = False):
+    async def process_upload(
+        cls, 
+        session, 
+        user_id, 
+        ip_address, 
+        file: UploadFile, 
+        module: str, 
+        upload_type: str, 
+        entity_id: str | None = None,
+        anonymous: bool = False
+    ):
         """Generic upload processing pipeline"""
         import logging
         import traceback
         logger = logging.getLogger(__name__)
         
         try:
-            logger.info(f"Processing upload: file={file.filename}, module={module}, type={upload_type}")
+            logger.info(f"Processing upload: file={file.filename}, module={module}, type={upload_type}, entity_id={entity_id}")
             
             # 1. Pre-flight Validation & Quota Check
             file.file.seek(0, 2)
@@ -93,7 +106,7 @@ class UploadService:
 
             # 2. Delegate to Media Fortress
             logger.info(f"Delegating {upload_type} to Media Fortress...")
-            result = await cls.send_to_media_service(file, module, upload_type)
+            result = await cls.send_to_media_service(file, module, upload_type, entity_id)
             
             # 3. Audit Logic
             action = "UPLOAD_FILE_ANONYMOUS" if anonymous else "UPLOAD_FILE"
@@ -107,7 +120,8 @@ class UploadService:
                     "type": upload_type,
                     "service": "media-fortress",
                     "hash": result.get('hash'),
-                    "path": result['path']
+                    "path": result['path'],
+                    "entity_id": entity_id
                 },
                 ip_address=ip_address
             )

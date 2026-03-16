@@ -21,7 +21,8 @@ from app.utils.html_sanitizer import sanitize_html
 async def process_and_save_complaint_files(
     files: list[object], # List[UploadFile] really, but typing generic object to avoid dep cycle if needed, though we can import UploadFile under IF TYPE_CHECKING
     session: AsyncSession,
-    client_ip: str
+    client_ip: str,
+    entity_id: str | None = None
 ) -> list[dict]:
     """
     Process, validate, convert (images) and save files for a complaint.
@@ -85,7 +86,8 @@ async def process_and_save_complaint_files(
             content=content,
             filename=original_filename if not is_image else f"{Path(original_filename).stem}.webp",
             module="complaints",
-            file_type="images" if is_image else "documents"
+            file_type="images" if is_image else "documents",
+            entity_id=entity_id
         )
         
         attachments.append({
@@ -257,22 +259,9 @@ async def delete_complaint(
         for att in complaint.attachments
     ]
 
-    # 1. Delete main attachment if exists (deprecated but kept for compatibility)
-    if complaint.file_path:
-        await delete_file_from_disk(complaint.file_path)
-    
-    # 2. Delete new multi-attachments
-    for attachment in complaint.attachments:
-        await delete_file_from_disk(attachment.file_url)
-    
-    # 3. Delete images embedded in description
-    if complaint.description:
-        # Regex to find all /uploads/images/ URLs
-        # Updated regex to match original file logic
-        img_regex = r'src="(/uploads/images/[^"]+)"'
-        images = re.findall(img_regex, complaint.description)
-        for img_url in images:
-            await delete_file_from_disk(img_url)
+    # Delete the entire folder containing all media for this complaint
+    from app.utils.file_ops import delete_entity_folders
+    await delete_entity_folders("complaints", str(complaint_id))
     
     # 3. Delete status logs (manual deletion since we don't have cascade on DB)
     await session.execute(

@@ -189,6 +189,7 @@ class User(SQLModel, table=True):
     notif_own_requests: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
     notif_managed_requests: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
     notif_complaints: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
+    notif_news: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
     
     @property
     def role_enum(self) -> UserRole:
@@ -204,6 +205,7 @@ class User(SQLModel, table=True):
 
 
 class UserCreate(SQLModel):
+    id: UUID | None = None
     username: str
     email: str
     password: str
@@ -244,6 +246,7 @@ class UserCreate(SQLModel):
     notif_own_requests: bool = True
     notif_managed_requests: bool = True
     notif_complaints: bool = True
+    notif_news: bool = True
 
 
 class UserUpdate(SQLModel):
@@ -289,6 +292,7 @@ class UserUpdate(SQLModel):
     notif_own_requests: bool | None = None
     notif_managed_requests: bool | None = None
     notif_complaints: bool | None = None
+    notif_news: bool | None = None
 
 
 class UserLogin(SQLModel):
@@ -352,6 +356,7 @@ class UserResponse(SQLModel):
     notif_own_requests: bool = True
     notif_managed_requests: bool = True
     notif_complaints: bool = True
+    notif_news: bool = True
 
 
 class Token(SQLModel):

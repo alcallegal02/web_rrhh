@@ -11,6 +11,7 @@ from .common import get_available_responsibles_for_user
 from .labor import calculate_user_labor_rights, recalculate_all_users_labor_rights
 from .request import (
     create_vacation_request,
+    delete_vacation_request,
     get_user_vacation_requests,
     submit_vacation_request,
     update_vacation_request,

@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     BRUTE_FORCE_REDIRECT_URL: str = "https://www.inespasa.com/"
     
     # File uploads
-    UPLOAD_DIR: str = "/uploads"
+    UPLOAD_DIR: str = "/media_data"
     
     # Upload size limits (in MB, converted to bytes)
     # These defaults are overridden by environment variables (MAX_IMAGE_SIZE_MB, etc.)

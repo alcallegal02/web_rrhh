@@ -1,6 +1,7 @@
-import { Component, input, output, signal, inject, effect, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, input, output, signal, inject, effect, viewChild, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-text-editor.component';
@@ -11,7 +12,8 @@ import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
     lucidePencil, lucideImage, lucideChevronDown, lucideFolderOpen,
     lucidePaperclip, lucideFileText, lucideX, lucideLoader2,
-    lucideTriangleAlert, lucideCheck, lucideHelpCircle
+    lucideTriangleAlert, lucideCheck, lucideHelpCircle, lucideTrash2, lucidePlus,
+    lucideSend, lucideArchive, lucideFileEdit
 } from '@ng-icons/lucide';
 
 export interface NewsFormModel {
@@ -19,21 +21,24 @@ export interface NewsFormModel {
     title: string;
     summary: string;
     content: string;
-    cover_image_url: string;
+    cover_image_url: string | null;
     status: 'borrador' | 'publicada' | 'archivada';
     publish_date: string;
     attachments: { file_url: string; file_original_name: string }[];
+    carousel_images: { id?: string; file_url: string; order: number }[];
 }
 
 @Component({
     selector: 'app-news-form',
-    imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIconComponent],
+    imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIconComponent, DragDropModule],
     templateUrl: './news-form.component.html',
+    styleUrl: './news-form.component.scss',
     providers: [
         provideIcons({
             lucidePencil, lucideImage, lucideChevronDown, lucideFolderOpen,
             lucidePaperclip, lucideFileText, lucideX, lucideLoader2,
-            lucideTriangleAlert, lucideCheck, lucideHelpCircle
+            lucideTriangleAlert, lucideCheck, lucideHelpCircle, lucideTrash2, lucidePlus,
+            lucideSend, lucideArchive, lucideFileEdit
         })
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -55,19 +60,31 @@ export class NewsFormComponent {
         title: '',
         summary: '',
         content: '',
-        cover_image_url: '',
+        cover_image_url: null,
         status: 'borrador',
         publish_date: '',
-        attachments: []
+        attachments: [],
+        carousel_images: []
     });
+
+    // Dropdown States
+    statusDropdownOpen = signal(false);
 
     // Upload State
     uploading = signal(false);
     uploadError = signal('');
 
+
+
+    // Generate a temporary ID for new news to keep files organized in their own folder
+    private tempId = window.crypto?.randomUUID?.() || `new-${Date.now()}`;
+    effectiveFolderId = computed(() => this.form().id || this.tempId);
+
     pendingAttachments = signal<{ file: File, url: string }[]>([]);
     pendingCoverImage = signal<File | null>(null);
     coverImagePreview = signal<string | null>(null);
+
+    pendingCarouselImages = signal<{ file: File, preview: string }[]>([]);
 
     totalUploadSize = signal(0);
     embeddedImagesSize = signal(0);
@@ -97,28 +114,32 @@ export class NewsFormComponent {
                 this.form.set({ ...init });
             } else {
                 this.form.set({
+                    id: this.tempId,
                     title: '',
                     summary: '',
                     content: '',
-                    cover_image_url: '',
+                    cover_image_url: null,
                     status: 'borrador',
                     publish_date: '',
-                    attachments: []
+                    attachments: [],
+                    carousel_images: []
                 });
             }
 
             // Reset buffers
             this.pendingAttachments.set([]);
+            this.pendingCarouselImages.set([]);
             this.pendingCoverImage.set(null);
             this.coverImagePreview.set(null);
             this.totalUploadSize.set(0);
             this.uploadError.set('');
             this.uploading.set(false);
+            this.statusDropdownOpen.set(false);
         });
     }
 
     // File Helpers
-    getFileUrl(path: string | undefined): string {
+    getFileUrl(path: string | null | undefined): string {
         if (!path) return '';
         if (path.startsWith('http')) return path;
         return `${environment.apiUrl.replace('/api', '')}${path}`;
@@ -139,6 +160,16 @@ export class NewsFormComponent {
         return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
     }
 
+    // Status methods
+    toggleStatusDropdown(): void {
+        this.statusDropdownOpen.update(v => !v);
+    }
+
+    selectStatus(status: 'borrador' | 'publicada' | 'archivada'): void {
+        this.updateField('status', status);
+        this.statusDropdownOpen.set(false);
+    }
+
     // Cover Image
     onCoverSelected(event: Event): void {
         const input = event.target as HTMLInputElement;
@@ -157,6 +188,125 @@ export class NewsFormComponent {
             this.coverImagePreview.set(reader.result as string);
         };
         reader.readAsDataURL(file);
+    }
+
+    removeCoverImage(event: Event): void {
+        event.stopPropagation();
+        this.pendingCoverImage.set(null);
+        this.coverImagePreview.set(null);
+        this.updateField('cover_image_url', null);
+    }
+
+    // Carousel Images
+    onCarouselSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        if (!input.files?.length) return;
+
+        this.uploadError.set('');
+        const files = Array.from(input.files);
+
+        for (const file of files) {
+            if (file.size > this.configService.maxImageSizeBytes) {
+                this.uploadError.set(`Una de las imágenes del carrusel supera los ${this.configService.limits().maxImageSizeMB}MB`);
+                continue;
+            }
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                this.pendingCarouselImages.update(current => [
+                    ...current,
+                    { file, preview: reader.result as string }
+                ]);
+            };
+            reader.readAsDataURL(file);
+        }
+        input.value = '';
+    }
+
+  // TODO:
+  // - [x] Implement News Image Carousel (User Request)
+  //   - [x] Backend: Add NewsCarouselImage model and relationships
+  //   - [x] Backend: Update CRUD and Query services
+  //   - [x] Frontend: Create ImageCarouselComponent
+  //   - [x] Frontend: Manage carousel in NewsForm (Add/Remove/Reorder)
+  //       - [x] Manual reordering with arrows
+  //       - [x] Drag and Drop reordering with Angular CDK
+  //   - [x] Fix persistence and reload issues
+
+    removeExistingCarousel(index: number): void {
+        this.form.update(f => {
+            const updated = [...f.carousel_images];
+            updated.splice(index, 1);
+            // Re-order remaining images
+            updated.forEach((img, i) => img.order = i);
+            return { ...f, carousel_images: updated };
+        });
+    }
+
+    removePendingCarousel(index: number): void {
+        this.pendingCarouselImages.update(current => {
+            const updated = [...current];
+            updated.splice(index, 1);
+            return updated;
+        });
+    }
+
+    moveCarouselImage(index: number, direction: 'up' | 'down', isPending: boolean): void {
+        if (isPending) {
+            this.pendingCarouselImages.update(current => {
+                const updated = [...current];
+                const targetIdx = direction === 'up' ? index - 1 : index + 1;
+                if (targetIdx >= 0 && targetIdx < updated.length) {
+                    [updated[index], updated[targetIdx]] = [updated[targetIdx], updated[index]];
+                }
+                return updated;
+            });
+        } else {
+            this.form.update(f => {
+                const updated = [...f.carousel_images];
+                const targetIdx = direction === 'up' ? index - 1 : index + 1;
+                if (targetIdx >= 0 && targetIdx < updated.length) {
+                    [updated[index], updated[targetIdx]] = [updated[targetIdx], updated[index]];
+                    // Correct orders
+                    updated.forEach((img, i) => img.order = i);
+                }
+                return { ...f, carousel_images: updated };
+            });
+        }
+    }
+
+    dropExistingCarousel(event: CdkDragDrop<any[]>): void {
+        const { previousIndex, currentIndex } = event;
+        if (previousIndex === currentIndex) return;
+        
+        this.form.update(f => {
+            // Create deep copy of the array and objects for immutability
+            const updated = f.carousel_images.map(img => ({ ...img }));
+            
+            // Perform explicit swap
+            const temp = updated[previousIndex];
+            updated[previousIndex] = updated[currentIndex];
+            updated[currentIndex] = temp;
+            
+            // Re-order weights/orders for consistency
+            updated.forEach((img, i) => img.order = i);
+            
+            return { ...f, carousel_images: updated };
+        });
+    }
+
+    dropPendingCarousel(event: CdkDragDrop<any[]>): void {
+        const { previousIndex, currentIndex } = event;
+        if (previousIndex === currentIndex) return;
+        
+        this.pendingCarouselImages.update(current => {
+            const updated = [...current];
+            // Perform explicit swap
+            const temp = updated[previousIndex];
+            updated[previousIndex] = updated[currentIndex];
+            updated[currentIndex] = temp;
+            return updated;
+        });
     }
 
     // Attachments
@@ -249,8 +399,10 @@ export class NewsFormComponent {
             if (coverFile) {
                 const formData = new FormData();
                 formData.append('file', coverFile);
+                formData.append('module', 'news');
+                formData.append('entity_id', this.effectiveFolderId());
                 const res = await firstValueFrom(
-                    this.http.post<{ url: string }>(`${environment.apiUrl}/upload/image?module=news`, formData)
+                    this.http.post<{ url: string }>(`${environment.apiUrl}/upload/image`, formData)
                 );
                 this.updateField('cover_image_url', res.url);
             }
@@ -261,9 +413,11 @@ export class NewsFormComponent {
             for (const item of filesToUpload) {
                 const formData = new FormData();
                 formData.append('file', item.file);
+                formData.append('module', 'news');
+                formData.append('entity_id', this.effectiveFolderId());
                 const res = await firstValueFrom(
                     this.http.post<{ url: string, filename: string, original_filename: string }>(
-                        `${environment.apiUrl}/upload/document?module=news`,
+                        `${environment.apiUrl}/upload/document`,
                         formData
                     )
                 );
@@ -279,22 +433,52 @@ export class NewsFormComponent {
                 attachments: [...(f.attachments || []), ...newAttachments]
             }));
 
+            // Upload Carousel Images
+            const carouselToUpload = this.pendingCarouselImages();
+            const newCarouselImages: { file_url: string; order: number }[] = [];
+            
+            // Current highest order
+            let currentOrder = this.form().carousel_images?.length || 0;
+
+            for (const item of carouselToUpload) {
+                const formData = new FormData();
+                formData.append('file', item.file);
+                formData.append('module', 'news');
+                formData.append('entity_id', this.effectiveFolderId());
+                const res = await firstValueFrom(
+                    this.http.post<{ url: string }>(`${environment.apiUrl}/upload/image`, formData)
+                );
+                newCarouselImages.push({
+                    file_url: res.url,
+                    order: currentOrder++
+                });
+            }
+
+            this.form.update(f => ({
+                ...f,
+                carousel_images: [...(f.carousel_images || []), ...newCarouselImages]
+            }));
+
 
             this.save.emit(this.form());
             this.uploading.set(false);
 
-            // Si es una creación (no hay id), limpiamos el formulario manualmente
-            if (!this.form().id) {
+            // Si es una creación (no hay initialData), limpiamos el formulario manualmente
+            if (!this.initialData()) {
+                this.tempId = window.crypto?.randomUUID?.() || `new-${Date.now()}`;
                 this.form.set({
+                    id: this.tempId,
                     title: '',
                     summary: '',
                     content: '',
-                    cover_image_url: '',
+                    cover_image_url: null,
                     status: 'borrador',
                     publish_date: '',
-                    attachments: []
+                    attachments: [],
+                    carousel_images: []
                 });
                 this.pendingAttachments.set([]);
+                this.pendingCarouselImages.set([]);
                 this.pendingCoverImage.set(null);
                 this.coverImagePreview.set(null);
                 this.totalUploadSize.set(0);

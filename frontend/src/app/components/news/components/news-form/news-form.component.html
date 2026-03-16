@@ -49,25 +49,36 @@
                         </div>
                     </div>
                 </label>
-                <div class="relative group min-h-[60px]">
-                    <input type="file" (change)="onCoverSelected($event)" accept="image/*"
-                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
-                    <div
-                        class="w-full h-full flex items-center justify-between px-4 py-2 bg-gray-50 border border-dashed border-gray-200 rounded-2xl group-hover:bg-white group-hover:border-inespasa-light/50 transition-all">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <span class="text-gray-400 text-lg flex-none"><ng-icon name="lucideImage"></ng-icon></span>
-                            <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest truncate">
-                                {{ pendingCoverImage()?.name || 'Subir portada' }}
-                            </span>
+                
+                <div class="relative group aspect-video rounded-3xl overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50 hover:border-[#3C65AB]/50 hover:bg-gray-100/50 transition-all duration-500">
+                    
+                    @if (coverImagePreview() || form().cover_image_url) {
+                        <!-- Image Preview -->
+                        <img [src]="coverImagePreview() || getFileUrl(form().cover_image_url)" 
+                             class="w-full h-full object-cover">
+                        
+                        <!-- Overlay on hover -->
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-sm">
+                            <div class="relative cursor-pointer bg-white text-gray-900 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl flex items-center gap-2 hover:scale-105 transition-transform">
+                                <ng-icon name="lucideImage"></ng-icon>
+                                Cambiar Foto
+                                <input type="file" (change)="onCoverSelected($event)" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                            </div>
+                            <button type="button" (click)="removeCoverImage($event)" class="bg-red-500 text-white p-2 rounded-xl hover:bg-red-600 hover:scale-110 transition-all shadow-xl">
+                                <ng-icon name="lucideTrash2"></ng-icon>
+                            </button>
                         </div>
-                        @if (coverImagePreview() || form().cover_image_url) {
-                        <div
-                            class="w-10 h-10 rounded-xl overflow-hidden border-2 border-white shadow-sm flex-none ml-2">
-                            <img [src]="coverImagePreview() || getFileUrl(form().cover_image_url)"
-                                class="w-full h-full object-cover">
-                        </div>
-                        }
-                    </div>
+                    } @else {
+                        <!-- Empty State -->
+                        <label class="absolute inset-0 flex flex-col items-center justify-center cursor-pointer p-6 text-center">
+                            <input type="file" (change)="onCoverSelected($event)" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                            <div class="h-12 w-12 rounded-2xl bg-white text-gray-300 flex items-center justify-center shadow-sm group-hover:scale-110 group-hover:text-[#3C65AB] transition-all mb-3">
+                                <ng-icon name="lucideImage" class="text-2xl"></ng-icon>
+                            </div>
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] group-hover:text-gray-600 transition-colors">Subir Imagen de Portada</span>
+                            <span class="text-[9px] text-gray-300 mt-1">Recomendado: 1200x630px</span>
+                        </label>
+                    }
                 </div>
             </div>
         </div>
@@ -100,7 +111,7 @@
                 <app-rich-text-editor [ngModel]="form().content" (ngModelChange)="updateField('content', $event)"
                     name="content" [quillModules]="quillModules" [height]="'450px'"
                     [placeholder]="'Empieza a escribir aquí...'" (contentChange)="onEditorContentChange($event)"
-                    [module]="'news'" required></app-rich-text-editor>
+                    [module]="'news'" [entityId]="effectiveFolderId()" required></app-rich-text-editor>
             </div>
         </div>
 
@@ -119,17 +130,82 @@
                         </div>
                     </div>
                 </label>
+                
                 <div class="relative">
-                    <select [ngModel]="form().status" (ngModelChange)="updateField('status', $event)" name="status"
-                        required
-                        class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-800 appearance-none focus:bg-white focus:ring-4 focus:ring-inespasa-light/10 focus:border-inespasa-light/50 transition-all outline-none">
-                        <option value="borrador">Borrador (Solo tú lo verás)</option>
-                        <option value="publicada">Publicada (Visible para todos)</option>
-                        <option value="archivada">Archivada (Oculta del tablón)</option>
-                    </select>
-                    <div class="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
-                        <ng-icon name="lucideChevronDown"></ng-icon>
+                    <!-- Custom Select Button -->
+                    <button type="button" (click)="toggleStatusDropdown()"
+                        class="w-full flex items-center justify-between px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-bold text-gray-800 hover:bg-white hover:ring-4 hover:ring-inespasa-light/10 hover:border-[#3C65AB]/30 transition-all outline-none">
+                        
+                        <div class="flex items-center gap-3">
+                            <div class="h-8 w-8 rounded-xl flex items-center justify-center border"
+                                [class]="form().status === 'publicada' ? 'bg-emerald-50 text-emerald-500 border-emerald-100' : 
+                                         form().status === 'borrador' ? 'bg-gray-100 text-gray-400 border-gray-200' : 
+                                         'bg-amber-50 text-amber-500 border-amber-100'">
+                                <ng-icon [name]="form().status === 'publicada' ? 'lucideSend' : 
+                                               form().status === 'borrador' ? 'lucideFileEdit' : 
+                                               'lucideArchive'"></ng-icon>
+                            </div>
+                            <span class="capitalize">{{ form().status }}</span>
+                        </div>
+                        
+                        <ng-icon name="lucideChevronDown" 
+                                 class="text-gray-300 transition-transform duration-300"
+                                 [class.rotate-180]="statusDropdownOpen()"></ng-icon>
+                    </button>
+
+                    <!-- Custom Dropdown Options -->
+                    @if (statusDropdownOpen()) {
+                    <div class="absolute top-full left-0 w-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2.5 z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                        
+                        <!-- Option Borrador -->
+                        <button type="button" (click)="selectStatus('borrador')"
+                            class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group/opt">
+                            <div class="h-10 w-10 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center border border-transparent group-hover/opt:border-gray-200 group-hover/opt:bg-white transition-all">
+                                <ng-icon name="lucideFileEdit"></ng-icon>
+                            </div>
+                            <div class="flex flex-col text-left">
+                                <span class="text-[11px] font-black uppercase tracking-widest text-gray-600">Borrador</span>
+                                <span class="text-[9px] text-gray-400 font-medium">Solo tú podrás ver y editar esta noticia</span>
+                            </div>
+                            @if (form().status === 'borrador') {
+                                <ng-icon name="lucideCheck" class="ml-auto text-emerald-500"></ng-icon>
+                            }
+                        </button>
+
+                        <!-- Option Publicada -->
+                        <button type="button" (click)="selectStatus('publicada')"
+                            class="w-full flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 transition-colors group/opt">
+                            <div class="h-10 w-10 rounded-xl bg-emerald-50 text-emerald-500 flex items-center justify-center border border-transparent group-hover/opt:border-emerald-200 group-hover/opt:bg-white transition-all">
+                                <ng-icon name="lucideSend"></ng-icon>
+                            </div>
+                            <div class="flex flex-col text-left">
+                                <span class="text-[11px] font-black uppercase tracking-widest text-emerald-600">Publicar</span>
+                                <span class="text-[9px] text-emerald-400 font-medium">Visible para todos los empleados del tablón</span>
+                            </div>
+                            @if (form().status === 'publicada') {
+                                <ng-icon name="lucideCheck" class="ml-auto text-emerald-500"></ng-icon>
+                            }
+                        </button>
+
+                        <!-- Option Archivada -->
+                        <button type="button" (click)="selectStatus('archivada')"
+                            class="w-full flex items-center gap-3 px-4 py-3 hover:bg-amber-50 transition-colors group/opt">
+                            <div class="h-10 w-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center border border-transparent group-hover/opt:border-amber-200 group-hover/opt:bg-white transition-all">
+                                <ng-icon name="lucideArchive"></ng-icon>
+                            </div>
+                            <div class="flex flex-col text-left">
+                                <span class="text-[11px] font-black uppercase tracking-widest text-amber-600">Archivar</span>
+                                <span class="text-[9px] text-amber-400 font-medium">Ocultar del tablón pero mantener el registro</span>
+                            </div>
+                            @if (form().status === 'archivada') {
+                                <ng-icon name="lucideCheck" class="ml-auto text-emerald-500"></ng-icon>
+                            }
+                        </button>
                     </div>
+
+                    <!-- Overlay to close on click outside -->
+                    <div class="fixed inset-0 z-[90]" (click)="statusDropdownOpen.set(false)"></div>
+                    }
                 </div>
             </div>
             <div class="space-y-3">
@@ -152,6 +228,81 @@
             </div>
         </div>
 
+        <!-- Carousel Gallery Section -->
+        <div class="bg-blue-50/30 rounded-[2.5rem] p-8 md:p-10 border border-blue-100/50 space-y-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-[#3C65AB] text-lg"><ng-icon name="lucideImage"></ng-icon></span>
+                    <label class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-900">Galería del Carrusel (Opcional)</label>
+                    <div class="group relative flex items-center">
+                        <ng-icon name="lucideHelpCircle"
+                            class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help ml-2"></ng-icon>
+                        <div
+                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                            Estas imágenes aparecerán en un carrusel dinámico en la noticia.
+                        </div>
+                    </div>
+                </div>
+                <label class="relative cursor-pointer bg-white text-inespasa px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:shadow-md border border-inespasa/10 flex items-center gap-2 hover:scale-105 transition-all">
+                    <ng-icon name="lucidePlus"></ng-icon>
+                    Añadir Imágenes
+                    <input type="file" (change)="onCarouselSelected($event)" multiple accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                </label>
+            </div>
+
+            <!-- Grid of images -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                 cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="dropExistingCarousel($event)">
+                <!-- Existing Carousel Images -->
+                @for (img of form().carousel_images; track img.file_url) {
+                <div class="relative group aspect-square rounded-2xl overflow-hidden border border-gray-100 bg-white shadow-sm"
+                     cdkDrag>
+                    <img [src]="getFileUrl(img.file_url)" class="w-full h-full object-cover">
+
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px] flex items-start justify-end p-2">
+                        <button type="button" (click)="removeExistingCarousel($index)" 
+                            class="p-1.5 bg-white/20 hover:bg-red-500 text-white rounded-xl transition-all hover:scale-110 backdrop-blur-md border border-white/20">
+                            <ng-icon name="lucideX" class="text-xs"></ng-icon>
+                        </button>
+                    </div>
+                    <div class="absolute top-2 left-2 px-2 py-0.5 bg-black/50 backdrop-blur-md rounded-md text-[8px] font-black text-white uppercase tracking-tighter">
+                        #{{ $index + 1 }}
+                    </div>
+                </div>
+                }
+            </div>
+
+            <!-- Grid of images (Pending) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                 cdkDropList cdkDropListOrientation="horizontal" (cdkDropListDropped)="dropPendingCarousel($event)">
+                <!-- Pending Carousel Images -->
+                @for (item of pendingCarouselImages(); track item.preview) {
+                <div class="relative group aspect-square rounded-2xl overflow-hidden border-2 border-dashed border-inespasa/30 bg-inespasa/5 animate-in zoom-in-95 duration-300"
+                     cdkDrag>
+                    <img [src]="item.preview" class="w-full h-full object-cover">
+
+                    <div class="absolute inset-0 bg-inespasa/40 opacity-0 group-hover:opacity-100 transition-all backdrop-blur-[1px] flex items-start justify-end p-2">
+                        <button type="button" (click)="removePendingCarousel($index)" 
+                            class="p-1.5 bg-white/20 hover:bg-red-500 text-white rounded-xl transition-all hover:scale-110 backdrop-blur-md border border-white/20">
+                            <ng-icon name="lucideX" class="text-xs"></ng-icon>
+                        </button>
+                    </div>
+                    <div class="absolute top-2 left-2 px-2 py-0.5 bg-inespasa/80 backdrop-blur-md rounded-md text-[8px] font-black text-white uppercase tracking-tighter shadow-lg">
+                        NUEVA #{{ form().carousel_images.length + $index + 1 }}
+                    </div>
+                </div>
+                }
+
+                <!-- Empty State within Grid -->
+                @if (form().carousel_images.length === 0 && pendingCarouselImages().length === 0) {
+                <div class="col-span-full py-8 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-2xl bg-white/50">
+                    <ng-icon name="lucideImage" class="text-3xl text-gray-200 mb-2"></ng-icon>
+                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Sin imágenes en el carrusel</p>
+                </div>
+                }
+            </div>
+        </div>
+
         <!-- File Upload Section -->
         <div class="bg-gray-50 rounded-[2.5rem] p-8 md:p-10 border border-gray-100 space-y-6">
             <div class="flex items-center justify-between">
@@ -164,7 +315,10 @@
                             class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help ml-2"></ng-icon>
                         <div
                             class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
-                            Archivos descargables que los empleados podrán abrir junto con la noticia.
+                       - **Garantía de Eliminación de Archivos**: Al eliminar una imagen del carrusel en el formulario, se borra físicamente del disco del servidor al guardar la noticia.
+- **Visibilidad de Borradores**: Corregido el error donde RRHH/Superadmin no veían borradores en la página principal de noticias.
+- **Rediseño de Filtros (Usuarios)**: Implementada una barra superior compacta para los filtros de fecha en la vista de empleados, optimizando el espacio y mejorando la estética.
+- **Corrección de Iconos**: Solucionado el problema de los iconos que no cargaban en la vista de noticias.
                         </div>
                     </div>
                 </div>

@@ -58,15 +58,18 @@ export class UserFormComponent {
     // Outputs
     save = output<UserFormModel>();
     cancel = output<void>();
-    uploadPhoto = output<File>();
-    uploadAttachments = output<File[]>();
+    uploadPhoto = output<{ file: File, entityId: string | null }>();
+    uploadAttachments = output<{ files: File[], entityId: string | null }>();
     removeAttachment = output<number>();
     activate = output<void>();
     deactivate = output<void>();
     delete = output<void>();
+    
+    private tempId = window.crypto?.randomUUID?.() || `new-user-${Date.now()}`;
 
     // Local State
     form = signal<UserFormModel>({
+        id: undefined,
         username: '',
         email: '',
         first_name: '',
@@ -82,7 +85,8 @@ export class UserFormComponent {
         can_manage_complaints: false,
         notif_own_requests: true,
         notif_managed_requests: true,
-        notif_complaints: true
+        notif_complaints: true,
+        notif_news: true
     } as UserFormModel);
 
     previewProfilePicUrl = signal<string | null>(null);
@@ -145,7 +149,13 @@ export class UserFormComponent {
 
     constructor() {
         effect(() => {
-            this.form.set({ ...this.initialForm() });
+            const init = this.initialForm();
+            if (init && init.id) {
+                this.form.set({ ...init });
+            } else {
+                this.form.set({ ...init, id: undefined });
+            }
+            
             if (this.initialForm().contract_expiration_date) {
                 this.contractType.set('temporary');
             } else {
@@ -195,7 +205,7 @@ export class UserFormComponent {
         const input = event.target as HTMLInputElement;
         if (input.files && input.files[0]) {
             const file = input.files[0];
-            this.uploadPhoto.emit(file);
+            this.uploadPhoto.emit({ file, entityId: this.form().id || this.tempId });
 
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -210,7 +220,7 @@ export class UserFormComponent {
         const input = event.target as HTMLInputElement;
         if (input.files && input.files.length > 0) {
             const files = Array.from(input.files);
-            this.uploadAttachments.emit(files);
+            this.uploadAttachments.emit({ files, entityId: this.form().id || this.tempId });
         }
     }
 

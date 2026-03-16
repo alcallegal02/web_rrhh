@@ -116,18 +116,23 @@ export class UserService {
         return this.http.delete<void>(`${this.apiUrl}/${id}`);
     }
 
-    uploadImage(file: File): Observable<{ url: string }> {
+    uploadImage(file: File, entityId?: string | null): Observable<{ url: string }> {
         const formData = new FormData();
         formData.append('file', file);
-        return this.http.post<{ url: string }>(`${environment.apiUrl}/upload/image?module=users`, formData);
+        formData.append('module', 'users');
+        if (entityId) {
+            formData.append('entity_id', entityId);
+        }
+        return this.http.post<{ url: string }>(`${this.apiUrl}/upload/image`, formData);
     }
 
-    uploadDocument(file: File): Observable<{ url: string, filename: string, original_filename: string }> {
+    uploadDocument(file: File, entityId?: string | null): Observable<{ url: string, filename: string, original_filename: string }> {
         const formData = new FormData();
         formData.append('file', file);
-        return this.http.post<{ url: string, filename: string, original_filename: string }>(
-            `${environment.apiUrl}/upload/document?module=users`,
-            formData
-        );
+        formData.append('module', 'users');
+        if (entityId) {
+            formData.append('entity_id', entityId);
+        }
+        return this.http.post<{ url: string, filename: string, original_filename: string }>(`${this.apiUrl}/upload/document`, formData);
     }
 }

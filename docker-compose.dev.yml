@@ -88,7 +88,7 @@ services:
     container_name: ${COMPOSE_PROJECT_NAME:-web_rrhh}_media_dev
     volumes:
       - ./media_service:/app
-      - ./media_data_dev:/media_data
+      - ./media_data:/media_data
     networks:
       - data_net
     # Security Hardening
@@ -148,8 +148,10 @@ services:
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
+      UPLOAD_DIR: /media_data
     volumes:
       - ./backend:/app
+      - ./media_data:/media_data
       - ${BACKEND_VOLUME_EXCLUDE:-/app/__pycache__}
     ports:
       - "${BACKEND_PORT:-8000}:${BACKEND_PORT:-8000}"
@@ -218,7 +220,7 @@ services:
     volumes:
       - ./nginx/nginx.conf.dev:/etc/nginx/nginx.conf:ro
       - ./nginx/error_pages:/usr/share/nginx/error_pages:ro
-      - ./media_data_dev:/media:ro
+      - ./media_data:/media:ro
     ports:
       - "${HTTP_PORT:-80}:80"
     depends_on:
@@ -261,7 +263,7 @@ services:
       BACKUP_KEEP_DAYS: 3
     volumes:
       - ./backups_dev:/backups
-      - ./media_data_dev:/media:ro
+      - ./media_data:/media:ro
       - ./scripts/backup.sh:/usr/local/bin/backup.sh
     networks:
       - data_net

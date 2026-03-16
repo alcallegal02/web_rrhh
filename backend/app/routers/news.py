@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Annotated
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status, BackgroundTasks
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +31,7 @@ async def create_news_item(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    background_tasks: BackgroundTasks,
     news_data: NewsCreate
 ):
     """Create a new news item (RRHH/admin/superadmin)"""
@@ -40,7 +41,7 @@ async def create_news_item(
             detail="Only RRHH/superadmin can create news"
         )
     
-    news = await create_news(session, str(current_user.id), news_data, ip_address=request.client.host)
+    news = await create_news(session, str(current_user.id), news_data, background_tasks=background_tasks, ip_address=request.client.host)
     return NewsResponse.model_validate(news)
 
 
@@ -86,6 +87,7 @@ async def update_news_status_endpoint(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    background_tasks: BackgroundTasks,
     news_id: str,
     new_status: Annotated[str, Query(description="New status: borrador, publicada, archivada")]
 ):
@@ -102,7 +104,7 @@ async def update_news_status_endpoint(
             detail="Invalid status. Must be one of: borrador, publicada, archivada"
         )
     
-    news = await update_news_status(session, news_id, new_status, user_id=str(current_user.id), ip_address=request.client.host)
+    news = await update_news_status(session, news_id, new_status, user_id=str(current_user.id), background_tasks=background_tasks, ip_address=request.client.host)
     if not news:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -142,6 +144,7 @@ async def update_news_item(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
+    background_tasks: BackgroundTasks,
     news_id: str,
     news_data: NewsUpdate
 ):
@@ -159,7 +162,7 @@ async def update_news_item(
     # Convert Pydantic model to dict, excluding None values
     update_data = news_data.model_dump(exclude_unset=True)
     
-    news = await update_news(session, news_id, update_data, str(current_user.id), ip_address=request.client.host)
+    news = await update_news(session, news_id, update_data, str(current_user.id), background_tasks=background_tasks, ip_address=request.client.host)
     
     if not news:
         raise HTTPException(

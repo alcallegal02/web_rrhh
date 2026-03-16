@@ -104,7 +104,7 @@ async def create_user(session: AsyncSession, payload: UserCreate, current_user: 
 
     password_hash = get_password_hash(payload.password)
 
-    user = User(
+    user_kwargs = dict(
         email=payload.email,
         username=payload.username,
         password_hash=password_hash,
@@ -122,9 +122,14 @@ async def create_user(session: AsyncSession, payload: UserCreate, current_user: 
         notif_own_requests=payload.notif_own_requests,
         notif_managed_requests=payload.notif_managed_requests,
         notif_complaints=payload.notif_complaints,
+        notif_news=payload.notif_news,
         # Allowances
         **extract_allowance_fields(payload)
     )
+    if payload.id:
+        user_kwargs["id"] = payload.id
+
+    user = User(**user_kwargs)
 
     session.add(user)
     await session.flush() # Generate ID without committing
@@ -202,6 +207,7 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
     if payload.notif_own_requests is not None: target.notif_own_requests = payload.notif_own_requests
     if payload.notif_managed_requests is not None: target.notif_managed_requests = payload.notif_managed_requests
     if payload.notif_complaints is not None: target.notif_complaints = payload.notif_complaints
+    if payload.notif_news is not None: target.notif_news = payload.notif_news
 
     # Photo
     if payload.photo_url is not None:
@@ -302,10 +308,9 @@ async def delete_user(session: AsyncSession, user_id: str, current_user: User, i
     if snapshot.get('updated_at'):
         snapshot['updated_at'] = snapshot['updated_at'].isoformat()
 
-    # Cleanup Files
-    if target.photo_url: await delete_file_from_disk(target.photo_url)
-    for att in target.attachments:
-        await delete_file_from_disk(att.file_url)
+    # Cleanup Files (Entire folder)
+    from app.utils.file_ops import delete_entity_folders
+    await delete_entity_folders("users", str(user_uuid))
 
     await session.delete(target)
     

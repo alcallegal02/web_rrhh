@@ -98,15 +98,6 @@
             }
         </a>
 
-        <a routerLink="/audit" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
-            (click)="close()"
-            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
-            <ng-icon name="lucideShieldCheck"
-                class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
-            @if (!isCollapsed()) {
-            <span class="whitespace-nowrap">Auditoría</span>
-            }
-        </a>
 
         <a routerLink="/calendar-config" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
@@ -132,7 +123,17 @@
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
             <ng-icon name="lucideSettings" class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
             @if (!isCollapsed()) {
-            <span class="whitespace-nowrap">Configuración</span>
+            <span class="whitespace-nowrap">Tipos de Ausencia</span>
+            }
+        </a>
+
+        <a routerLink="/audit" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
+            (click)="close()"
+            class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
+            <ng-icon name="lucideShieldCheck"
+                class="mr-3 text-xl opacity-80 group-hover:opacity-100 flex-none"></ng-icon>
+            @if (!isCollapsed()) {
+            <span class="whitespace-nowrap">Auditoría</span>
             }
         </a>
         }

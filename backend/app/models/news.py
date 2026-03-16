@@ -21,6 +21,13 @@ class NewsAttachmentResponse(SQLModel):
     file_original_name: str | None = None
     created_at: datetime
 
+class NewsCarouselImageResponse(SQLModel):
+    id: UUID
+    news_id: UUID
+    file_url: str
+    order: int = 0
+    created_at: datetime
+
 
 class NewsAttachment(SQLModel, table=True):
     __tablename__ = "news_attachments"
@@ -32,6 +39,17 @@ class NewsAttachment(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     news: "News" = Relationship(back_populates="attachments")
+
+class NewsCarouselImage(SQLModel, table=True):
+    __tablename__ = "news_carousel_images"
+    
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    news_id: UUID = Field(foreign_key="news.id")
+    file_url: str
+    order: int = Field(default=0)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    news: "News" = Relationship(back_populates="carousel_images")
 
 class News(SQLModel, table=True):
     __tablename__ = "news"
@@ -48,6 +66,7 @@ class News(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
     attachments: list["NewsAttachment"] = Relationship(back_populates="news", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    carousel_images: list["NewsCarouselImage"] = Relationship(back_populates="news", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     
     @property
     def status_enum(self) -> NewsStatus:
@@ -58,6 +77,7 @@ class News(SQLModel, table=True):
             return NewsStatus.BORRADOR
 
 class NewsCreate(SQLModel):
+    id: UUID | None = None
     title: str
     summary: str | None = None
     content: str
@@ -65,6 +85,7 @@ class NewsCreate(SQLModel):
     status: str = "borrador"
     publish_date: datetime | None = None
     attachments: list[dict] | None = None
+    carousel_images: list[dict] | None = None
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -77,6 +98,7 @@ class NewsUpdate(SQLModel):
     status: str | None = None
     publish_date: datetime | None = None
     attachments: list[dict] | None = None
+    carousel_images: list[dict] | None = None
 
 
 class NewsResponse(SQLModel):
@@ -89,6 +111,7 @@ class NewsResponse(SQLModel):
     status: str
     publish_date: datetime | None = None
     attachments: list[NewsAttachmentResponse] = []
+    carousel_images: list[NewsCarouselImageResponse] = []
     created_at: datetime
     updated_at: datetime
     

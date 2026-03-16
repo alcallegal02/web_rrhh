@@ -33,6 +33,10 @@ export class NewsComponent {
   filterStartDate = signal<string>('');
   filterEndDate = signal<string>('');
 
+  isAdmin = computed(() => {
+    return this.authService.isRRHH() || this.authService.isAdmin() || this.authService.isSuperadmin();
+  });
+
   statusOptions = [
     { value: 'borrador', label: 'Borrador', icon: 'lucideFileEdit', color: 'gray' },
     { value: 'publicada', label: 'Publicada', icon: 'lucideSend', color: 'emerald' },
@@ -41,12 +45,17 @@ export class NewsComponent {
 
   // Data
   newsListResource = rxResource({
-    stream: () => this.newsService.getAllNews(
+    params: () => ({
+      status: this.filterStatus().length > 0 ? this.filterStatus() : undefined,
+      start: this.filterStartDate() || undefined,
+      end: this.filterEndDate() || undefined
+    }),
+    stream: ({ params }) => this.newsService.getAllNews(
       100,
       0,
-      this.filterStatus().length > 0 ? this.filterStatus() : undefined,
-      this.filterStartDate() || undefined,
-      this.filterEndDate() || undefined
+      params.status,
+      params.start,
+      params.end
     )
   });
   newsList = computed(() => this.newsListResource.value() || []);
@@ -90,7 +99,8 @@ export class NewsComponent {
       cover_image_url: news.cover_image_url || '',
       status: news.status as any,
       publish_date: publishDateFormatted,
-      attachments: (news as any).attachments || []
+      attachments: (news as any).attachments || [],
+      carousel_images: news.carousel_images || []
     };
 
     this.editingNewsId.set(news.id);
@@ -121,15 +131,18 @@ export class NewsComponent {
   }
 
   onStatusChange(event: { id: string, status: string }): void {
+    console.log('Changing status for news', event.id, 'to', event.status);
     const params = new HttpParams().set('new_status', event.status);
     this.http.patch<News>(`${environment.apiUrl}/news/${event.id}/status`, null, {
       params: params
     }).subscribe({
-      next: () => {
+      next: (updated) => {
+        console.log('Status updated successfully:', updated);
         this.loadNews();
       },
       error: (err) => {
         console.error('Error updating news status:', err);
+        alert('Error al cambiar el estado de la noticia: ' + (err.error?.detail || err.message));
       }
     });
   }
@@ -140,7 +153,13 @@ export class NewsComponent {
     this.loading.set(true);
 
     const newsData: any = { ...formData };
-    if (!newsData.publish_date) delete newsData.publish_date;
+    // Fix: If publish_date or cover_image_url is empty string, set it to null so Pydantic doesn't fail
+    if (!newsData.publish_date || newsData.publish_date === '') {
+      newsData.publish_date = null;
+    }
+    if (!newsData.cover_image_url || newsData.cover_image_url === '') {
+      newsData.cover_image_url = null;
+    }
 
     const id = this.editingNewsId();
 

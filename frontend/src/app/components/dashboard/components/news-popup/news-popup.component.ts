@@ -6,7 +6,7 @@ import { NgIconComponent } from '@ng-icons/core';
 export interface DashboardNews {
     title: string;
     summary?: string;
-    cover_image_url?: string;
+    cover_image_url?: string | null;
     created_at: string;
     [key: string]: any;
 }
@@ -23,7 +23,7 @@ export class NewsPopupComponent {
     close = output<void>();
     readMore = output<void>();
 
-    getFileUrl(path: string): string {
+    getFileUrl(path: string | null | undefined): string {
         if (!path) return '';
         if (path.startsWith('http')) return path;
         return `${environment.apiUrl.replace('/api/v1', '')}/${path}`; // Adjusted path normalization

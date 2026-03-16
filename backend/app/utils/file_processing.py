@@ -34,7 +34,7 @@ def is_compressed(content: bytes) -> bool:
     """Check if content is Gzip compressed"""
     return content.startswith(b'\x1f\x8b')
 
-async def save_file_organized(content: bytes, filename: str, module: str, file_type: str) -> dict:
+async def save_file_organized(content: bytes, filename: str, module: str, file_type: str, entity_id: str | None = None) -> dict:
     """
     Save a file with deduplication and organization.
     Returns a dict with url, filename, and status flags.
@@ -52,7 +52,9 @@ async def save_file_organized(content: bytes, filename: str, module: str, file_t
             
     # 3. Path organization
     safe_module = "".join(c for c in module if c.isalnum() or c in ('-', '_')).lower()
-    upload_dir = Path(settings.UPLOAD_DIR) / safe_module / file_type
+    safe_entity = "".join(c for c in entity_id if c.isalnum() or c in ('-', '_')).lower() if entity_id else "common"
+    
+    upload_dir = Path(settings.UPLOAD_DIR) / safe_module / safe_entity / file_type
     upload_dir.mkdir(parents=True, exist_ok=True)
     
     final_filename = f"{file_hash}.{ext}"
@@ -60,7 +62,7 @@ async def save_file_organized(content: bytes, filename: str, module: str, file_t
         final_filename += ".gz"
         
     file_path = upload_dir / final_filename
-    relative_url = f"/uploads/{safe_module}/{file_type}/{final_filename}"
+    relative_url = f"/media/{safe_module}/{safe_entity}/{file_type}/{final_filename}"
     
     if file_path.exists():
         return {

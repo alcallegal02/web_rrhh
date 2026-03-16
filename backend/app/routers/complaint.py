@@ -52,7 +52,6 @@ router = APIRouter(tags=["complaint"])
 limiter = Limiter(key_func=get_remote_address)
 logger = logging.getLogger(__name__)
 
-
 @router.post("/", response_model=ComplaintCreateResponse)
 @limiter.limit("5/minute")
 async def create_complaint_endpoint(
@@ -65,22 +64,47 @@ async def create_complaint_endpoint(
     files: list[UploadFile] = File(default=[])
 ):
     """Create a new anonymous complaint (public endpoint)"""
-    from app.services.complaint import process_and_save_complaint_files
+    from app.services.complaint import process_and_save_complaint_files, create_complaint
+    from app.models.complaint import ComplaintAttachment
+    from sqlalchemy.orm import selectinload
+    from sqlmodel import select
 
-    # Process files via service (this handles validation, quota, conversion, saving)
-    attachments = []
-    if files:
-         attachments = await process_and_save_complaint_files(files, session, request.client.host)
-            
+    # 1. Create the complaint first (without attachments) to get its ID
     complaint_data = ComplaintCreate(
         title=title,
         description=description,
-        attachments=attachments if attachments else None
+        attachments=None
     )
-    
+
     try:
         complaint = await create_complaint(session, complaint_data)
-        # Service now handles full reload with attachments
+        complaint_id_str = str(complaint.id)
+
+        # 2. Process files via service using the new complaint ID for folder organization
+        if files:
+            attachments = await process_and_save_complaint_files(
+                files, 
+                session, 
+                request.client.host,
+                entity_id=complaint_id_str
+            )
+
+            # 3. Add the attachments to the DB and link them to the complaint
+            for att in attachments:
+                attachment = ComplaintAttachment(
+                    complaint_id=complaint.id,
+                    file_url=att['file_url'],
+                    file_original_name=att.get('file_original_name')
+                )
+                session.add(attachment)
+
+            await session.commit()
+
+            # Reload to include new attachments in response
+            result = await session.execute(
+                select(Complaint).where(Complaint.id == complaint.id).options(selectinload(Complaint.attachments))
+            )
+            complaint = result.scalar_one()
 
         # 4. If email is provided, send credentials (non-blocking)
         if email:
@@ -113,17 +137,10 @@ async def create_complaint_endpoint(
 
         # Broadcast create event
         from app.websocket.manager import websocket_manager
-        # Prepare public safe data (Admin view needs it all, public view limited)
-        # Broadcast full data to admins? WebSocket broadcast goes to ALL. 
-        # For security, we should filter or only send ID. 
-        # But for this MVP request, let's send minimal notification.
-        # "New Complaint Created"
         await websocket_manager.broadcast({
             "type": "COMPLAINT_CREATED",
             "data": { "id": str(complaint.id), "title": complaint.title, "status": complaint.status }
         })
-
-        # AUDIT LOG (Anonymous) - EXPLICITLY REMOVED TO PRESERVE ANONYMITY AND MATCH SERVICE
 
         return complaint
     except Exception as e:
@@ -174,9 +191,6 @@ async def get_complaint(
     security_manager.reset_attempts(client_ip)
     
     # Return filtered data for public view
-    # Informants shouldn't see internal admin notes if they are sensitive, 
-    # but the user asked for "admin_response" to be visible to them in the frontend before
-    # Ley 2/2023 requires transparency. We use status_public_description for specific steps.
     return ComplaintResponse.model_validate(complaint)
 
 
@@ -244,10 +258,7 @@ async def update_status_endpoint(
     
     # Broadcast update event
     from app.websocket.manager import websocket_manager
-    # We should convert to Response model first to ensure no sensitive data leaks (though response model has public desc...)
-    # Actually, broadcasting the RESPONSE model is safer than raw DB model.
     response_data = ComplaintResponse.model_validate(complaint).model_dump()
-    # Convert UUIDs
     response_data['id'] = str(response_data['id'])
 
     await websocket_manager.broadcast({
@@ -289,4 +300,3 @@ async def delete_complaint_endpoint(
     })
 
     return {"message": "Complaint and associated files deleted successfully"}
-

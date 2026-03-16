@@ -30,6 +30,12 @@ export class NewsListComponent {
     layout = input<'grid' | 'list' | 'sidebar'>('sidebar');
     editingId = input<string | null>(null);
 
+    statusOptions = [
+        { value: 'borrador', label: 'Borrador', icon: 'lucideFileEdit' },
+        { value: 'publicada', label: 'Publicar', icon: 'lucideSend' },
+        { value: 'archivada', label: 'Archivar', icon: 'lucideArchive' }
+    ];
+
     // Custom Dropdown State
     activeDropdownId = signal<string | null>(null);
 

@@ -1,0 +1,51 @@
+[cdkDrag] {
+  cursor: grab;
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 1.5rem;
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.2),
+              0 10px 15px -6px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+  z-index: 1000;
+  pointer-events: none;
+  
+  /* Ensure preview has dimensions to avoid "line" glitch */
+  width: 150px !important;
+  aspect-ratio: 1/1;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 1.5rem;
+  }
+
+  /* Hide interactions in preview */
+  .absolute, [cdkDragHandle] {
+    display: none !important;
+  }
+}
+
+.cdk-drag-placeholder {
+  background: rgba(0, 0, 0, 0.03) !important;
+  border: 2px dashed rgba(0, 0, 0, 0.1) !important;
+  border-radius: 1.5rem !important;
+  /* Hide the content of the clone so we see the dashed box */
+  & > * {
+    opacity: 0 !important;
+  }
+}
+
+/* Sorting animation */
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drop-list-dragging [cdkDrag] {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}

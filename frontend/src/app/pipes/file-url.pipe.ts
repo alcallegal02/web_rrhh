@@ -5,7 +5,7 @@ import { environment } from '../config/environment';
     name: 'fileUrl',
 })
 export class FileUrlPipe implements PipeTransform {
-    transform(path: string | undefined): string {
+    transform(path: string | null | undefined): string {
         if (!path) return '';
         if (path.startsWith('http') || path.startsWith('data:')) return path;
 

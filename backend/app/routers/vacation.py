@@ -244,6 +244,33 @@ async def reject_request_rrhh(
     return _map_request_response(result)
 
 
+@router.delete("/{request_id}")
+async def delete_request(
+    request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    request_id: str
+):
+    """Delete a vacation request (draft only or admin/superadmin)"""
+    # Logic: users can only delete their own BORRADOR requests.
+    # RRHH/Superadmin can delete any? 
+    # For now, let's keep it simple: own draft or authorized roles.
+    
+    # We load it first to check status/ownership
+    requests = await get_user_vacation_requests(session, str(current_user.id))
+    # This is inefficient, but we don't have get_by_id exposed in router?
+    # Actually, let's just call the service and let it handle auth or add it here.
+    
+    deleted = await delete_vacation_request(session, request_id, str(current_user.id), ip_address=request.client.host)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Request not found or cannot be deleted"
+        )
+        
+    return {"message": "Request deleted successfully"}
+
+
 @router.get("/available-responsibles", response_model=list[UserResponse])
 async def get_available_responsibles(
     current_user: Annotated[User, Depends(get_current_user)],

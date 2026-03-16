@@ -24,6 +24,7 @@ export interface UserFormModel {
     notif_own_requests?: boolean;
     notif_managed_requests?: boolean;
     notif_complaints?: boolean;
+    notif_news?: boolean;
 
     // Rights
     vac_days?: number;

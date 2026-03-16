@@ -13,6 +13,7 @@ export interface NewsCreate {
     status?: 'borrador' | 'publicada' | 'archivada';
     publish_date?: string;
     attachments?: { file_url: string; file_original_name: string }[];
+    carousel_images?: { id?: string; file_url: string; order: number }[];
 }
 
 @Injectable({

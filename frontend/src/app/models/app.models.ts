@@ -21,16 +21,25 @@ export interface NewsAttachment {
     created_at: string;
 }
 
+export interface NewsCarouselImage {
+    id: string;
+    news_id: string;
+    file_url: string;
+    order: number;
+    created_at: string;
+}
+
 export interface News {
     id: string;
     title: string;
     summary?: string;
     content: string;
-    cover_image_url?: string;
+    cover_image_url?: string | null;
     author_id: string;
     status: 'borrador' | 'publicada' | 'archivada';
     publish_date?: string;
     attachments: NewsAttachment[];
+    carousel_images: NewsCarouselImage[];
     created_at: string;
     updated_at: string;
 }

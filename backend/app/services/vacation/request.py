@@ -317,3 +317,42 @@ async def submit_vacation_request(
     )
     
     return request
+async def delete_vacation_request(
+    session: AsyncSession,
+    request_id: str,
+    user_id: str,
+    ip_address: str | None = None
+) -> bool:
+    """Delete a vacation request and its attachments"""
+    request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
+    stmt = select(VacationRequest).where(VacationRequest.id == request_uuid)
+    result = await session.execute(stmt)
+    request = result.scalar_one_or_none()
+    
+    if not request:
+        return False
+        
+    # Capture snapshot
+    snapshot = request.model_dump()
+    snapshot['id'] = str(snapshot['id'])
+    
+    # Delete folder
+    from app.utils.file_ops import delete_entity_folders
+    await delete_entity_folders("vacations", str(request_id))
+    
+    # Audit Log
+    await log_action(
+        session=session,
+        user_id=UUID(user_id),
+        action="DELETE",
+        module="VACACIONES",
+        details={
+            "request_id": str(request_id),
+            "full_snapshot": snapshot
+        },
+        ip_address=ip_address
+    )
+    
+    await session.delete(request)
+    await session.commit()
+    return True

@@ -192,3 +192,73 @@ def _send_complaint_notification_email_sync(email_to: str, complaint_code: str, 
 async def send_complaint_notification(email_to: str, code: str, title: str):
     """Async wrapper for sending complaint notification email"""
     await run_in_threadpool(_send_complaint_notification_email_sync, email_to, code, title)
+
+
+def _send_news_notification_email_sync(email_to: str, news_title: str, news_summary: str, news_id: str):
+    """Sync implementation for notifying users about new published news"""
+    if not settings.SMTP_HOST or not settings.EMAIL_FROM_ADDRESS:
+        return
+
+    # Try to get the first CORS origin as base URL for the news link
+    base_url = "http://localhost:4200"
+    if settings.CORS_ORIGINS:
+        origins = settings.CORS_ORIGINS.split(',')
+        if origins:
+            base_url = origins[0].strip()
+
+    news_link = f"{base_url}/news/{news_id}"
+
+    html_content = f"""
+    <html>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f3f4f6; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb;">
+            <!-- Header -->
+            <div style="background-color: #3C65AB; padding: 30px; text-align: center;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.025em;">Nueva Noticia Publicada</h2>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 40px;">
+                <h3 style="color: #111827; margin: 0 0 15px 0; font-size: 20px; font-weight: 700; line-height: 1.3;">{news_title}</h3>
+                
+                <p style="color: #4b5563; font-size: 16px; margin-bottom: 25px; line-height: 1.6;">
+                    {news_summary}
+                </p>
+                
+                <div style="text-align: center; margin-top: 35px;">
+                    <a href="{news_link}" style="background-color: #3C65AB; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; transition: all 0.2s;">Leer Noticia Completa</a>
+                </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #edf2f7;">
+                <p style="font-size: 12px; color: #9ca3af; margin: 0;">
+                    Has recibido este correo porque tienes activadas las notificaciones de noticias en tu perfil de Web RRHH.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    message = MIMEMultipart("alternative")
+    message["Subject"] = f"Nueva Noticia: {news_title}"
+    message["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>"
+    message["To"] = email_to
+
+    message.attach(MIMEText(html_content, "html"))
+
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            if settings.SMTP_TLS:
+                server.starttls()
+            if settings.SMTP_USER and settings.SMTP_PASS:
+                server.login(settings.SMTP_USER, settings.SMTP_PASS)
+            server.send_message(message)
+            logger.info(f"News notification email sent successfully to {email_to}")
+    except Exception as e:
+        logger.error(f"Error sending news notification to {email_to}: {str(e)}", exc_info=True)
+
+async def send_news_notification(email_to: str, title: str, summary: str, news_id: str):
+    """Async wrapper for sending news notification email"""
+    await run_in_threadpool(_send_news_notification_email_sync, email_to, title, summary, news_id)

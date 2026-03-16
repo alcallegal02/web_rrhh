@@ -16,6 +16,7 @@
             <!-- Dynamic Filters -->
             <div class="space-y-4 pt-2 border-t border-gray-100">
                 <div class="grid grid-cols-1 gap-4">
+                    @if (isAdmin()) {
                     <div class="space-y-2">
                         <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider ml-1">Estados</label>
                         <div class="flex flex-wrap gap-1.5 p-1">
@@ -42,6 +43,7 @@
                             }
                         </div>
                     </div>
+                    }
 
                     <!-- Date Filters -->
                     <div class="flex items-center gap-2">
@@ -72,15 +74,17 @@
             </div>
 
             <!-- New News Button -->
-            <button (click)="resetForm()"
-                class="w-full p-3 mb-2 rounded-xl bg-blue-50 text-[#3C65AB] border border-blue-100 hover:bg-[#3C65AB] hover:text-white hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest group">
-                <ng-icon name="lucidePlus" class="text-lg group-hover:scale-110 transition-transform"></ng-icon>
-                <span>Nueva Noticia</span>
-            </button>
+            <div class="mt-6 pt-6 border-t border-gray-100">
+                <button (click)="resetForm()"
+                    class="w-full p-3 mb-2 rounded-xl bg-blue-50 text-[#3C65AB] border border-blue-100 hover:bg-[#3C65AB] hover:text-white hover:shadow-lg hover:shadow-blue-500/20 active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest group">
+                    <ng-icon name="lucidePlus" class="text-lg group-hover:scale-110 transition-transform"></ng-icon>
+                    <span>Nueva Noticia</span>
+                </button>
+            </div>
         </div>
 
         <!-- Sidebar List -->
-        <div class="flex-1 overflow-y-auto p-2 space-y-1 min-h-[300px] lg:min-h-0">
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1 min-h-[300px] lg:min-h-0">
             <app-news-list [newsList]="newsList()" [editingId]="editingNewsId()"
                 [canManage]="authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()"
                 layout="sidebar" (edit)="onEdit($event)" (delete)="onDelete($event)"
@@ -99,23 +103,10 @@
 
     <!-- Main Content Area -->
     <div
-        class="flex-1 lg:overflow-y-auto bg-gray-50/30 rounded-2xl border border-dashed border-gray-200 p-2 lg:p-4 order-1 lg:order-2">
-        @if (authService.isRRHH() || authService.isAdmin() || authService.isSuperadmin()) {
-        <app-news-form [initialData]="initialFormData()" (save)="onSave($event)" (cancel)="onCancel()">
-        </app-news-form>
-        } @else {
-        <!-- Optional read-only view or selection prompt -->
-        <div class="h-full flex flex-col items-center justify-center p-12 text-center space-y-4">
-            <div
-                class="h-20 w-20 rounded-3xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-gray-200">
-                <ng-icon name="lucideNewspaper" class="text-4xl"></ng-icon>
-            </div>
-            <div>
-                <h3 class="text-lg font-black text-gray-900 tracking-tight">Selecciona una noticia</h3>
-                <p class="text-xs text-gray-400 max-w-xs mx-auto">Elige una noticia del directorio de la izquierda
-                    para ver su contenido detallado.</p>
-            </div>
-        </div>
+        class="flex-1 lg:overflow-y-auto order-1 lg:order-2">
+        @if (isAdmin()) {
+            <app-news-form [initialData]="initialFormData()" (save)="onSave($event)" (cancel)="onCancel()">
+            </app-news-form>
         }
     </div>
 

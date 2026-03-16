@@ -5,6 +5,7 @@
     height: 100%;
     overflow-y: auto;
     position: relative !important;
+    border: none !important; /* Remove internal Quill border */
 }
 
 :host ::ng-deep .ql-editor {
@@ -20,7 +21,8 @@
     /* Even tighter packing */
     padding: 0.35rem !important;
     /* Reduced padding */
-    border-bottom: 2px solid #e5e7eb !important;
+    border: none !important; /* Remove Quill border */
+    border-bottom: 2px solid #f3f4f6 !important; /* Subtle separator from content */
     background-color: #fff;
 }
 

@@ -54,6 +54,7 @@ def optimize_image(content: bytes) -> bytes:
 async def upload_file(
     file: UploadFile = File(...), 
     module: str = Form("common"),
+    entity_id: Optional[str] = Form(None),
     type: str = Form("document") # 'image' or 'document'
 ):
     content = await file.read()
@@ -78,9 +79,6 @@ async def upload_file(
         
         # Documents are stored RAW but hashed
         clean_content = content
-        # Get extension from original filename (sanitized) or map content type
-        # For simplicity, we trust the client extension IF it matches mime, 
-        # but better to rely on original filename extension after sanitization
         orig_ext = Path(file.filename).suffix.lower().lstrip('.')
         if not orig_ext:
             orig_ext = "dat"
@@ -96,9 +94,11 @@ async def upload_file(
     filename = f"{file_hash}.{extension}"
     
     # 3. Secure Storage Path
-    # Structure: /media_data/module/[images|documents]/
+    # New Structure: /media_data/module/[entity_id|common]/[images|documents]/
     safe_module = sanitize_filename(module)
-    save_dir = UPLOAD_ROOT / safe_module / subdir
+    safe_entity = sanitize_filename(entity_id) if entity_id else "common"
+    
+    save_dir = UPLOAD_ROOT / safe_module / safe_entity / subdir
     save_dir.mkdir(parents=True, exist_ok=True)
     
     file_path = save_dir / filename
@@ -114,9 +114,86 @@ async def upload_file(
         "original_filename": file.filename,
         "content_type": content_type,
         "size": len(clean_content),
-        "path": f"/media/{safe_module}/{subdir}/{filename}",
+        "path": f"/media/{safe_module}/{safe_entity}/{subdir}/{filename}",
         "hash": file_hash
     }
+
+def remove_empty_parents(path: Path):
+    """
+    Recursively remove empty parent directories up to UPLOAD_ROOT.
+    """
+    # Start with the parent of the deleted file
+    current = path.parent
+    
+    # Don't delete UPLOAD_ROOT itself or anything above it
+    while current != UPLOAD_ROOT and current.exists() and current.is_dir():
+        # Check if directory is empty
+        if not any(current.iterdir()):
+            try:
+                current.rmdir()
+                print(f"Removed empty directory: {current}")
+                current = current.parent # Move up
+            except Exception as e:
+                print(f"Failed to remove directory {current}: {e}")
+                break # Stop if we can't delete
+        else:
+            break # Not empty, stop
+
+@app.delete("/delete/file")
+async def delete_file(path: str):
+    """
+    Securely delete a file within the UPLOAD_ROOT.
+    Expects a path relative to the Nginx mount (e.g., /media/module/...) 
+    or just the internal path.
+    """
+    # 1. Normalize path
+    # If it starts with /media/, remove it
+    clean_path = path.lstrip('/')
+    if clean_path.startswith('media/'):
+        clean_path = clean_path.replace('media/', '', 1)
+        
+    target_path = (UPLOAD_ROOT / clean_path).resolve()
+    
+    # 2. Security: Ensure the path is within UPLOAD_ROOT
+    if not str(target_path).startswith(str(UPLOAD_ROOT.resolve())):
+        raise HTTPException(status_code=403, detail="Access denied")
+        
+    # 3. Delete if exists
+    if target_path.exists() and target_path.is_file():
+        try:
+            target_path.unlink()
+            
+            # 4. Cleanup empty parents
+            remove_empty_parents(target_path)
+            
+            return {"status": "deleted", "path": path}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Delete failed: {str(e)}")
+    
+    return {"status": "not_found", "path": path}
+
+@app.delete("/delete/folder")
+async def delete_folder(module: str, entity_id: str):
+    """
+    Securely delete all media folders related to a specific entity ID.
+    Example: Deletes /media_data/news/1234/
+    """
+    safe_module = sanitize_filename(module)
+    safe_entity = sanitize_filename(entity_id)
+    
+    if safe_entity == "common":
+        raise HTTPException(status_code=400, detail="Cannot delete common folder")
+        
+    target_dir = UPLOAD_ROOT / safe_module / safe_entity
+    
+    if target_dir.exists() and target_dir.is_dir():
+        try:
+            shutil.rmtree(target_dir)
+            return {"status": "success", "deleted_folder": str(target_dir)}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to delete folder {target_dir}: {e}")
+                    
+    return {"status": "not_found", "path": str(target_dir)}
 
 @app.get("/health")
 def health_check():

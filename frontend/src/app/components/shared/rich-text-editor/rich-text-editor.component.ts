@@ -59,6 +59,7 @@ export class RichTextEditorComponent implements OnDestroy, ControlValueAccessor 
   quillModules = input<QuillModulesConfig>(createQuillModulesConfig());
   uploadUrl = input<string>('/upload/image');
   module = input<string>('common');
+  entityId = input<string | null>(null);
 
   editorCreated = output<any>();
   contentChange = output<string>();
@@ -293,9 +294,13 @@ export class RichTextEditorComponent implements OnDestroy, ControlValueAccessor 
 
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('module', this.module());
+        if (this.entityId()) {
+          formData.append('entity_id', this.entityId()!);
+        }
 
         const uploadRes = await firstValueFrom(
-          this.http.post<{ url: string }>(`${environment.apiUrl}${this.uploadUrl()}?module=${this.module()}`, formData)
+          this.http.post<{ url: string }>(`${environment.apiUrl}${this.uploadUrl()}`, formData)
         );
 
         if (uploadRes?.url) {

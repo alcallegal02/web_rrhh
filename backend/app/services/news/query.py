@@ -20,7 +20,10 @@ async def get_all_news(
     """Get news - with automatic status filtering based on role"""
     from app.models.user import UserRole
     
-    query = select(News).options(selectinload(News.attachments))
+    query = select(News).options(
+        selectinload(News.attachments),
+        selectinload(News.carousel_images)
+    )
     
     # Secure filtering logic
     is_privileged = user_role in [UserRole.RRHH.value, UserRole.SUPERADMIN.value]
@@ -58,7 +61,10 @@ async def get_latest_published_news(
     result = await session.execute(
         select(News)
         .where(News.status == NewsStatus.PUBLICADA.value)
-        .options(selectinload(News.attachments))
+        .options(
+            selectinload(News.attachments),
+            selectinload(News.carousel_images)
+        )
         .order_by(News.publish_date.desc(), News.created_at.desc())
         .limit(1)
     )
@@ -74,7 +80,10 @@ async def get_news_by_id(
     from app.models.user import UserRole
     
     news_uuid = UUID(news_id) if isinstance(news_id, str) else news_id
-    query = select(News).where(News.id == news_uuid).options(selectinload(News.attachments))
+    query = select(News).where(News.id == news_uuid).options(
+        selectinload(News.attachments),
+        selectinload(News.carousel_images)
+    )
     
     # Secure individual retrieval
     if user_role not in [UserRole.RRHH.value, UserRole.SUPERADMIN.value]:

@@ -2,14 +2,14 @@ from typing import Annotated
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status, Form
 from fastapi.responses import FileResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import settings
 from app.database import get_session
+from app.config import settings
 from app.models.user import User, UserRole
 from app.routers.auth import get_current_user
 from app.services.upload import UploadService
@@ -24,7 +24,8 @@ async def upload_image(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     file: UploadFile = File(...),
-    module: str = "common"
+    module: str = Form("common"),
+    entity_id: Optional[str] = Form(None)
 ):
     """Upload an image file (RRHH/superadmin only)"""
     if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
@@ -40,6 +41,7 @@ async def upload_image(
         file=file,
         module=module,
         upload_type="image",
+        entity_id=entity_id,
         anonymous=False
     )
 
@@ -49,7 +51,8 @@ async def upload_image_anonymous(
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
     file: UploadFile = File(...),
-    module: str = "complaints"
+    module: str = Form("complaints"),
+    entity_id: Optional[str] = Form(None)
 ):
     """Upload an image file anonymously (for complaints)"""
     return await UploadService.process_upload(
@@ -59,6 +62,7 @@ async def upload_image_anonymous(
         file=file,
         module=module,
         upload_type="image",
+        entity_id=entity_id,
         anonymous=True
     )
 
@@ -69,7 +73,8 @@ async def upload_document(
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     file: UploadFile = File(...),
-    module: str = "common"
+    module: str = Form("common"),
+    entity_id: Optional[str] = Form(None)
 ):
     """Upload a document file"""
     # Permission Logic
@@ -86,6 +91,7 @@ async def upload_document(
         file=file,
         module=module,
         upload_type="document",
+        entity_id=entity_id,
         anonymous=False
     )
 
@@ -97,7 +103,15 @@ async def download_file(file_path: str, original_name: str | None = None):
     """
     clean_path = file_path.lstrip('/')
     base_uploads = Path(settings.UPLOAD_DIR).resolve()
-    disk_path = (base_uploads.parent / clean_path).resolve()
+    
+    if clean_path.startswith('media/'):
+        relative_path = clean_path.replace('media/', '', 1)
+        disk_path = (base_uploads / relative_path).resolve()
+    elif clean_path.startswith('uploads/'):
+        relative_path = clean_path.replace('uploads/', '', 1)
+        disk_path = (base_uploads / relative_path).resolve()
+    else:
+        disk_path = (base_uploads / clean_path).resolve()
     
     # Path Traversal Check
     if not str(disk_path).startswith(str(base_uploads)):

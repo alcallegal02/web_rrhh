@@ -9,10 +9,11 @@ import { FileUrlPipe } from '../../../../pipes/file-url.pipe';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { map, of } from 'rxjs';
 import { NgIconComponent } from '@ng-icons/core';
+import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
 
 @Component({
     selector: 'app-news-detail',
-    imports: [CommonModule, RouterModule, DatePipe, FileUrlPipe, NgIconComponent],
+    imports: [CommonModule, RouterModule, DatePipe, FileUrlPipe, NgIconComponent, ImageCarouselComponent],
     templateUrl: './news-detail.component.html',
     styleUrl: './news-detail.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush
@@ -46,14 +47,14 @@ export class NewsDetailComponent implements OnInit {
     });
 
     otherNewsResource = rxResource({
-        stream: () => this.newsService.getAllNews(6, 0, ['publicada'])
+        stream: () => this.newsService.getAllNews(11, 0, ['publicada'])
     });
 
     news = computed(() => this.newsResource.value() || null);
     otherNews = computed(() => {
         const data = this.otherNewsResource.value() || [];
         const id = this.currentId();
-        return data.filter(n => n.id !== id).slice(0, 5);
+        return data.filter(n => n.id !== id).slice(0, 10);
     });
 
     // The legacy `loading` was used manually. With rxResource we expose it directly, or map to newsResource.isLoading

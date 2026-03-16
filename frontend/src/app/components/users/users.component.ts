@@ -146,10 +146,10 @@ export class UsersComponent implements OnInit {
   }
 
   // File Uploads (handled at parent because it interacts with Service)
-  async onUploadPhoto(file: File) {
+  async onUploadPhoto(event: { file: File, entityId: string | null }) {
     this.uploadingPhoto.set(true);
     try {
-      const res = await firstValueFrom(this.userService.uploadImage(file));
+      const res = await firstValueFrom(this.userService.uploadImage(event.file, event.entityId));
       // Update the active form with new URL
       this.activeUser.update(f => f ? ({ ...f, photo_url: res.url }) : null);
     } catch (err) {
@@ -160,12 +160,12 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  async onUploadAttachments(files: File[]) {
+  async onUploadAttachments(event: { files: File[], entityId: string | null }) {
     this.uploadingAttachments.set(true);
     try {
       const newAtts: any[] = [];
-      for (const f of files) {
-        const res = await firstValueFrom(this.userService.uploadDocument(f));
+      for (const f of event.files) {
+        const res = await firstValueFrom(this.userService.uploadDocument(f, event.entityId));
         newAtts.push({ file_url: res.url, file_original_name: res.original_filename });
       }
       this.activeUser.update(f => f ? ({ ...f, attachments: [...f.attachments, ...newAtts] }) : null);
