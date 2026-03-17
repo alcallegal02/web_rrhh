@@ -461,9 +461,18 @@ export class NewsFormComponent {
 
 
             this.save.emit(this.form());
+
+            // Clear buffers regardless of edit/create mode
+            this.pendingAttachments.set([]);
+            this.pendingCarouselImages.set([]);
+            this.pendingCoverImage.set(null);
+            this.coverImagePreview.set(null);
+            this.totalUploadSize.set(0);
+            this.embeddedImagesSize.set(0);
+            this.uploadError.set('');
             this.uploading.set(false);
 
-            // Si es una creación (no hay initialData), limpiamos el formulario manualmente
+            // Si es una creación (no hay initialData), limpiamos los campos básicos del formulario manualmente
             if (!this.initialData()) {
                 this.tempId = window.crypto?.randomUUID?.() || `new-${Date.now()}`;
                 this.form.set({
@@ -477,13 +486,6 @@ export class NewsFormComponent {
                     attachments: [],
                     carousel_images: []
                 });
-                this.pendingAttachments.set([]);
-                this.pendingCarouselImages.set([]);
-                this.pendingCoverImage.set(null);
-                this.coverImagePreview.set(null);
-                this.totalUploadSize.set(0);
-                this.embeddedImagesSize.set(0);
-                this.uploadError.set('');
             }
 
         } catch (e: any) {

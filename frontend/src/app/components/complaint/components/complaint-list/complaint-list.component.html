@@ -1,0 +1,77 @@
+<div class="space-y-4">
+    @for (c of complaints(); track c.id) {
+    <div (click)="select.emit(c)"
+        [class]="'group/card relative p-6 bg-white rounded-3xl border transition-all cursor-pointer ' + 
+        (selectedId() === c.id ? 'border-inespasa ring-4 ring-inespasa-light/10 shadow-lg' : 'border-gray-100 hover:border-inespasa-light/50 hover:shadow-md')">
+
+        <!-- Visual Clipping Layer (for stripe) -->
+        <div class="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
+            <!-- Status Stripe -->
+            <div class="absolute left-0 top-0 bottom-0 w-2.5 transition-all shadow-[2px_0_8px_rgba(0,0,0,0.05)]"
+                [class]="getStatusStripeClass(c.status)"></div>
+        </div>
+
+        <div class="relative pl-3 space-y-4">
+            <div class="flex justify-between items-center">
+                <span
+                    class="text-[10px] font-mono font-black text-inespasa bg-inespasa-light/10 px-2.5 py-1 rounded shadow-sm">{{
+                    c.code }}</span>
+                <span class="flex items-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-tighter">
+                    <ng-icon name="lucideCalendarDays" class="text-sm"></ng-icon>
+                    {{ c.created_at | date:'dd MMM, yyyy' }}
+                </span>
+            </div>
+
+            <h3
+                class="font-black text-gray-800 text-base line-clamp-2 leading-tight group-hover/card:text-inespasa transition-colors">
+                {{ c.title }}</h3>
+
+            <div
+                class="flex items-center justify-between text-[11px] text-gray-400 pt-3 border-t border-gray-50 mt-2">
+                <div class="relative">
+                    <button (click)="toggleStatusDropdown($event, c.id)"
+                        [class]="getStatusClass(c.status)"
+                        class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border shadow-sm flex items-center gap-2 transition-all hover:scale-105">
+                        <ng-icon [name]="getStatusIcon(c.status)" [class]="getStatusIconColor(c.status)" class="text-xs"></ng-icon>
+                        {{ getStatusLabel(c.status) }}
+                        <ng-icon name="lucideChevronDown" class="text-[8px] opacity-50"></ng-icon>
+                    </button>
+
+                    @if (activeStatusDropdownId() === c.id) {
+                        <div (click)="$event.stopPropagation()" 
+                            class="absolute left-0 top-full mt-1 w-48 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                            @for (opt of statusOptions(); track opt.value) {
+                                <button (click)="changeStatus(c.id, opt.value)"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group/opt border-l-4 border-transparent"
+                                    [class.border-l-inespasa]="c.status === opt.value"
+                                    [class.bg-gray-50]="c.status === opt.value">
+                                    <ng-icon [name]="opt.icon" [class]="opt.iconColor" class="text-xs"></ng-icon>
+                                    <span class="text-[9px] font-black uppercase tracking-wider text-gray-600 group-hover/opt:text-inespasa">
+                                        {{ opt.label }}
+                                    </span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="flex items-center gap-4">
+                    @if (selectedId() === c.id) {
+                        <button (click)="delete.emit(c.id); $event.stopPropagation()" 
+                                class="text-red-400 hover:text-red-600 transition-colors">
+                            <ng-icon name="lucideTrash2" class="text-base"></ng-icon>
+                        </button>
+                    }
+                    <ng-icon name="lucideChevronRight"
+                        class="text-gray-300 text-base transform group-hover/card:translate-x-1 transition-transform"></ng-icon>
+                </div>
+            </div>
+        </div>
+    </div>
+    } @empty {
+        <div class="bg-white rounded-[2.5rem] p-16 text-center border-2 border-dashed border-gray-100 opacity-60">
+            <div class="text-5xl text-gray-200 mb-6"><ng-icon name="lucideScale"></ng-icon></div>
+            <p class="text-sm font-black uppercase tracking-widest text-gray-400">Sin denuncias</p>
+        </div>
+    }
+</div>

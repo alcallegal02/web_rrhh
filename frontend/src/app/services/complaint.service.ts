@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../config/environment';
 import { StoreService } from './store.service';
-import { Complaint } from '../models/app.models';
+import { Complaint, ComplaintComment } from '../models/app.models';
 
 
 export interface ComplaintCreateResponse {
@@ -40,19 +40,9 @@ export class ComplaintService {
 
     private initRealTimeUpdates() {
         this.wsService.messages$.subscribe(msg => {
-            if (msg.type === 'db_update' && msg.data.table === 'complaints') {
+            if ((msg.type === 'db_update' && msg.data.table === 'complaints') || 
+                msg.type === 'complaint_comment_added') {
                 // Refresh complaints list (Admin)
-                // Or individual status? 
-                // If Admin, getAll. If user, maybe refresh status if viewing.
-                // For now, safe to refresh All if we are Admin (handled by getAll internal logic or component call)
-                // But wait, getAll takes status param.
-                // We can simply set store empty or re-fetch default.
-                // Let's rely on component calling getAll, OR we trigger a refresh of what's currently in store?
-                // Simple approach: Re-fetch all if we have data?
-                // Actually this service doesn't hold state except via store.
-                // StoreService holds 'complaints'. 
-                // Use case: Admin panel open. New complaint arrives.
-                // We should re-fetch.
                 this.getAllComplaints().subscribe();
             }
         });
@@ -63,8 +53,8 @@ export class ComplaintService {
     }
 
     getComplaintStatus(code: string, token: string): Observable<Complaint> {
-        return this.http.get<Complaint>(`${this.apiUrl}/status/${code}`, {
-            params: { access_token: token }
+        return this.http.get<Complaint>(`${this.apiUrl}/${code}`, {
+            params: { token: token }
         });
     }
 
@@ -77,17 +67,48 @@ export class ComplaintService {
         );
     }
 
-    replyToComplaint(complaintId: string, content: string, token?: string): Observable<ComplaintMessage> {
-        const params: any = {};
-        if (token) params.access_token = token;
-        return this.http.post<ComplaintMessage>(`${this.apiUrl}/${complaintId}/reply`, { content }, { params });
+    addPublicComment(code: string, token: string, content: string, files?: File[]): Observable<ComplaintComment> {
+        const formData = new FormData();
+        formData.append('content', content);
+        if (files) {
+            files.forEach(file => formData.append('files', file));
+        }
+        return this.http.post<ComplaintComment>(`${this.apiUrl}/${code}/comments`, formData, {
+            params: { token }
+        }).pipe(
+            tap(comment => {
+                // Para el reporteador público, necesitamos encontrar la ID de la denuncia
+                // pero ya la tenemos cargada en el estado si estamos viendo los detalles.
+                const complaints = this.store.complaints().items;
+                const complaint = complaints.find(c => c.code === code);
+                if (complaint) {
+                    this.store.addCommentToComplaint(complaint.id, comment);
+                }
+            })
+        );
+    }
+
+    addAdminComment(complaintId: string, content: string, isPublic: boolean, files?: File[]): Observable<ComplaintComment> {
+        const formData = new FormData();
+        formData.append('content', content);
+        formData.append('is_public', String(isPublic));
+        if (files) {
+            files.forEach(file => formData.append('files', file));
+        }
+        return this.http.post<ComplaintComment>(`${this.apiUrl}/admin/${complaintId}/comments`, formData).pipe(
+            tap(comment => this.store.addCommentToComplaint(complaintId, comment))
+        );
     }
 
     updateComplaintStatus(complaintId: string, data: FormData): Observable<Complaint> {
-        return this.http.patch<Complaint>(`${this.apiUrl}/${complaintId}/status`, data);
+        return this.http.patch<Complaint>(`${this.apiUrl}/${complaintId}/status`, data).pipe(
+            tap(updated => this.store.updateComplaint(updated))
+        );
     }
 
     deleteComplaint(complaintId: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/admin/${complaintId}`);
+        return this.http.delete<void>(`${this.apiUrl}/admin/${complaintId}`).pipe(
+            tap(() => this.store.removeComplaint(complaintId))
+        );
     }
 }

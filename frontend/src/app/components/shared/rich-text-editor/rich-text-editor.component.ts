@@ -1,4 +1,4 @@
-import { Component, OnDestroy, inject, forwardRef, OnInit, AfterViewInit, ChangeDetectionStrategy, input, output } from '@angular/core';
+import { Component, OnDestroy, inject, forwardRef, OnInit, AfterViewInit, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { QuillModule } from 'ngx-quill';
@@ -60,6 +60,9 @@ export class RichTextEditorComponent implements OnDestroy, ControlValueAccessor 
   uploadUrl = input<string>('/upload/image');
   module = input<string>('common');
   entityId = input<string | null>(null);
+  variant = input<'classic' | 'glass' | 'dark'>('classic');
+
+  variantClass = computed(() => `editor-variant-${this.variant()}`);
 
   editorCreated = output<any>();
   contentChange = output<string>();

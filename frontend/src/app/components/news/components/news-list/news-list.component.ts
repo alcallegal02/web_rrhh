@@ -92,6 +92,16 @@ export class NewsListComponent {
         return classes[status] || 'bg-gray-50 text-gray-500 border-gray-200';
     }
 
+    getStatusIcon(status: string): string {
+        const icons: { [key: string]: string } = {
+            'borrador': 'lucideFileEdit',
+            'publicada': 'lucideSend',
+            'archivada': 'lucideArchive',
+            'eliminada': 'lucideTrash2'
+        };
+        return icons[status] || 'lucideNewspaper';
+    }
+
     // Actions
     onStatusChange(id: string, event: Event) {
         const target = event.target as HTMLSelectElement;

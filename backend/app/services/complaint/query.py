@@ -13,7 +13,10 @@ async def get_complaint_by_code(
     result = await session.execute(
         select(Complaint)
         .where(Complaint.code == code)
-        .options(selectinload(Complaint.attachments))
+        .options(
+            selectinload(Complaint.attachments),
+            selectinload(Complaint.comments).selectinload(Complaint.comments.property.mapper.class_.attachments)
+        )
     )
     return result.scalar_one_or_none()
 
@@ -30,7 +33,10 @@ async def verify_complaint_access(
             Complaint.code == code,
             Complaint.access_token == access_token
         )
-        .options(selectinload(Complaint.attachments))
+        .options(
+            selectinload(Complaint.attachments),
+            selectinload(Complaint.comments).selectinload(Complaint.comments.property.mapper.class_.attachments)
+        )
     )
     return result.scalar_one_or_none()
 
@@ -41,7 +47,10 @@ async def get_all_complaints(
     """Get all complaints (for administrators)"""
     result = await session.execute(
         select(Complaint)
-        .options(selectinload(Complaint.attachments))
+        .options(
+            selectinload(Complaint.attachments),
+            selectinload(Complaint.comments).selectinload(Complaint.comments.property.mapper.class_.attachments)
+        )
         .order_by(desc(Complaint.created_at))
     )
     return list(result.scalars().all())

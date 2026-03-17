@@ -77,7 +77,11 @@ export class AuthService {
 
   token = this._token.asReadonly();
   user = this._user.asReadonly();
-  isAuthenticated = computed(() => this._token() !== null && this._user() !== null);
+  
+  isAuthenticated = computed(() => {
+    const token = this._token();
+    return token !== null && this._user() !== null && !this.isTokenExpired(token);
+  });
 
   login(credentials: LoginRequest): Observable<User> {
     const formData = new FormData();
@@ -139,6 +143,19 @@ export class AuthService {
   isSuperadmin(): boolean {
     return this.hasRole('superadmin');
   }
+  isTokenExpired(token: string | null): boolean {
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload.exp) return false;
+      
+      const expirationDate = payload.exp * 1000;
+      return Date.now() >= expirationDate;
+    } catch {
+      return true;
+    }
+  }
+
   // Helper helper to verify session state reflects storage state
   checkSessionConsistency(): boolean {
     const storedToken = localStorage.getItem(this.tokenKey);

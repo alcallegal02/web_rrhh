@@ -43,6 +43,21 @@
   --color-inespasa-light: #5A9AD5;
 }
 
+/* Custom Scrollbar Thin */
+.custom-scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
 @layer base {
   :root {
     /* Fluid Typography Scale */
@@ -148,6 +163,60 @@
 
   .news-content {
     @apply max-w-none;
+  }
+
+  .news-content h1,
+  .news-content h2,
+  .news-content h3 {
+    @apply font-black mt-6 mb-4 text-gray-900;
+  }
+
+  .news-content h2 { @apply text-2xl; }
+  .news-content h3 { @apply text-xl; }
+
+  .news-content p {
+    @apply mb-4 leading-relaxed;
+  }
+
+  /* Robust bold styling as requested */
+  .news-content strong, 
+  .news-content b {
+    @apply font-black text-inespasa;
+  }
+
+  .news-content ul,
+  .news-content ol {
+    @apply ml-8 mb-6 list-disc;
+  }
+  
+  .news-content ol {
+    @apply list-decimal;
+  }
+
+  .news-content li {
+    @apply mb-2;
+  }
+
+  .news-content blockquote {
+    @apply border-l-4 border-inespasa pl-6 italic my-8 text-gray-500 bg-gray-50 py-4 pr-4 rounded-r-2xl;
+  }
+
+  /* Quill Support Classes */
+  .news-content .ql-align-center { text-align: center !important; }
+  .news-content .ql-align-right { text-align: right !important; }
+  .news-content .ql-align-justify { text-align: justify !important; }
+
+  .news-content .ql-indent-1 { padding-left: 3rem !important; }
+  .news-content .ql-indent-2 { padding-left: 6rem !important; }
+  .news-content .ql-indent-3 { padding-left: 9rem !important; }
+  .news-content .ql-indent-4 { padding-left: 12rem !important; }
+  
+  .news-content .ql-size-small { font-size: 0.75rem !important; }
+  .news-content .ql-size-large { font-size: 1.5rem !important; }
+  .news-content .ql-size-huge { font-size: 2.5rem !important; }
+
+  .news-content .ql-video {
+    @apply block w-full max-w-3xl aspect-video mx-auto my-8 rounded-2xl shadow-lg;
   }
 
   /* Animations */

@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { WebSocketService, WebSocketMessage } from './websocket.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { News, VacationRequest, Holiday, User, Complaint } from '../models/app.models';
+import { News, VacationRequest, Holiday, User, Complaint, ComplaintComment } from '../models/app.models';
 
 // Define State Interfaces
 export interface NewsState {
@@ -133,6 +133,24 @@ export class StoreService {
             ...s,
             complaints: {
                 items: s.complaints.items.map(i => i.id === item.id ? item : i),
+                lastUpdated: new Date()
+            }
+        }));
+    }
+
+    addCommentToComplaint(complaintId: string, comment: ComplaintComment) {
+        this._state.update(s => ({
+            ...s,
+            complaints: {
+                items: s.complaints.items.map(i => {
+                    if (i.id === complaintId) {
+                        const comments = i.comments || [];
+                        // Evitar duplicados si el WS ya lo metió
+                        if (comments.find(c => c.id === comment.id)) return i;
+                        return { ...i, comments: [...comments, comment] };
+                    }
+                    return i;
+                }),
                 lastUpdated: new Date()
             }
         }));

@@ -34,8 +34,9 @@ export class WebSocketService {
 
   connect(): void {
     const token = this.authService.getToken();
-    if (!token) {
-      console.warn('Cannot connect WebSocket: No authentication token');
+    if (!token || this.authService.isTokenExpired(token)) {
+      console.warn('Cannot connect WebSocket: No authentication token or token expired');
+      this._connected.set(false);
       return;
     }
 
@@ -77,9 +78,18 @@ export class WebSocketService {
         this._connected.set(false);
       };
 
-      this.ws.onclose = () => {
+      this.ws.onclose = (event: CloseEvent) => {
         this._connected.set(false);
         this.stopHeartbeat();
+        
+        // If closed due to invalid authentication (backend code 1008)
+        // or other permanent policy violations, DO NOT RECONNECT
+        if (event.code === 1008) {
+          console.error('WebSocket closed: Invalid authentication. Stopping reconnection.');
+          this.authService.logout();
+          return;
+        }
+
         this.attemptReconnect();
       };
     } catch (error) {

@@ -25,6 +25,28 @@ class ComplaintAttachmentResponse(SQLModel):
     created_at: datetime
 
 
+class CommentAttachmentResponse(SQLModel):
+    id: UUID
+    comment_id: UUID
+    file_url: str
+    file_original_name: str | None = None
+    created_at: datetime
+
+
+class CommentResponse(SQLModel):
+    id: UUID
+    complaint_id: UUID
+    user_id: UUID | None = None
+    user_name: str | None = None
+    content: str
+    is_public: bool
+    complaint_status: str
+    attachments: List[CommentAttachmentResponse] = []
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class ComplaintAttachment(SQLModel, table=True):
     __tablename__ = "complaint_attachments"
     
@@ -35,6 +57,34 @@ class ComplaintAttachment(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     complaint: "Complaint" = Relationship(back_populates="attachments")
+
+
+class CommentAttachment(SQLModel, table=True):
+    __tablename__ = "comment_attachments"
+    
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    comment_id: UUID = Field(foreign_key="complaint_comments.id")
+    file_url: str
+    file_original_name: str | None = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    comment: "ComplaintComment" = Relationship(back_populates="attachments")
+
+
+class ComplaintComment(SQLModel, table=True):
+    __tablename__ = "complaint_comments"
+    
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    complaint_id: UUID = Field(foreign_key="complaints.id")
+    user_id: UUID | None = Field(foreign_key="users.id", default=None)
+    content: str
+    is_public: bool = Field(default=True)
+    complaint_status: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    complaint: "Complaint" = Relationship(back_populates="comments")
+    author: Optional["User"] = Relationship()
+    attachments: List["CommentAttachment"] = Relationship(back_populates="comment", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 
 class Complaint(SQLModel, table=True):
@@ -54,6 +104,7 @@ class Complaint(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     attachments: List["ComplaintAttachment"] = Relationship(back_populates="complaint", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    comments: List["ComplaintComment"] = Relationship(back_populates="complaint", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 
 class ComplaintCreate(SQLModel):
@@ -77,10 +128,16 @@ class ComplaintResponse(SQLModel):
     status_public_description: str | None = None
     admin_response: str | None = None
     attachments: list[ComplaintAttachmentResponse] = []
+    comments: list[CommentResponse] = []
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CommentCreate(SQLModel):
+    content: str
+    is_public: bool = True
 
 
 class ComplaintCreateResponse(ComplaintResponse):

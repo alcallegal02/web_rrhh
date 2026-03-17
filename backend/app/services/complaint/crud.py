@@ -10,6 +10,7 @@ from sqlmodel import select, text
 from app.models.complaint import (
     Complaint,
     ComplaintAttachment,
+    ComplaintComment,
     ComplaintCreate,
     ComplaintStatusLog,
 )
@@ -138,16 +139,77 @@ async def create_complaint(
             session.add(attachment)
     await session.commit()
     
-    # Reload with attachments
+    # Reload with all relationships to avoid Pydantic evaluation errors
     from sqlalchemy.orm import selectinload
     result = await session.execute(
-        select(Complaint).where(Complaint.id == complaint.id).options(selectinload(Complaint.attachments))
+        select(Complaint)
+        .where(Complaint.id == complaint.id)
+        .options(
+            selectinload(Complaint.attachments),
+            selectinload(Complaint.comments).selectinload(ComplaintComment.attachments)
+        )
     )
     complaint = result.scalar_one()
     
     # EXPLICITLY NOT LOGGING CREATION FOR ANONYMITY
     
     return complaint
+
+
+async def create_complaint_comment(
+    session: AsyncSession,
+    complaint_id: UUID,
+    content: str,
+    is_public: bool,
+    user_id: UUID | None = None,
+    attachments: list[dict] | None = None
+) -> ComplaintComment | None:
+    """Create a new comment on a complaint"""
+    result = await session.execute(
+        select(Complaint).where(Complaint.id == complaint_id)
+    )
+    complaint = result.scalar_one_or_none()
+    
+    if not complaint:
+        return None
+        
+    # Sanitize content
+    sanitized_content = sanitize_html(content)
+    
+    # Snapshot current status
+    comment = ComplaintComment(
+        complaint_id=complaint_id,
+        user_id=user_id,
+        content=sanitized_content,
+        is_public=is_public,
+        complaint_status=complaint.status
+    )
+    
+    session.add(comment)
+    await session.flush()  # Get comment ID
+    
+    # Handle attachments
+    if attachments:
+        for att in attachments:
+            attachment = CommentAttachment(
+                comment_id=comment.id,
+                file_url=att['file_url'],
+                file_original_name=att.get('file_original_name')
+            )
+            session.add(attachment)
+            
+    await session.commit()
+    
+    # Reload with attachments
+    from sqlalchemy.orm import selectinload
+    result = await session.execute(
+        select(ComplaintComment)
+        .where(ComplaintComment.id == comment.id)
+        .options(selectinload(ComplaintComment.attachments))
+    )
+    comment = result.scalar_one()
+    
+    return comment
 
 
 async def update_complaint_status(
@@ -215,12 +277,15 @@ async def update_complaint_status(
     
     await session.commit()
     
-    # Reload with attachments to avoid Lazy Loading errors in response
+    # Reload with all relationships to avoid Lazy Loading errors in response
     from sqlalchemy.orm import selectinload
     result = await session.execute(
         select(Complaint)
         .where(Complaint.id == complaint.id)
-        .options(selectinload(Complaint.attachments))
+        .options(
+            selectinload(Complaint.attachments),
+            selectinload(Complaint.comments).selectinload(ComplaintComment.attachments)
+        )
     )
     complaint = result.scalar_one()
     

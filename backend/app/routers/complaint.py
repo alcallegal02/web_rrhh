@@ -27,6 +27,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.database import get_session
 from app.models.complaint import (
+    CommentCreate,
+    CommentResponse,
     Complaint,
     ComplaintCreate,
     ComplaintCreateResponse,
@@ -190,8 +192,64 @@ async def get_complaint(
     # Success: Reset attempts for this IP
     security_manager.reset_attempts(client_ip)
     
+    # Filter only public comments for public view
+    complaint.comments = [c for c in complaint.comments if c.is_public]
+    
     # Return filtered data for public view
     return ComplaintResponse.model_validate(complaint)
+
+
+@router.post("/{code}/comments", response_model=CommentResponse)
+@limiter.limit("5/minute")
+async def add_public_comment(
+    request: Request,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    code: str,
+    token: Annotated[str, Query(description="Access token/Security key")],
+    content: str = Form(...),
+    files: list[UploadFile] = File(default=[])
+):
+    """Add a response as reporter (public endpoint)"""
+    complaint = await verify_complaint_access(session, code, token)
+    if not complaint:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Denuncia no encontrada o clave incorrecta."
+        )
+    
+    from app.services.complaint.crud import process_and_save_complaint_files, create_complaint_comment
+    
+    # Process files
+    attachments = []
+    if files:
+        attachments = await process_and_save_complaint_files(
+            files,
+            session,
+            request.client.host,
+            entity_id=str(complaint.id) # Use complaint ID for folder organization
+        )
+
+    comment = await create_complaint_comment(
+        session=session,
+        complaint_id=complaint.id,
+        content=content,
+        is_public=True,
+        user_id=None,
+        attachments=attachments
+    )
+    
+    # Broadcast event
+    from app.websocket.manager import websocket_manager
+    await websocket_manager.broadcast({
+        "type": "COMPLAINT_COMMENT_ADDED",
+        "data": {
+            "complaint_id": str(complaint.id),
+            "is_public": True,
+            "status": complaint.status
+        }
+    })
+    
+    return CommentResponse.model_validate(comment)
 
 
 def _ensure_complaint_admin(user: User):
@@ -267,6 +325,61 @@ async def update_status_endpoint(
     })
     
     return ComplaintResponse.model_validate(complaint)
+
+
+@router.post("/admin/{complaint_id}/comments", response_model=CommentResponse)
+async def add_admin_comment(
+    request: Request,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    complaint_id: UUID,
+    content: str = Form(...),
+    is_public: bool = Form(True),
+    files: list[UploadFile] = File(default=[])
+):
+    """Add a public or private comment by RRHH/Admin"""
+    _ensure_complaint_admin(current_user)
+    
+    from app.services.complaint.crud import process_and_save_complaint_files, create_complaint_comment
+    
+    # Process files
+    attachments = []
+    if files:
+        attachments = await process_and_save_complaint_files(
+            files,
+            session,
+            request.client.host,
+            entity_id=str(complaint_id)
+        )
+
+    comment = await create_complaint_comment(
+        session=session,
+        complaint_id=complaint_id,
+        content=content,
+        is_public=is_public,
+        user_id=current_user.id,
+        attachments=attachments
+    )
+    
+    if not comment:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+    
+    # Set user name for response
+    comment_resp = CommentResponse.model_validate(comment)
+    comment_resp.user_name = f"{current_user.first_name} {current_user.last_name}" if current_user.first_name else current_user.email
+
+    # Broadcast event
+    from app.websocket.manager import websocket_manager
+    await websocket_manager.broadcast({
+        "type": "COMPLAINT_COMMENT_ADDED",
+        "data": {
+            "complaint_id": str(complaint_id),
+            "is_public": is_public,
+            "user_id": str(current_user.id)
+        }
+    })
+    
+    return comment_resp
 
 
 @router.delete("/admin/{complaint_id}")

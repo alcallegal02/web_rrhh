@@ -104,6 +104,26 @@ export interface Holiday {
     description?: string;
 }
 
+export interface CommentAttachment {
+    id: string;
+    comment_id: string;
+    file_url: string;
+    file_original_name?: string;
+    created_at: string;
+}
+
+export interface ComplaintComment {
+    id: string;
+    complaint_id: string;
+    user_id?: string;
+    user_name?: string;
+    content: string;
+    is_public: boolean;
+    complaint_status: string;
+    attachments: CommentAttachment[];
+    created_at: string;
+}
+
 export interface ComplaintAttachment {
     id: string;
     complaint_id: string;
@@ -123,6 +143,7 @@ export interface Complaint {
     status_public_description?: string;
     admin_response?: string;
     attachments: ComplaintAttachment[];
+    comments: ComplaintComment[];
     created_at: string;
     updated_at?: string;
 }

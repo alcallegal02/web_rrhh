@@ -1,4 +1,4 @@
-import { Component, signal, inject, viewChild, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, signal, inject, viewChild, ChangeDetectionStrategy, computed, HostListener } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DatePipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,18 +7,22 @@ import { AuthService } from '../../../../services/auth.service';
 import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-text-editor.component';
 import { ComplaintService } from '../../../../services/complaint.service';
 import { Complaint } from '../../../../models/app.models';
+import { ComplaintListComponent } from '../../components/complaint-list/complaint-list.component';
 import { QuillConfigModule } from 'ngx-quill';
-import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { NgIcon, provideIcons } from '@ng-icons/core';
 import {
   lucideScale, lucideClipboardType, lucideCalendarDays, lucideChevronRight,
   lucideClock, lucidePaperclip, lucideDownload, lucideWrench,
   lucideChevronDown, lucideCheck, lucideTrash2, lucideArrowLeft,
-  lucideHelpCircle
+  lucideHelpCircle, lucideMessageCircle, lucideUser, lucideShield,
+  lucideSend, lucideLock, lucideFileText, lucideX, lucideFilter,
+  lucideSearch, lucideShieldAlert, lucideMessageSquareText, lucideCheckCircle,
+  lucideXCircle, lucidePackageCheck
 } from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-complaint-management',
-  imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIconComponent],
+  imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIcon, ComplaintListComponent],
   templateUrl: './complaint-management.component.html',
   styleUrl: './complaint-management.component.scss',
   providers: [
@@ -26,7 +30,10 @@ import {
       lucideScale, lucideClipboardType, lucideCalendarDays, lucideChevronRight,
       lucideClock, lucidePaperclip, lucideDownload, lucideWrench,
       lucideChevronDown, lucideCheck, lucideTrash2, lucideArrowLeft,
-      lucideHelpCircle
+      lucideHelpCircle, lucideMessageCircle, lucideUser, lucideShield,
+      lucideSend, lucideLock, lucideFileText, lucideX, lucideFilter,
+      lucideSearch, lucideShieldAlert, lucideMessageSquareText, lucideCheckCircle,
+      lucideXCircle, lucidePackageCheck
     })
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -36,8 +43,60 @@ export class ComplaintManagementComponent {
   authService = inject(AuthService);
   private sanitizer = inject(DomSanitizer);
 
-  // Computed signal from service
-  complaints = computed(() => this.complaintService.complaints());
+  // Filters
+  filterStatus = signal<string[]>([]);
+  filterStartDate = signal<string>('');
+  filterEndDate = signal<string>('');
+
+  statusOptions = [
+    { value: 'entregada', label: 'Entregada', icon: 'lucidePackageCheck', iconColor: 'text-gray-400' },
+    { value: 'pendiente', label: 'Pendiente', icon: 'lucideClock', iconColor: 'text-amber-500' },
+    { value: 'en_analisis', label: 'En Análisis', icon: 'lucideSearch', iconColor: 'text-blue-500' },
+    { value: 'en_investigacion', label: 'En Investigación', icon: 'lucideShieldAlert', iconColor: 'text-purple-500' },
+    { value: 'informacion_requerida', label: 'Info. Requerida', icon: 'lucideMessageSquareText', iconColor: 'text-orange-500' },
+    { value: 'resuelta', label: 'Resuelta', icon: 'lucideCheckCircle', iconColor: 'text-emerald-500' },
+    { value: 'desestimada', label: 'Desestimada', icon: 'lucideXCircle', iconColor: 'text-red-500' }
+  ];
+
+  // UI state
+  activeStatusDropdown = signal(false);
+
+  @HostListener('document:click')
+  closeDropdowns() {
+    this.activeStatusDropdown.set(false);
+  }
+
+  getStatusIcon(status: string): string {
+    return this.statusOptions.find(opt => opt.value === status)?.icon || 'lucideScale';
+  }
+
+  getStatusIconColor(status: string): string {
+    return this.statusOptions.find(opt => opt.value === status)?.iconColor || 'text-gray-400';
+  }
+
+  // Computed signal from service with filtering
+  complaints = computed(() => {
+    let items = this.complaintService.complaints();
+    
+    // Filter by status
+    if (this.filterStatus().length > 0) {
+      items = items.filter(c => this.filterStatus().includes(c.status));
+    }
+    
+    // Filter by date
+    if (this.filterStartDate()) {
+      const start = new Date(this.filterStartDate());
+      items = items.filter(c => new Date(c.created_at) >= start);
+    }
+    
+    if (this.filterEndDate()) {
+      const end = new Date(this.filterEndDate());
+      end.setHours(23, 59, 59, 999);
+      items = items.filter(c => new Date(c.created_at) <= end);
+    }
+    
+    return items;
+  });
 
   selectedComplaintId = signal<string | null>(null);
   selectedComplaint = computed(() => {
@@ -49,7 +108,22 @@ export class ComplaintManagementComponent {
   loading = signal(false);
   submitting = signal(false);
 
-  editor = viewChild(RichTextEditorComponent);
+  // Management UI signals
+  activeTab = signal<'public' | 'internal'>('public');
+  adminCommentContent = signal('');
+  adminSelectedFiles = signal<File[]>([]);
+
+  commentEditor = viewChild('commentEditor', { read: RichTextEditorComponent });
+
+  publicComments = computed(() => {
+    const selected = this.selectedComplaint();
+    return selected?.comments?.filter(c => c.is_public) || [];
+  });
+
+  internalComments = computed(() => {
+    const selected = this.selectedComplaint();
+    return selected?.comments?.filter(c => !c.is_public) || [];
+  });
 
   editData = {
     new_status: '',
@@ -92,6 +166,50 @@ export class ComplaintManagementComponent {
       admin_notes: c.admin_response || '',
       status_public_description: c.status_public_description || ''
     };
+    this.activeTab.set('public');
+    this.activeStatusDropdown.set(false);
+  }
+
+  toggleStatusDropdown(event: Event): void {
+    event.stopPropagation();
+    this.activeStatusDropdown.set(!this.activeStatusDropdown());
+  }
+
+  async changeStatusQuickly(newStatus: string): Promise<void> {
+    const complaint = this.selectedComplaint();
+    if (!complaint || complaint.status === newStatus) return;
+    
+    this.editData.new_status = newStatus;
+    // When changing quickly, we don't want to overwrite existing notes/desc if we are not editing them
+    // But the backend endpoint expects them. We'll send the current ones from selectedComplaint.
+    this.editData.admin_notes = complaint.admin_response || '';
+    this.editData.status_public_description = complaint.status_public_description || '';
+    
+    await this.updateStatus();
+    this.activeStatusDropdown.set(false);
+  }
+
+  async changeStatusFromList(event: { complaintId: string, newStatus: string }): Promise<void> {
+    const complaint = this.complaints().find(c => c.id === event.complaintId);
+    if (!complaint || complaint.status === event.newStatus) return;
+
+    this.submitting.set(true);
+
+    const formData = new FormData();
+    formData.append('new_status', event.newStatus);
+    formData.append('admin_notes', complaint.admin_response || '');
+    formData.append('status_public_description', complaint.status_public_description || '');
+
+    this.complaintService.updateComplaintStatus(event.complaintId, formData).subscribe({
+      next: () => {
+        this.submitting.set(false);
+      },
+      error: (err) => {
+        console.error('Error updating status from list:', err);
+        this.submitting.set(false);
+        alert('Error al actualizar el estado desde el listado');
+      }
+    });
   }
 
   async updateStatus(): Promise<void> {
@@ -100,13 +218,6 @@ export class ComplaintManagementComponent {
 
     this.submitting.set(true);
 
-    // Procesar imágenes del editor antes de actualizar
-    const editorNode = this.editor();
-    if (editorNode) {
-      const processedResponse = await editorNode.processImages();
-      this.editData.admin_notes = processedResponse;
-    }
-
     const formData = new FormData();
     formData.append('new_status', this.editData.new_status);
     formData.append('admin_notes', this.editData.admin_notes);
@@ -114,14 +225,7 @@ export class ComplaintManagementComponent {
 
     this.complaintService.updateComplaintStatus(complaint.id, formData).subscribe({
       next: (updated) => {
-        // No manual update needed, WS handles it. 
-        // We might want to update selectedComplaint though if it's the one being viewed?
-        // But if we just update the store, the list updates. 
-        // selectedComplaint is a separate signal.
-        // If we want the detail view to update, we should maybe selecting by ID from the list compute?
-        // For now, let's update selectedComplaint manually for immediate feedback or just set it.
         this.submitting.set(false);
-        alert('Estado actualizado correctamente');
       },
       error: (err) => {
         console.error('Error updating status:', err);
@@ -210,5 +314,81 @@ export class ComplaintManagementComponent {
 
   getSafeHtml(content: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(content);
+  }
+
+  onFileSelected(event: any): void {
+    const files = Array.from(event.target.files) as File[];
+    if (files.length > 0) {
+      this.adminSelectedFiles.update(current => [...current, ...files]);
+    }
+    event.target.value = '';
+  }
+
+  removeFile(index: number): void {
+    this.adminSelectedFiles.update(files => files.filter((_, i) => i !== index));
+  }
+
+  async sendAdminComment(): Promise<void> {
+    const complaintId = this.selectedComplaintId();
+    if (!complaintId || !this.adminCommentContent() || this.submitting()) return;
+
+    this.submitting.set(true);
+
+    // Procesar imágenes del editor de comentarios
+    const editorNode = this.commentEditor();
+    if (editorNode) {
+      const processed = await editorNode.processImages();
+      this.adminCommentContent.set(processed);
+    }
+
+    const isPublic = this.activeTab() === 'public';
+
+    this.complaintService.addAdminComment(
+      complaintId, 
+      this.adminCommentContent(), 
+      isPublic,
+      this.adminSelectedFiles()
+    ).subscribe({
+      next: (comment) => {
+        // WS will handle the list update
+        this.adminCommentContent.set('');
+        this.adminSelectedFiles.set([]);
+        this.submitting.set(false);
+      },
+      error: (err) => {
+        console.error('Error sending admin comment:', err);
+        this.submitting.set(false);
+        alert('Error al enviar el comentario');
+      }
+    });
+  }
+
+  // --- Filter Actions ---
+  toggleFilterStatus(status: string): void {
+    this.filterStatus.update(current => {
+      if (current.includes(status)) {
+        return current.filter(s => s !== status);
+      } else {
+        return [...current, status];
+      }
+    });
+  }
+
+  isFilterStatusSelected(status: string): boolean {
+    return this.filterStatus().includes(status);
+  }
+
+  setFilterStartDate(date: string): void {
+    this.filterStartDate.set(date);
+  }
+
+  setFilterEndDate(date: string): void {
+    this.filterEndDate.set(date);
+  }
+
+  clearFilters(): void {
+    this.filterStatus.set([]);
+    this.filterStartDate.set('');
+    this.filterEndDate.set('');
   }
 }

@@ -23,66 +23,104 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        <!-- Complaint List (Sidebar) -->
+    <div class="management-container">
+        <!-- Sidebar: Complaint Directory -->
         <div
-            class="lg:col-span-4 space-y-4 max-h-[calc(100vh-220px)] overflow-y-auto pr-2 custom-scrollbar lg:sticky lg:top-24">
-            @if (loading()) {
-            <div class="text-center py-20 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm animate-pulse">
-                <div
-                    class="h-10 w-10 border-4 border-inespasa/20 border-t-inespasa rounded-full animate-spin mx-auto mb-4">
+            class="management-sidebar flex flex-col bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-200/50">
+            <!-- Sidebar Header -->
+            <div class="p-8 bg-gray-50/50 border-b border-gray-100">
+                <div class="flex items-center gap-4 mb-8">
+                    <div
+                        class="h-12 w-12 rounded-2xl bg-inespasa text-white flex items-center justify-center shadow-lg shadow-inespasa/20">
+                        <ng-icon name="lucideFilter" class="text-2xl"></ng-icon>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-black text-gray-900 uppercase tracking-widest">Filtros de Búsqueda</h2>
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter">Refina el listado de expedientes</p>
+                    </div>
                 </div>
-                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargando...</p>
-            </div>
-            } @else if (complaints().length === 0) {
-            <div class="bg-white rounded-[2.5rem] p-12 text-center border-2 border-dashed border-gray-100 opacity-60">
-                <div class="text-4xl text-gray-200 mb-4"><ng-icon name="lucideClipboardType"></ng-icon></div>
-                <p class="text-xs font-black uppercase tracking-widest text-gray-400">Sin denuncias</p>
-            </div>
-            } @else {
-            <div class="space-y-3">
-                @for (c of complaints(); track c.id) {
-                <div (click)="selectComplaint(c)"
-                    [class]="'group relative p-5 bg-white rounded-2xl border transition-all cursor-pointer overflow-hidden ' + 
-                    (selectedComplaint()?.id === c.id ? 'border-inespasa ring-4 ring-inespasa-light/10 shadow-lg' : 'border-gray-100 hover:border-inespasa-light/50 hover:shadow-md')">
 
-                    <!-- Status Stripe -->
-                    <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-all"
-                        [class]="getStatusStripeClass(c.status)"></div>
-
-                    <div class="pl-2 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span
-                                class="text-[9px] font-mono font-black text-inespasa bg-inespasa-light/10 px-2 py-0.5 rounded shadow-sm">{{
-                                c.code }}</span>
-                            <span [class]="getStatusClass(c.status)"
-                                class="text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-lg border shadow-sm">
-                                {{ getStatusLabel(c.status) }}
-                            </span>
+                <!-- Dynamic Filters -->
+                <div class="filters-grid">
+                    <!-- Statuses -->
+                    <div class="filter-col status-col">
+                        <label class="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Estados del Expediente</label>
+                        <div class="filter-buttons">
+                            @for (status of statusOptions; track status.value) {
+                            <button (click)="toggleFilterStatus(status.value)"
+                                class="flex items-center gap-3 px-4 py-3.5 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-all shadow-sm justify-start"
+                                [class.bg-inespasa]="isFilterStatusSelected(status.value)"
+                                [class.text-white]="isFilterStatusSelected(status.value)"
+                                [class.border-inespasa]="isFilterStatusSelected(status.value)"
+                                [class.bg-white]="!isFilterStatusSelected(status.value)"
+                                [class.text-gray-500]="!isFilterStatusSelected(status.value)"
+                                [class.border-gray-100]="!isFilterStatusSelected(status.value)">
+                                <ng-icon [name]="status.icon" 
+                                    [class]="isFilterStatusSelected(status.value) ? 'text-white' : status.iconColor"
+                                    class="text-sm transition-colors"></ng-icon>
+                                {{ status.label }}
+                            </button>
+                            }
                         </div>
+                    </div>
 
-                        <h3
-                            class="font-bold text-gray-800 text-sm line-clamp-2 leading-tight group-hover:text-inespasa transition-colors">
-                            {{ c.title }}</h3>
+                    <!-- Column 3: Dates & Actions -->
+                    <div class="filter-col date-col">
+                        <label class="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Rango de Fechas</label>
+                        <div class="filter-buttons date-inputs">
+                            <div class="relative date-field">
+                                <input type="date" [value]="filterStartDate()"
+                                    (change)="setFilterStartDate($any($event.target).value)"
+                                    class="w-full px-4 py-3.5 bg-white border border-gray-100 rounded-2xl text-[11px] font-bold text-gray-600 focus:outline-none focus:border-inespasa transition-all cursor-pointer">
+                                <span class="absolute -top-2.5 left-4 px-2 bg-white text-[9px] font-black text-gray-400 uppercase tracking-tighter border border-gray-50 rounded-full">Desde</span>
+                            </div>
+                            <div class="relative">
+                                <input type="date" [value]="filterEndDate()"
+                                    (change)="setFilterEndDate($any($event.target).value)"
+                                    class="w-full px-4 py-3.5 bg-white border border-gray-100 rounded-2xl text-[11px] font-bold text-gray-600 focus:outline-none focus:border-inespasa transition-all cursor-pointer">
+                                <span class="absolute -top-2.5 left-4 px-2 bg-white text-[9px] font-black text-gray-400 uppercase tracking-tighter border border-gray-50 rounded-full">Hasta</span>
+                            </div>
 
-                        <div
-                            class="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-gray-50 mt-2">
-                            <span class="flex items-center gap-1 font-bold uppercase tracking-tighter">
-                                <ng-icon name="lucideCalendarDays" class="text-xs"></ng-icon>
-                                {{ c.created_at | date:'dd MMM, yyyy' }}
-                            </span>
-                            <ng-icon name="lucideChevronRight"
-                                class="text-gray-300 transform group-hover:translate-x-1 transition-transform"></ng-icon>
+                            @if (filterStatus().length > 0 || filterStartDate() || filterEndDate()) {
+                            <button (click)="clearFilters()"
+                                class="clear-filters-btn w-full py-3.5 text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-white hover:bg-red-500 rounded-2xl transition-all flex items-center justify-center gap-2 border border-red-100 shadow-sm mt-4">
+                                <ng-icon name="lucideX" class="text-sm"></ng-icon>
+                                Limpiar filtros
+                            </button>
+                            }
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Sidebar List -->
+            <div class="flex-1 overflow-y-auto max-h-[calc(100vh-550px)] min-h-[400px] custom-scrollbar p-6">
+                @if (loading()) {
+                    <div class="text-center py-12 animate-pulse">
+                        <div class="h-10 w-10 border-4 border-inespasa/20 border-t-inespasa rounded-full animate-spin mx-auto mb-4"></div>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-gray-400">Cargando...</p>
+                    </div>
+                } @else {
+                    <app-complaint-list 
+                        [complaints]="complaints()" 
+                        [selectedId]="selectedComplaintId()"
+                        [statusOptions]="statusOptions"
+                        (select)="selectComplaint($event)"
+                        (statusChange)="changeStatusFromList($event)"
+                        (delete)="deleteComplaint()">
+                    </app-complaint-list>
                 }
             </div>
-            }
+
+            <!-- Sidebar Footer -->
+            <div class="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-[10px] text-gray-400 font-black uppercase tracking-widest">
+                <span>Resultados</span>
+                <span class="bg-white px-3 py-1 rounded-lg border border-gray-200 text-inespasa">{{ complaints().length }}</span>
+            </div>
         </div>
 
         <!-- Complaint Details (Detail Area) -->
-        <div class="lg:col-span-8 min-w-0">
+        <div class="flex-1 min-w-0">
             @let selected = selectedComplaint();
             @if (selected) {
             <div class="space-y-8 animate-fadeIn">
@@ -103,187 +141,332 @@
                                 Recibida el {{ selected.created_at | date:'dd/MM/yyyy HH:mm' }}
                             </p>
                         </div>
-                        <span [class]="getStatusClass(selected.status)"
-                            class="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] border-2 shadow-sm">
-                            {{ getStatusLabel(selected.status) }}
-                        </span>
-                    </div>
+                        <div class="relative">
+                            <button (click)="toggleStatusDropdown($event)"
+                                [class]="getStatusClass(selected.status)"
+                                class="px-6 py-2.5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] border-2 shadow-sm flex items-center gap-3 hover:scale-105 transition-all">
+                                <ng-icon [name]="getStatusIcon(selected.status)" [class]="getStatusIconColor(selected.status)" class="text-sm"></ng-icon>
+                                <span>{{ getStatusLabel(selected.status) }}</span>
+                                <ng-icon name="lucideChevronDown" class="text-xs opacity-50"></ng-icon>
+                            </button>
 
-                    <div class="space-y-10">
-                        <!-- Description -->
-                        <div class="space-y-4">
-                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Descripción
-                                de la Denuncia</h4>
-                            <div class="bg-gray-50/50 p-8 rounded-[2rem] border border-gray-100 text-gray-700 leading-loose news-content shadow-inner"
-                                [innerHTML]="getSafeHtml(selected.description)">
-                            </div>
+                            @if (activeStatusDropdown()) {
+                                <div (click)="$event.stopPropagation()" 
+                                    class="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <div class="p-2 bg-gray-50 border-b border-gray-100 text-[8px] font-black text-gray-400 uppercase tracking-widest text-center">
+                                        Cambiar estado rápidamente
+                                    </div>
+                                    @for (opt of statusOptions; track opt.value) {
+                                        <button (click)="changeStatusQuickly(opt.value)"
+                                            class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group/opt border-l-4 border-transparent"
+                                            [class.border-l-inespasa]="selected.status === opt.value"
+                                            [class.bg-gray-50]="selected.status === opt.value">
+                                            <div class="h-8 w-8 rounded-lg flex items-center justify-center transition-all border shadow-sm"
+                                                [class]="getStatusClass(opt.value)">
+                                                <ng-icon [name]="opt.icon" [class]="opt.iconColor" class="text-sm"></ng-icon>
+                                            </div>
+                                            <span class="text-[10px] font-black uppercase tracking-wider text-gray-600 group-hover:text-inespasa transition-colors">
+                                                {{ opt.label }}
+                                            </span>
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Complaint Description (Always visible above tabs) -->
+                <div class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 mb-8">
+                    <div class="space-y-6">
+                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Descripción de la Denuncia</h4>
+                        <div class="bg-gray-50/50 p-8 rounded-[2rem] border border-gray-100 text-gray-700 leading-loose news-content shadow-inner"
+                            [innerHTML]="getSafeHtml(selected.description)">
                         </div>
 
-                        <!-- Attachments -->
+                        <!-- Initial Attachments -->
                         @if (selected.attachments && selected.attachments.length > 0) {
-                        <div class="space-y-4">
-                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Documentos
-                                y Evidencias</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                @for (att of selected.attachments; track att.id) {
-                                <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
-                                    class="group flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl transition-all hover:shadow-lg hover:border-inespasa-light/30">
-                                    <div
-                                        class="h-12 w-12 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 group-hover:bg-inespasa group-hover:text-white group-hover:scale-105 transition-all shadow-sm">
-                                        <ng-icon name="lucidePaperclip" class="text-xl"></ng-icon>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p
-                                            class="text-xs font-bold text-gray-700 truncate group-hover:text-inespasa transition-colors">
-                                            {{ att.file_original_name || 'Ver archivo' }}</p>
-                                        <p
-                                            class="text-[9px] font-black text-gray-400 uppercase tracking-tighter mt-0.5">
-                                            Click para descargar</p>
-                                    </div>
-                                    <ng-icon name="lucideDownload"
-                                        class="text-gray-300 opacity-0 group-hover:opacity-100 transition-all"></ng-icon>
-                                </a>
-                                }
-                            </div>
+                        <div class="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            @for (att of selected.attachments; track att.id) {
+                            <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
+                                class="group flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-2xl transition-all hover:shadow-lg">
+                                <div class="h-10 w-10 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center border border-gray-100 group-hover:bg-inespasa group-hover:text-white transition-all shadow-sm">
+                                    <ng-icon name="lucidePaperclip" class="text-lg"></ng-icon>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-bold text-gray-700 truncate group-hover:text-inespasa transition-colors">{{ att.file_original_name || 'Archivo adjunto' }}</p>
+                                </div>
+                                <ng-icon name="lucideDownload" class="text-gray-300 opacity-0 group-hover:opacity-100 transition-all"></ng-icon>
+                            </a>
+                            }
                         </div>
                         }
                     </div>
                 </div>
 
-                <!-- Admin Action Area -->
-                <div
-                    class="bg-gray-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl shadow-gray-900/10 border border-gray-800 relative overflow-hidden">
-                    <!-- Decor -->
-                    <div
-                        class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl pointer-events-none">
+                <!-- Tabs -->
+                <div class="flex items-center gap-8 border-b border-gray-100 mb-8 px-6">
+                    <button (click)="activeTab.set('public')"
+                        [class]="'pb-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all relative ' + 
+                        (activeTab() === 'public' ? 'text-inespasa' : 'text-gray-400 hover:text-gray-600')">
+                        <div class="flex items-center gap-2">
+                            <ng-icon name="lucideMessageCircle" class="text-sm"></ng-icon>
+                            Hilo con Denunciante
+                        </div>
+                        @if (activeTab() === 'public') {
+                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-inespasa rounded-t-full"></div>
+                        }
+                    </button>
+                    <button (click)="activeTab.set('internal')"
+                        [class]="'pb-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all relative ' + 
+                        (activeTab() === 'internal' ? 'text-inespasa' : 'text-gray-400 hover:text-gray-600')">
+                        <div class="flex items-center gap-2">
+                            <ng-icon name="lucideLock" class="text-sm"></ng-icon>
+                            Notas Internas (Privadas)
+                        </div>
+                        @if (activeTab() === 'internal') {
+                            <div class="absolute bottom-0 left-0 right-0 h-1 bg-inespasa rounded-t-full"></div>
+                        }
+                    </button>
+                </div>
+
+                @if (activeTab() === 'public') {
+                <div class="space-y-8 animate-fadeIn">
+                    <!-- Public Thread -->
+                    <div class="space-y-4">
+                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-6 mb-2">Historial de Comunicación</h4>
+                        @if (publicComments().length > 0) {
+                            @for (comment of publicComments(); track comment.id) {
+                            <div class="bg-white rounded-[2rem] p-6 md:p-8 border border-gray-100 shadow-sm relative overflow-hidden group">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div [class]="comment.user_id ? 'bg-inespasa text-white' : 'bg-gray-900 text-white'"
+                                            class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg">
+                                            <ng-icon [name]="comment.user_id ? 'lucideShield' : 'lucideUser'"></ng-icon>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-black uppercase tracking-widest text-gray-900">
+                                                {{ comment.user_name || (comment.user_id ? 'Equipo HR' : 'Denunciante (Anónimo)') }}
+                                            </p>
+                                            <p class="text-[9px] font-bold text-gray-400">
+                                                {{ comment.created_at | date:'dd/MM/yyyy HH:mm' }} 
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="flex flex-col items-end">
+                                        <span class="text-[8px] font-black uppercase tracking-widest text-gray-400">Estado</span>
+                                        <span [class]="getStatusClass(comment.complaint_status)"
+                                            class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm">
+                                            {{ getStatusLabel(comment.complaint_status) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-gray-700 leading-relaxed news-content ml-1 lg:ml-13" 
+                                    [innerHTML]="getSafeHtml(comment.content)">
+                                </div>
+
+                                <!-- Comment Attachments -->
+                                @if (comment.attachments && comment.attachments.length > 0) {
+                                <div class="mt-4 ml-1 lg:ml-13 flex flex-wrap gap-2">
+                                    @for (att of comment.attachments; track att.id) {
+                                    <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
+                                        class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-all group">
+                                        <ng-icon name="lucideFileText" class="text-gray-400 group-hover:text-inespasa"></ng-icon>
+                                        <span class="text-[10px] font-bold text-gray-600 truncate max-w-[150px]">{{ att.file_original_name }}</span>
+                                        <ng-icon name="lucideDownload" class="text-gray-300"></ng-icon>
+                                    </a>
+                                    }
+                                </div>
+                                }
+                            </div>
+                            }
+                        } @else {
+                            <div class="bg-gray-50/50 rounded-[2rem] border border-gray-100 p-12 text-center opacity-60 ml-6">
+                                <ng-icon name="lucideMessageCircle" class="text-3xl text-gray-300 mb-2"></ng-icon>
+                                <p class="text-xs font-black uppercase tracking-widest text-gray-400">No hay mensajes públicos aún</p>
+                            </div>
+                        }
                     </div>
 
-                    <div class="relative z-10 space-y-10">
-                        <div class="flex items-center gap-4 border-b border-white/10 pb-6">
-                            <div class="w-10 h-10 rounded-xl bg-inespasa text-white flex items-center justify-center">
-                                <ng-icon name="lucideWrench" class="text-xl"></ng-icon>
-                            </div>
-                            <div>
-                                <h3 class="text-xl font-black text-white tracking-tight">Acciones de Gestión</h3>
-                                <p class="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mt-0.5">
-                                    Respuesta oficial y cambio de estado</p>
-                            </div>
-                        </div>
-
-                        <form (ngSubmit)="updateStatus()" class="space-y-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div class="space-y-3">
-                                    <label
-                                        class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 flex items-center justify-between">
-                                        <span>Estado del Expediente</span>
-                                        <div class="group relative flex items-center mr-4">
-                                            <ng-icon name="lucideHelpCircle"
-                                                class="text-inespasa hover:text-inespasa-light transition-colors cursor-help"></ng-icon>
-                                            <div
-                                                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal shadow-xl">
-                                                Actualiza el estado actual de la investigación. Cada cambio queda
-                                                registrado en la auditoría.
-                                            </div>
-                                        </div>
-                                    </label>
-                                    <div class="relative">
-                                        <select [(ngModel)]="editData.new_status" name="status"
-                                            class="w-full pl-6 pr-12 py-4 bg-white/10 border border-white/10 rounded-2xl font-bold text-white focus:bg-white/20 focus:ring-4 focus:ring-inespasa/20 transition-all outline-none appearance-none cursor-pointer">
-                                            <option value="pendiente" class="text-gray-900">Pendiente</option>
-                                            <option value="en_analisis" class="text-gray-900">En Análisis</option>
-                                            <option value="en_investigacion" class="text-gray-900">En Investigación
-                                            </option>
-                                            <option value="informacion_requerida" class="text-gray-900">Información
-                                                Requerida</option>
-                                            <option value="resuelta" class="text-gray-900">Resuelta</option>
-                                            <option value="desestimada" class="text-gray-900">Desestimada</option>
-                                        </select>
-                                        <ng-icon name="lucideChevronDown"
-                                            class="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"></ng-icon>
-                                    </div>
+                    <!-- Add Public Comment Form -->
+                    <div class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-48 h-48 bg-inespasa/5 rounded-full -mr-24 -mt-24"></div>
+                        <div class="relative z-10 space-y-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-inespasa text-white flex items-center justify-center shadow-lg shadow-inespasa/20">
+                                    <ng-icon name="lucideMessageCircle" class="text-xl"></ng-icon>
                                 </div>
-                            </div>
-
-                            <div class="space-y-3">
-                                <label
-                                    class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4">
-                                    <div class="flex items-center justify-between mr-4">
-                                        <span>Comunicación al Denunciante</span>
-                                        <div class="group relative flex items-center">
-                                            <ng-icon name="lucideHelpCircle"
-                                                class="text-inespasa hover:text-inespasa-light transition-colors cursor-help"></ng-icon>
-                                            <div
-                                                class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal shadow-xl">
-                                                Este mensaje será visible para el denunciante al consultar su código.
-                                                Úsalo para informar sobre el avance del caso.
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <span
-                                        class="text-inespasa lowercase font-bold tracking-normal ml-1 italic">(Transparencia
-                                        Ley 2/2023)</span>
-                                </label>
-                                <textarea [(ngModel)]="editData.status_public_description" name="public_desc" rows="3"
-                                    placeholder="Ej: Se ha procedido a la apertura de una investigación interna..."
-                                    class="w-full px-8 py-5 bg-white/10 border border-white/10 rounded-[2rem] text-sm text-white focus:bg-white/20 focus:ring-4 focus:ring-inespasa/20 transition-all outline-none placeholder:text-gray-600"></textarea>
-                            </div>
-
-                            <div class="space-y-3">
-                                <label
-                                    class="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ml-4 flex items-center justify-between">
-                                    <span>Resolución Interna</span>
-                                    <div class="group relative flex items-center mr-4">
-                                        <ng-icon name="lucideHelpCircle"
-                                            class="text-inespasa hover:text-inespasa-light transition-colors cursor-help"></ng-icon>
-                                        <div
-                                            class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal shadow-xl">
-                                            Detalles técnicos, pruebas y conclusiones finales que solo el equipo de
-                                            cumplimiento podrá ver.
-                                        </div>
-                                    </div>
-                                </label>
-                                <div
-                                    class="rounded-[2rem] overflow-hidden border border-white/10 bg-white/5 focus-within:ring-4 ring-inespasa/20 transition-all">
-                                    <app-rich-text-editor [(ngModel)]="editData.admin_notes" name="admin_notes"
-                                        [height]="'250px'"
-                                        [placeholder]="'Indique aquí los detalles confidenciales de la resolución...'"
-                                        [quillModules]="quillModules"></app-rich-text-editor>
-                                </div>
-                                <p class="text-[10px] text-gray-500 italic ml-4">Esta respuesta solo será visible
-                                    internamente en el panel de gestión.</p>
-                            </div>
-
-                            <button type="submit" [disabled]="submitting()"
-                                class="w-full flex items-center justify-center gap-3 bg-inespasa text-white px-10 py-6 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-inespasa-light/10 hover:bg-inespasa-dark hover:scale-[1.01] active:scale-95 disabled:opacity-50 transition-all">
-                                @if (submitting()) {
-                                <div class="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin">
-                                </div>
-                                <span>Actualizando Expediente...</span>
-                                } @else {
-                                <ng-icon name="lucideCheck" class="text-lg"></ng-icon>
-                                <span>Guardar Cambios y Notificar</span>
-                                }
-                            </button>
-                        </form>
-
-                        <!-- Danger Zone -->
-                        <div class="pt-8 border-t border-white/5 mt-10">
-                            <div
-                                class="flex flex-col sm:flex-row items-center justify-between gap-6 p-8 rounded-[2rem] bg-red-500/5 border border-red-500/10">
                                 <div>
-                                    <h4 class="text-xs font-black text-red-500 uppercase tracking-widest mb-1">Zona de
-                                        Gestión Crítica</h4>
-                                    <p class="text-[10px] text-gray-500 font-medium">La eliminación es permanente y
-                                        afectará a todos los adjuntos.</p>
+                                    <h3 class="text-lg font-black text-gray-900 tracking-tight">Responder al Denunciante</h3>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Este mensaje será visible públicamente para el autor</p>
                                 </div>
-                                <button (click)="deleteComplaint()" [disabled]="submitting()"
-                                    class="group flex items-center gap-3 text-red-500 font-black uppercase tracking-widest text-[10px] hover:text-white hover:bg-red-500 px-6 py-4 rounded-xl border border-red-500/20 transition-all shadow-sm">
-                                    <ng-icon name="lucideTrash2"
-                                        class="text-base group-hover:scale-110 transition-transform"></ng-icon>
-                                    Eliminar por completo
+                            </div>
+
+                            <app-rich-text-editor #commentEditor
+                                [(ngModel)]="adminCommentContent" 
+                                placeholder="Escribe tu respuesta oficial aquí..."
+                                [height]="'300px'">
+                            </app-rich-text-editor>
+
+                            <!-- Selected Files List -->
+                            @if (adminSelectedFiles().length > 0) {
+                            <div class="flex flex-wrap gap-3 animate-fadeIn">
+                                @for (file of adminSelectedFiles(); track $index) {
+                                <div class="flex items-center gap-3 bg-gray-50 border border-gray-100 px-4 py-2 rounded-xl">
+                                    <ng-icon name="lucideFileText" class="text-gray-400"></ng-icon>
+                                    <span class="text-[10px] font-bold text-gray-700">{{ file.name }}</span>
+                                    <button (click)="removeFile($index)" class="text-gray-400 hover:text-red-500 transition-colors">
+                                        <ng-icon name="lucideX"></ng-icon>
+                                    </button>
+                                </div>
+                                }
+                            </div>
+                            }
+
+                            <div class="flex flex-wrap items-center justify-between gap-6 pt-2">
+                                <label class="cursor-pointer flex items-center gap-2 bg-white border border-gray-100 px-5 py-3 rounded-2xl hover:bg-gray-50 transition-all group shadow-sm">
+                                    <input type="file" class="hidden" (change)="onFileSelected($event)" multiple>
+                                    <ng-icon name="lucidePaperclip" class="text-gray-400 group-hover:text-inespasa"></ng-icon>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Adjuntar evidencias</span>
+                                </label>
+
+                                <button (click)="sendAdminComment()" [disabled]="!adminCommentContent() || submitting()"
+                                    class="flex items-center gap-3 bg-inespasa text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-inespasa-dark hover:scale-105 transition-all shadow-lg shadow-inespasa/20 disabled:opacity-30">
+                                    <ng-icon name="lucideSend"></ng-icon>
+                                    <span>{{ submitting() ? 'Enviando...' : 'Enviar Respuesta Pública' }}</span>
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+                }
+
+                @if (activeTab() === 'internal') {
+                <div class="space-y-8 animate-fadeIn">
+                    <!-- Internal Notes List -->
+                    <div class="space-y-4">
+                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-6 mb-2">Bitácora de Notas Internas</h4>
+                        @if (internalComments().length > 0) {
+                            @for (comment of internalComments(); track comment.id) {
+                            <div class="bg-amber-50/20 rounded-[2rem] p-6 md:p-8 border border-amber-100/50 shadow-sm relative overflow-hidden group">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg">
+                                            <ng-icon name="lucideShield"></ng-icon>
+                                        </div>
+                                        <div>
+                                            <p class="text-xs font-black uppercase tracking-widest text-gray-900">
+                                                {{ comment.user_name || 'Equipo HR' }}
+                                            </p>
+                                            <p class="text-[9px] font-bold text-gray-400">
+                                                {{ comment.created_at | date:'dd/MM/yyyy HH:mm' }} 
+                                                <span class="ml-2 text-amber-600 font-black uppercase tracking-widest border-l border-amber-200 pl-2">Nota Privada</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    
+                                    <span [class]="getStatusClass(comment.complaint_status)"
+                                        class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm">
+                                        {{ getStatusLabel(comment.complaint_status) }}
+                                    </span>
+                                </div>
+                                <div class="text-sm text-gray-700 leading-relaxed news-content ml-1 lg:ml-13" 
+                                    [innerHTML]="getSafeHtml(comment.content)">
+                                </div>
+
+                                <!-- Comment Attachments -->
+                                @if (comment.attachments && comment.attachments.length > 0) {
+                                <div class="mt-4 ml-1 lg:ml-13 flex flex-wrap gap-2">
+                                    @for (att of comment.attachments; track att.id) {
+                                    <a [href]="getDownloadUrl(att.file_url, att.file_original_name)" target="_blank"
+                                        class="flex items-center gap-2 px-3 py-2 bg-white/50 border border-amber-100 rounded-xl hover:bg-white transition-all group">
+                                        <ng-icon name="lucideFileText" class="text-amber-400"></ng-icon>
+                                        <span class="text-[10px] font-bold text-amber-700 truncate max-w-[150px]">{{ att.file_original_name }}</span>
+                                    </a>
+                                    }
+                                </div>
+                                }
+                            </div>
+                            }
+                        } @else {
+                            <div class="bg-gray-50/50 rounded-[2rem] border border-gray-100 p-12 text-center opacity-60 ml-6">
+                                <ng-icon name="lucideLock" class="text-3xl text-gray-300 mb-2"></ng-icon>
+                                <p class="text-xs font-black uppercase tracking-widest text-gray-400">No hay notas internas registradas</p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Add Internal Note Form -->
+                    <div class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full -mr-24 -mt-24"></div>
+                        <div class="relative z-10 space-y-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/20">
+                                    <ng-icon name="lucideLock" class="text-xl"></ng-icon>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-black text-gray-900 tracking-tight">Nueva Nota Interna</h3>
+                                    <p class="text-[10px] text-amber-600 font-bold uppercase tracking-widest">Solo visible para el equipo de RRHH y administración</p>
+                                </div>
+                            </div>
+
+                            <app-rich-text-editor #commentEditor
+                                [(ngModel)]="adminCommentContent" 
+                                placeholder="Registra detalles de la investigación, conclusiones privadas..."
+                                [height]="'300px'">
+                            </app-rich-text-editor>
+
+                            <!-- Selected Files List -->
+                            @if (adminSelectedFiles().length > 0) {
+                            <div class="flex flex-wrap gap-3 animate-fadeIn">
+                                @for (file of adminSelectedFiles(); track $index) {
+                                <div class="flex items-center gap-3 bg-gray-50 border border-gray-100 px-4 py-2 rounded-xl">
+                                    <ng-icon name="lucideFileText" class="text-gray-400"></ng-icon>
+                                    <span class="text-[10px] font-bold text-gray-700">{{ file.name }}</span>
+                                    <button (click)="removeFile($index)" class="text-gray-400 hover:text-red-500 transition-colors">
+                                        <ng-icon name="lucideX"></ng-icon>
+                                    </button>
+                                </div>
+                                }
+                            </div>
+                            }
+
+                            <div class="flex flex-wrap items-center justify-between gap-6 pt-2">
+                                <label class="cursor-pointer flex items-center gap-2 bg-white border border-gray-100 px-5 py-3 rounded-2xl hover:bg-gray-50 transition-all group shadow-sm">
+                                    <input type="file" class="hidden" (change)="onFileSelected($event)" multiple>
+                                    <ng-icon name="lucidePaperclip" class="text-gray-400 group-hover:text-amber-500"></ng-icon>
+                                    <span class="text-[10px] font-black uppercase tracking-widest text-gray-500">Adjuntar archivos de trabajo</span>
+                                </label>
+
+                                <button (click)="sendAdminComment()" [disabled]="!adminCommentContent() || submitting()"
+                                    class="flex items-center gap-3 bg-amber-500 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-amber-600 hover:scale-105 transition-all shadow-lg shadow-amber-500/20 disabled:opacity-30">
+                                    <ng-icon name="lucideShield"></ng-icon>
+                                    <span>{{ submitting() ? 'Guardando...' : 'Guardar Nota Privada' }}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                }
+
+                <!-- Danger Zone -->
+                <div class="bg-red-50/10 rounded-[2.5rem] p-8 md:p-12 border border-red-500/10 animate-fadeIn">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/20">
+                                <ng-icon name="lucideTrash2" class="text-2xl"></ng-icon>
+                            </div>
+                            <div>
+                                <h4 class="text-base font-black text-red-600 uppercase tracking-widest mb-1">Zona de Gestión Crítica</h4>
+                                <p class="text-[10px] text-gray-500 font-bold uppercase tracking-tight">La eliminación es permanente e irreversible</p>
+                            </div>
+                        </div>
+                        <button (click)="deleteComplaint()" [disabled]="submitting()"
+                            class="group w-full sm:w-auto flex items-center justify-center gap-3 text-red-500 font-black uppercase tracking-widest text-[10px] hover:text-white hover:bg-red-500 px-8 py-4 rounded-2xl border border-red-500/20 transition-all shadow-sm active:scale-95 disabled:opacity-30">
+                            <ng-icon name="lucideTrash2" class="text-base group-hover:scale-110 transition-transform"></ng-icon>
+                            Eliminar Expediente
+                        </button>
                     </div>
                 </div>
             </div>

@@ -99,9 +99,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-10">
                     <!-- Content -->
-                    <div class="lg:col-span-2 space-y-8">
+                    <div class="xl:col-span-2 space-y-8 min-w-0">
                         <div>
                             <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4 ml-1">
                                 Contenido Original</h4>
@@ -141,7 +141,7 @@
                     </div>
 
                     <!-- Metadata -->
-                    <div class="space-y-6">
+                    <div class="space-y-6 min-w-0">
                         <div class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
                             <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Cronología</h4>
 
@@ -192,40 +192,132 @@
                 </div>
             </div>
 
-            <!-- Resolution / Admin Response -->
-            @if (complaint()!.status_public_description || complaint()!.admin_response) {
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                @if (complaint()!.status_public_description) {
-                <div class="bg-blue-50/50 rounded-[2.5rem] p-10 border border-blue-100 shadow-sm animate-slideUp">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 rounded-xl bg-inespasa text-white flex items-center justify-center">
-                            <ng-icon name="lucideInfo" class="text-xl"></ng-icon>
+            <!-- Conversation Timeline -->
+            @if (complaint()?.comments && (complaint()?.comments?.length || 0) > 0) {
+            <div class="space-y-6">
+                <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Historial de Comunicación</h3>
+                
+                <div class="space-y-4">
+                    @for (comment of complaint()?.comments; track comment.id) {
+                    <div class="bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 shadow-xl shadow-gray-200/50 relative overflow-hidden group animate-slideUp">
+                        <!-- Author Badge -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div [class]="comment.user_id ? 'bg-inespasa text-white' : 'bg-gray-900 text-white'"
+                                    class="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110">
+                                    <ng-icon [name]="comment.user_id ? 'lucideShieldCheck' : 'lucideMessageSquare'"></ng-icon>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-black uppercase tracking-widest text-gray-900">
+                                        {{ comment.user_id ? 'Recursos Humanos' : 'Tú (Remitente)' }}
+                                    </p>
+                                    <p class="text-[9px] font-bold text-gray-400">
+                                        {{ comment.created_at | date:'dd/MM/yyyy HH:mm' }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Status at time of comment -->
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-[8px] font-black uppercase tracking-widest text-gray-400">Estado en ese momento</span>
+                                <span [class]="getStatusClass(comment.complaint_status)"
+                                    class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm">
+                                    {{ getStatusLabel(comment.complaint_status) }}
+                                </span>
+                            </div>
                         </div>
-                        <h3 class="text-lg font-black text-gray-900 tracking-tight">Información de Seguimiento</h3>
-                    </div>
-                    <div
-                        class="bg-white p-6 rounded-2xl border border-blue-100/50 text-sm text-gray-700 leading-relaxed italic whitespace-pre-line">
-                        {{ complaint()!.status_public_description }}
-                    </div>
-                </div>
-                }
 
-                @if (complaint()!.admin_response) {
-                <div class="bg-emerald-50/50 rounded-[2.5rem] p-10 border border-emerald-100 shadow-sm animate-slideUp">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
-                            <ng-icon name="lucideMessageSquare" class="text-xl"></ng-icon>
+                        <!-- Content -->
+                        <div class="text-sm text-gray-700 leading-relaxed news-content ml-1 lg:ml-13" 
+                            [innerHTML]="getSafeHtml(comment.content)">
                         </div>
-                        <h3 class="text-lg font-black text-gray-900 tracking-tight">Respuesta Final</h3>
+
+                        <!-- Comment Attachments -->
+                        @if (comment.attachments && comment.attachments.length > 0) {
+                        <div class="mt-4 ml-1 lg:ml-13 flex flex-wrap gap-2">
+                            @for (att of comment.attachments; track att.id) {
+                            <a [href]="getFileUrl(att.file_url, att.file_original_name)" target="_blank"
+                                class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-all group">
+                                <ng-icon name="lucideFileText" class="text-gray-400 group-hover:text-inespasa"></ng-icon>
+                                <span class="text-[10px] font-bold text-gray-600 truncate max-w-[150px]">{{ att.file_original_name }}</span>
+                                <ng-icon name="lucideDownload" class="text-gray-300"></ng-icon>
+                            </a>
+                            }
+                        </div>
+                        }
                     </div>
-                    <div
-                        class="bg-white p-6 rounded-2xl border border-emerald-100/50 text-sm text-gray-700 leading-relaxed font-bold italic whitespace-pre-line">
-                        {{ complaint()!.admin_response }}
-                    </div>
+                    }
                 </div>
-                }
             </div>
             }
+
+            <!-- Reply Form -->
+            <div class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden animate-slideUp">
+                <div class="absolute top-0 right-0 w-48 h-48 bg-inespasa/5 rounded-full -mr-24 -mt-24"></div>
+                
+                <div class="relative z-10">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-12 h-12 rounded-2xl bg-inespasa text-white flex items-center justify-center shadow-lg shadow-inespasa/20">
+                            <ng-icon name="lucideMessageSquare" class="text-xl"></ng-icon>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-black text-gray-900 tracking-tight">Escribir una respuesta</h3>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Aportar más información o responder consultas</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <app-rich-text-editor #replyEditor
+                            [(ngModel)]="replyContent" 
+                            placeholder="Escribe tu mensaje aquí..."
+                            [height]="'350px'">
+                        </app-rich-text-editor>
+                    </div>
+
+                    <!-- Selected Files List -->
+                    @if (selectedFiles().length > 0) {
+                    <div class="flex flex-wrap gap-3 mb-6 animate-fadeIn">
+                        @for (file of selectedFiles(); track $index) {
+                        <div class="flex items-center gap-3 bg-gray-50 border border-gray-100 px-4 py-2 rounded-xl group/file">
+                            <ng-icon name="lucideFileText" class="text-gray-400"></ng-icon>
+                            <span class="text-[10px] font-bold text-gray-700">{{ file.name }}</span>
+                            <button (click)="removeFile($index)" class="text-gray-400 hover:text-red-500 transition-colors">
+                                <ng-icon name="lucideX"></ng-icon>
+                            </button>
+                        </div>
+                        }
+                    </div>
+                    }
+
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <label class="cursor-pointer flex items-center gap-2 bg-white border border-gray-100 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all group">
+                                <input type="file" class="hidden" (change)="onFileSelected($event)" multiple>
+                                <ng-icon name="lucidePaperclip" class="text-gray-400 group-hover:text-inespasa"></ng-icon>
+                                <span class="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-inespasa">Adjuntar archivos</span>
+                            </label>
+                            
+                            <p class="text-[10px] text-gray-400 italic flex items-center gap-2">
+                                <ng-icon name="lucideLock"></ng-icon>
+                                Tu respuesta seguirá siendo anónima y segura.
+                            </p>
+                        </div>
+                        
+                        <button 
+                            (click)="sendReply()" 
+                            [disabled]="(!replyContent() && selectedFiles().length === 0) || submittingReply()"
+                            class="w-full sm:w-auto flex items-center justify-center gap-3 bg-inespasa text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-inespasa-dark hover:scale-[1.05] active:scale-95 disabled:opacity-30 disabled:scale-100 transition-all shadow-xl shadow-inespasa/20">
+                            @if (submittingReply()) {
+                                <div class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                <span>Enviando...</span>
+                            } @else {
+                                <ng-icon name="lucideSend"></ng-icon>
+                                <span>Enviar Respuesta</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row gap-4 pt-6">

@@ -1,4 +1,4 @@
-import { Component, signal, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, inject, viewChild, ChangeDetectionStrategy } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DatePipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,8 +8,9 @@ import {
   lucideArrowLeft, lucideSearch, lucideLock, lucideFileText,
   lucideDownload, lucideCalendar, lucideRefreshCw, lucideShieldCheck,
   lucideScale, lucideInfo, lucideMessageSquare, lucideTriangleAlert,
-  lucideShield
+  lucideShield, lucideSend, lucidePaperclip, lucideX
 } from '@ng-icons/lucide';
+import { RichTextEditorComponent } from '../../../../components/shared/rich-text-editor/rich-text-editor.component';
 import { environment } from '../../../../config/environment';
 import { ConfigService } from '../../../../services/config';
 import { ComplaintService } from '../../../../services/complaint.service';
@@ -17,7 +18,7 @@ import { Complaint } from '../../../../models/app.models';
 
 @Component({
   selector: 'app-complaint-status',
-  imports: [CommonModule, FormsModule, DatePipe, NgIconComponent],
+  imports: [CommonModule, FormsModule, DatePipe, NgIconComponent, RichTextEditorComponent],
   templateUrl: './complaint-status.component.html',
   styleUrl: './complaint-status.component.scss',
   providers: [
@@ -25,7 +26,7 @@ import { Complaint } from '../../../../models/app.models';
       lucideArrowLeft, lucideSearch, lucideLock, lucideFileText,
       lucideDownload, lucideCalendar, lucideRefreshCw, lucideShieldCheck,
       lucideScale, lucideInfo, lucideMessageSquare, lucideTriangleAlert,
-      lucideShield
+      lucideShield, lucideSend, lucidePaperclip, lucideX
     })
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -42,6 +43,13 @@ export class ComplaintStatusComponent {
   token = signal('');
   loading = signal(false);
   error = signal('');
+  
+  // Reply signals
+  replyContent = signal('');
+  selectedFiles = signal<File[]>([]);
+  submittingReply = signal(false);
+
+  replyEditor = viewChild('replyEditor', { read: RichTextEditorComponent });
 
   constructor() {
     const codeParam = this.route.snapshot.paramMap.get('code');
@@ -145,8 +153,8 @@ export class ComplaintStatusComponent {
     this.router.navigate(['/complaint']);
   }
 
-  getSafeHtml(content: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(content);
+  getSafeHtml(content: string | undefined | null): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(content || '');
   }
 
   getFileUrl(path: string, originalName: string | undefined): string {
@@ -162,5 +170,57 @@ export class ComplaintStatusComponent {
     if (!filename) return false;
     const ext = filename.split('.').pop()?.toLowerCase();
     return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
+  }
+
+  onFileSelected(event: any): void {
+    const files = Array.from(event.target.files) as File[];
+    if (files.length > 0) {
+      this.selectedFiles.update(current => [...current, ...files]);
+    }
+    // Reset input
+    event.target.value = '';
+  }
+
+  removeFile(index: number): void {
+    this.selectedFiles.update(files => files.filter((_, i) => i !== index));
+  }
+
+  async sendReply(): Promise<void> {
+    if (!this.replyContent() || this.submittingReply()) return;
+
+    this.submittingReply.set(true);
+
+    // Procesar imágenes del editor antes de enviar
+    const editorNode = this.replyEditor();
+    if (editorNode) {
+      const processed = await editorNode.processImages();
+      this.replyContent.set(processed);
+    }
+
+    this.complaintService.addPublicComment(
+      this.code(), 
+      this.token(), 
+      this.replyContent(), 
+      this.selectedFiles()
+    ).subscribe({
+      next: (comment) => {
+        // Optimistic update: Add comment to current complaint signal
+        const current = this.complaint();
+        if (current) {
+          this.complaint.set({
+            ...current,
+            comments: [...(current.comments || []), comment]
+          });
+        }
+        this.replyContent.set('');
+        this.selectedFiles.set([]);
+        this.submittingReply.set(false);
+      },
+      error: (err) => {
+        console.error('Error sending reply:', err);
+        this.error.set('No se pudo enviar la respuesta. Por favor, inténtalo de nuevo.');
+        this.submittingReply.set(false);
+      }
+    });
   }
 }

@@ -88,5 +88,50 @@
             font-size: 1.2rem;
             color: #4b5563;
         }
+
+        /* QUILL SUPPORT CLASSES */
+        .ql-align-center { text-align: center; }
+        .ql-align-right { text-align: right; }
+        .ql-align-justify { text-align: justify; }
+
+        .ql-indent-1 { padding-left: 3em; }
+        .ql-indent-2 { padding-left: 6em; }
+        .ql-indent-3 { padding-left: 9em; }
+        .ql-indent-4 { padding-left: 12em; }
+        .ql-indent-5 { padding-left: 15em; }
+        .ql-indent-6 { padding-left: 18em; }
+        .ql-indent-7 { padding-left: 21em; }
+        .ql-indent-8 { padding-left: 24em; }
+
+        .ql-video {
+            display: block;
+            max-width: 100%;
+            aspect-ratio: 16 / 9;
+            margin: 2rem auto;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .ql-font-serif { font-family: Georgia, Times New Roman, serif; }
+        .ql-font-monospace { font-family: Monaco, Courier New, monospace; }
+
+        .ql-size-small { font-size: 0.75rem; }
+        .ql-size-large { font-size: 1.5rem; }
+        .ql-size-huge { font-size: 2.5rem; }
+
+        /* Ensure inline styles aren't overwritten by prose */
+        span[style*="color"], 
+        span[style*="background-color"],
+        span[style*="font-size"] {
+            color: inherit;
+            background-color: inherit;
+            font-size: inherit;
+        }
+        
+        /* But allow explicitly set styles to take precedence */
+        *[style] {
+            all: revert-layer; /* Try to respect inline styles more strongly */
+        }
     }
 }

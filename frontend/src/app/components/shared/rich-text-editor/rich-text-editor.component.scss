@@ -1,99 +1,249 @@
-/* Estilos para el editor y sus elementos */
-:host ::ng-deep .ql-container {
-    font-family: inherit;
-    font-size: inherit;
-    height: 100%;
-    overflow-y: auto;
-    position: relative !important;
-    border: none !important; /* Remove internal Quill border */
-}
+/* Estilos para el editor unificados con el estilo de noticias (Blanco/Azul) */
+:host ::ng-deep {
+    .quill-editor-container {
+        display: flex;
+        flex-direction: column;
+        border-radius: 1.5rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid #eef2f6;
+        background: #ffffff;
+        width: 100%;
+        min-height: inherit;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 
-:host ::ng-deep .ql-editor {
-    min-height: 200px;
-    padding: 1rem;
-}
+        &:focus-within {
+            border-color: #004494;
+            box-shadow: 0 4px 20px rgba(0, 68, 148, 0.08);
+        }
 
-/* Toolbar Responsive & Size Optimization */
-:host ::ng-deep .ql-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.15rem;
-    /* Even tighter packing */
-    padding: 0.35rem !important;
-    /* Reduced padding */
-    border: none !important; /* Remove Quill border */
-    border-bottom: 2px solid #f3f4f6 !important; /* Subtle separator from content */
-    background-color: #fff;
-}
+        .quill-editor {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            width: 100%;
+        }
 
-/* Global toolbar button sizing */
-:host ::ng-deep .ql-toolbar button {
-    width: 28px !important;
-    height: 24px !important;
-    /* Slightly shorter */
-    padding: 2px 4px !important;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-}
+        .ql-container {
+            flex: 1;
+            border: none !important;
+            font-family: inherit;
+            font-size: 14px;
+        }
 
-:host ::ng-deep .ql-toolbar button svg {
-    width: 16px !important;
-    /* Smaller icons */
-    height: 16px !important;
-}
+        .ql-editor {
+            color: #1e293b !important; /* Gris azulado oscuro para el texto */
+            min-height: 400px !important;
+            flex: 1 0 auto;
+            padding: 1.5rem;
+            line-height: 1.6;
+            
+            @media (max-width: 1200px) {
+                min-height: 450px !important;
+                padding: 1.25rem;
+            }
 
-/* Adjust format groups spacing */
-:host ::ng-deep .ql-toolbar .ql-formats {
-    margin-right: 0.25rem !important;
-    margin-bottom: 0.25rem !important;
-    display: flex;
-    align-items: center;
-    border-right: 1px solid #f3f4f6;
-    /* Subtle separator */
-    padding-right: 0.25rem;
-}
+            @media (max-width: 768px) {
+                min-height: 500px !important;
+                padding: 1rem;
+            }
 
-:host ::ng-deep .ql-toolbar .ql-formats:last-child {
-    border-right: none;
-}
+            &.ql-blank::before {
+                color: #94a3b8 !important; /* Gris suave para placeholder */
+                font-style: normal !important;
+                opacity: 0.8;
+                left: 1.5rem;
+                pointer-events: none;
+                
+                @media (max-width: 768px) {
+                    left: 1rem;
+                }
+            }
 
-/* Fix Picker Labels */
-:host ::ng-deep .ql-snow .ql-picker-label {
-    padding-left: 0.25rem;
-    font-size: 11px !important;
-    height: 24px !important;
-    display: flex !important;
-    align-items: center;
-}
+            p, span, h1, h2, h3, h4, li {
+                color: inherit !important;
+            }
+        }
 
-/* Mobile Specific Optimizations (< 640px) */
-@media (max-width: 640px) {
-    :host ::ng-deep .ql-toolbar button {
-        width: 24px !important;
-        height: 24px !important;
-        padding: 2px !important;
+        /* Variante Glass/Transparente ajustada a azul/blanco */
+        &.editor-variant-glass {
+            background: rgba(255, 255, 255, 0.6) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            
+            .ql-toolbar {
+                background: rgba(255, 255, 255, 0.4) !important;
+            }
+        }
     }
 
-    :host ::ng-deep .ql-toolbar button svg {
-        width: 18px !important;
-        height: 18px !important;
+    /* Toolbar Styling */
+    .ql-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.7rem 1rem !important;
+        border: none !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        background-color: #f8fafc;
+        width: 100% !important;
+
+        @media (max-width: 1200px) {
+            padding: 0.5rem 0.75rem !important;
+            gap: 0.25rem;
+        }
     }
 
-    :host ::ng-deep .ql-toolbar .ql-picker-label {
+    .ql-formats {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        margin-right: 0.5rem !important;
+        padding-right: 0.5rem;
+        border-right: 1px solid #e2e8f0;
+
+        @media (max-width: 1200px) {
+            margin-right: 0.3rem !important;
+            padding-right: 0.3rem;
+        }
+
+        &:last-child {
+            border-right: none;
+        }
+    }
+
+    .ql-toolbar button {
+        width: 32px !important;
+        height: 32px !important;
+        padding: 5px !important;
+        border-radius: 8px !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        color: #64748b;
+
+        &:hover { 
+            background: #e2e8f0 !important; 
+            color: #004494;
+        }
+
+        &.ql-active { 
+            background: rgba(0, 68, 148, 0.1) !important;
+            .ql-stroke { stroke: #004494 !important; }
+            .ql-fill { fill: #004494 !important; }
+        }
+
+        .ql-stroke { 
+            stroke: currentColor !important; 
+            stroke-width: 2.5px !important;
+        }
+        .ql-fill { fill: currentColor !important; }
+
+        svg {
+            width: 22px !important; 
+            height: 22px !important;
+        }
+
+        @media (max-width: 1200px) {
+            width: 30px !important;
+            height: 30px !important;
+            padding: 4px !important;
+            
+            svg {
+                width: 20px !important;
+                height: 20px !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            width: 26px !important;
+            height: 26px !important;
+            padding: 3px !important;
+            
+            svg {
+                width: 16px !important;
+                height: 16px !important;
+            }
+        }
+    }
+
+    .ql-picker {
+        height: 32px !important;
+        
+        @media (max-width: 1200px) {
+            height: 30px !important;
+        }
+
+        @media (max-width: 768px) {
+            height: 26px !important;
+        }
+        color: #64748b !important;
+        
+        &:hover { color: #004494 !important; }
+
+        /* Specific fix for tiny icons in pickers like color/align */
+        &.ql-color, &.ql-background, &.ql-align {
+            .ql-picker-label {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 !important;
+                
+                svg {
+                    width: 22px !important;
+                    height: 22px !important;
+                    position: relative !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                }
+
+                @media (max-width: 1200px) {
+                    svg {
+                        width: 20px !important;
+                        height: 20px !important;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    svg {
+                        width: 18px !important;
+                        height: 18px !important;
+                    }
+                }
+            }
+        }
+    }
+
+    .ql-picker-label {
+        padding: 0 10px !important;
+        border-radius: 8px !important;
         font-size: 12px !important;
-        padding-left: 0;
-    }
+        font-weight: 700 !important;
+        display: flex !important;
+        align-items: center;
+        gap: 6px;
 
-    :host ::ng-deep .ql-toolbar .ql-picker-item {
-        font-size: 12px !important;
+        @media (max-width: 1200px) {
+            padding: 0 6px !important;
+            font-size: 11px !important;
+        }
+
+        @media (max-width: 768px) {
+            padding: 0 4px !important;
+            font-size: 10px !important;
+        }
+
+        svg {
+            width: 16px !important; 
+            height: 16px !important;
+        }
     }
 }
 
-/* CRÍTICO: Asegurar que los iframes de video siempre ocupen el 100% de su contenedor wrapper */
+/* Video Support */
 :host ::ng-deep .ql-video-wrapper iframe {
     width: 100% !important;
-    height: 100% !important;
-    display: block;
-    /* Eliminar espacio extra en inline */
+    border-radius: 1rem;
 }
