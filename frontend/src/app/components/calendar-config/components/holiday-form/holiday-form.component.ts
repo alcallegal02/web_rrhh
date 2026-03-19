@@ -1,5 +1,4 @@
 import { Component, input, output, effect, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Holiday, HolidayType, HolidayCreate, HolidayUpdate } from '../../../../interfaces/holiday.interface';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -7,7 +6,7 @@ import { lucideHelpCircle } from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-holiday-form',
-    imports: [CommonModule, FormsModule, NgIconComponent],
+    imports: [FormsModule, NgIconComponent],
     templateUrl: './holiday-form.component.html',
     providers: [
         provideIcons({ lucideHelpCircle })

@@ -1,4 +1,7 @@
 <div class="flex flex-col h-full lg:flex-row gap-4 lg:overflow-hidden">
+@let userList = filteredUsersBySidebar();
+@let currentUser = activeUser();
+@let totalUsers = users().length;
 
     <!-- Sidebar: Unified Directory -->
     <div
@@ -18,8 +21,7 @@
                         </div>
                     </div>
                 </div>
-                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-black">{{ users().length
-                    }}</span>
+                <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[9px] font-black">{{ totalUsers }}</span>
             </h2>
             <div class="relative">
                 <input type="text"
@@ -39,18 +41,18 @@
                 <span>Nuevo Registro</span>
             </button>
 
-            @for (u of filteredUsersBySidebar(); track u.id) {
+            @for (u of userList; track u.id) {
             <div (click)="onEdit(u)"
                 class="w-full p-2.5 rounded-xl cursor-pointer transition-all flex items-center gap-3 group border border-transparent"
-                [class]="activeUser()?.id === u.id ? 'bg-[#3C65AB] text-white shadow-xl translate-x-1' : 'hover:bg-gray-50 hover:border-gray-100 text-gray-700'">
+                [class]="currentUser?.id === u.id ? 'bg-[#3C65AB] text-white shadow-xl translate-x-1' : 'hover:bg-gray-50 hover:border-gray-100 text-gray-700'">
 
                 <div class="w-10 h-10 rounded-full shrink-0 overflow-hidden border-2"
-                    [class]="activeUser()?.id === u.id ? 'border-white/20' : 'border-gray-100'">
+                    [class]="currentUser?.id === u.id ? 'border-white/20' : 'border-gray-100'">
                     @if (u.photo_url) {
                     <img [src]="getFileUrl(u.photo_url)" class="w-full h-full object-cover">
                     } @else {
                     <div class="w-full h-full flex items-center justify-center text-xs font-bold"
-                        [class]="activeUser()?.id === u.id ? 'bg-white/10 text-white' : 'bg-blue-50 text-blue-500'">
+                        [class]="currentUser?.id === u.id ? 'bg-white/10 text-white' : 'bg-blue-50 text-blue-500'">
                         {{ u.full_name[0] }}
                     </div>
                     }
@@ -58,8 +60,7 @@
 
                 <div class="flex flex-col min-w-0 flex-1">
                     <span class="text-xs font-bold truncate">{{ u.full_name }}</span>
-                    <span class="text-[10px] truncate opacity-60 uppercase font-medium">{{ u.position || u.role
-                        }}</span>
+                    <span class="text-[10px] truncate opacity-60 uppercase font-medium">{{ u.position || u.role }}</span>
                 </div>
 
                 @if (u.is_active === false) {
@@ -80,72 +81,22 @@
     <!-- Main Content Area -->
     <div
         class="flex-1 lg:overflow-y-auto bg-gray-50/30 rounded-2xl border border-dashed border-gray-200 p-2 lg:p-4 order-1 lg:order-2">
-        @if (activeUser()) {
-        <app-user-form [initialForm]="activeUser()!" [roles]="allowedRoles()" [availableUsers]="users() || []"
+        @defer (on idle) {
+        <app-user-form [initialForm]="currentUser" [roles]="allowedRoles()" [availableUsers]="users()"
             [concepts]="concepts" [convenioConfig]="convenioConfig()" [isLoading]="loading()"
             [uploadingPhoto]="uploadingPhoto()" [uploadingAttachments]="uploadingAttachments()" (save)="onSave($event)"
             (cancel)="onCancel()" (uploadPhoto)="onUploadPhoto($event)"
             (uploadAttachments)="onUploadAttachments($event)" (removeAttachment)="onRemoveAttachment($event)"
-            (activate)="onActivate()" (deactivate)="onDeactivate()" (delete)="onDelete(activeUser()!)">
+            (activate)="onActivate()" (deactivate)="onDeactivate()" (delete)="onDelete(currentUser)">
         </app-user-form>
-        } @else {
-        <div
-            class="h-full flex flex-col items-center justify-center text-center p-8 bg-white rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden">
-            <!-- Decorative background element -->
-            <div class="absolute top-0 right-0 p-12 opacity-[0.02] pointer-events-none">
-                <ng-icon name="lucideUsers" class="text-[20rem]"></ng-icon>
-            </div>
-
-            <div class="relative">
-                <div
-                    class="w-32 h-32 bg-blue-50 rounded-[2.5rem] flex items-center justify-center text-5xl mb-8 text-blue-600 shadow-inner relative z-10">
-                    <ng-icon name="lucideFolderOpen"></ng-icon>
-                    <!-- Small badges around the main icon -->
-                    <div
-                        class="absolute -top-2 -right-2 w-10 h-10 bg-white rounded-2xl shadow-lg border border-gray-50 flex items-center justify-center text-xl text-emerald-500 animate-pulse">
-                        <ng-icon name="lucideSearch"></ng-icon>
-                    </div>
+        } @placeholder {
+            <div class="h-full flex items-center justify-center bg-white rounded-3xl border border-gray-100 shadow-sm animate-pulse">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-50 rounded-2xl mb-4 mx-auto"></div>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Cargando expediente...</p>
                 </div>
             </div>
-
-            <h2 class="text-3xl font-black text-[#3C65AB] mb-4 tracking-tight">
-                Gestión de Expedientes <span class="text-blue-500">Premium</span>
-            </h2>
-
-            <p class="text-gray-400 max-w-sm mb-10 text-sm leading-relaxed font-medium">
-                Bienvenido al centro de administración de personal de <span
-                    class="text-[#3C65AB] font-black">INESPASA</span>.
-                Seleccione un perfil del directorio para gestionar su vinculación laboral, derechos y documentación.
-            </p>
-
-            <div class="flex items-center gap-8">
-                <div class="flex flex-col items-center gap-1.5 group">
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all">
-                        <ng-icon name="lucideUsers" class="text-xl"></ng-icon>
-                    </div>
-                    <span class="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">{{ users().length }}
-                        Empleados</span>
-                </div>
-
-                <div class="w-px h-12 bg-gradient-to-b from-transparent via-gray-200 to-transparent"></div>
-
-                <div class="flex flex-col items-center gap-1.5 group">
-                    <div
-                        class="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-all">
-                        <ng-icon name="lucideBuilding2" class="text-xl"></ng-icon>
-                    </div>
-                    <span class="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">RRHH Central</span>
-                </div>
-            </div>
-
-            <!-- Footer micro-hint -->
-            <div
-                class="mt-16 flex items-center gap-2 text-[10px] font-bold text-gray-300 uppercase tracking-widest animate-pulse">
-                <span class="w-2 h-2 rounded-full bg-blue-400"></span>
-                Listo para administrar
-            </div>
-        </div>
         }
     </div>
-</div>
+
+

@@ -1,0 +1,9 @@
+<div [class]="'quill-editor-container ' + variantClass()" [style.min-height]="height()">
+    <quill-editor 
+        [modules]="quillModules()" 
+        [styles]="{ height: '100%', width: '100%' }" 
+        [placeholder]="placeholder()"
+        (onContentChanged)="onContentChange($event.html ?? '')"
+        (onEditorCreated)="onEditorCreated($event)">
+    </quill-editor>
+</div>

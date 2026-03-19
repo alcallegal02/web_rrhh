@@ -1,39 +1,43 @@
-<div class="p-2 md:p-4 bg-gray-50 min-h-screen">
+<div class="p-4 md:p-8 bg-gray-50 min-h-screen">
     <div class="max-w-none mx-auto">
-        <!-- Header -->
-        <div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-            <div class="space-y-1">
-                <div class="flex items-center gap-3">
-                    <div
-                        class="flex items-center justify-center w-12 h-12 rounded-2xl bg-inespasa shadow-lg shadow-inespasa-light/30 text-white">
-                        <ng-icon name="lucideShieldCheck" class="text-2xl"></ng-icon>
-                    </div>
-                    <div>
-                        <h2 class="text-3xl font-black text-gray-900 tracking-tight leading-none">Auditoría del Sistema
-                        </h2>
-                        <p class="text-gray-500 mt-1.5 text-sm font-bold flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            Monitorización en tiempo real de la plataforma
-                        </p>
-                    </div>
-                </div>
+        
+        <app-page-header 
+            title="Auditoría del Sistema" 
+            subtitle="Monitorización en tiempo real de la plataforma"
+            icon="lucideShieldCheck"
+            [actions]="pageActions"
+            (actionClick)="logsResource.reload()">
+            
+            <div extra-actions class="px-4 py-2 bg-white border border-gray-100 rounded-xl flex flex-col items-center shadow-sm">
+                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Registros</span>
+                <span class="text-sm font-black text-inespasa leading-none">{{ logs().length }}</span>
             </div>
-
-            <div class="flex items-center gap-2 p-1.5 bg-white border border-gray-100 rounded-2xl shadow-sm">
-                <div class="px-4 py-2 bg-gray-50 rounded-xl border border-gray-100 flex flex-col items-center">
-                    <span
-                        class="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Registros</span>
-                    <span class="text-lg font-black text-inespasa leading-none">{{ logs().length }}</span>
-                </div>
-            </div>
-        </div>
+        </app-page-header>
 
         <app-audit-filters (filtersChanged)="onFiltersChanged($event)">
         </app-audit-filters>
 
-        <app-audit-list [logs]="logs()" [loading]="loading()" [currentPage]="currentPage()" [pageSize]="pageSize"
-            (itemSelected)="onItemSelected($event)" (pageChange)="onPageChange($event)">
-        </app-audit-list>
+        @if (loading()) {
+            <div class="h-96 bg-white rounded-3xl border border-dashed border-gray-200 animate-pulse flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-12 h-12 border-4 border-inespasa border-t-transparent rounded-full animate-spin mb-4 mx-auto"></div>
+                    <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Sincronizando logs...</p>
+                </div>
+            </div>
+        } @else {
+            <app-data-table 
+                [columns]="tableColumns" 
+                [data]="logs()"
+                [hasActions]="true">
+                
+                <ng-template #rowActions let-row>
+                    <button (click)="onItemSelected(row)"
+                        class="p-2 text-gray-400 hover:text-inespasa hover:bg-blue-50 rounded-lg transition-all">
+                        <ng-icon name="lucideSearch" class="text-lg"></ng-icon>
+                    </button>
+                </ng-template>
+            </app-data-table>
+        }
     </div>
 </div>
 

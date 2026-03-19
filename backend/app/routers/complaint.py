@@ -192,8 +192,8 @@ async def get_complaint(
     # Success: Reset attempts for this IP
     security_manager.reset_attempts(client_ip)
     
-    # Filter only public comments for public view
-    complaint.comments = [c for c in complaint.comments if c.is_public]
+    # Filter only public comments for public view and sort by date
+    complaint.comments = sorted([c for c in complaint.comments if c.is_public], key=lambda x: x.created_at)
     
     # Return filtered data for public view
     return ComplaintResponse.model_validate(complaint)
@@ -254,9 +254,12 @@ async def add_public_comment(
 
 def _ensure_complaint_admin(user: User):
     """Checks if the user has permission to manage complaints (Superadmin or RRHH with permission)"""
-    if user.role_enum == UserRole.SUPERADMIN:
+    # Usamos comparaciones directas de strings para mayor fiabilidad con SQLModel/FastAPI
+    role = user.role.lower() if user.role else ""
+    
+    if role == UserRole.SUPERADMIN.value:
         return
-    if user.role_enum == UserRole.RRHH and user.can_manage_complaints:
+    if role == UserRole.RRHH.value and user.can_manage_complaints:
         return
     
     raise HTTPException(

@@ -1,4 +1,4 @@
-<div class="max-w-none mx-auto p-2 md:p-4 pb-12 animate-fadeIn">
+<div class="max-w-none mx-auto p-2 md:p-4 pb-12">
     <!-- Header / Nav -->
     <div class="flex items-center justify-between mb-8">
         <button (click)="goBack()"
@@ -74,7 +74,7 @@
         }
 
         @if (complaint()) {
-        <div class="space-y-10 animate-fadeIn">
+        <div class="space-y-10">
             <!-- Main Tracking Card -->
             <div class="bg-gray-50 rounded-[2.5rem] p-8 md:p-12 border border-gray-100">
                 <div
@@ -89,13 +89,14 @@
                                 complaint()!.code }}</span>
                         </div>
                     </div>
+                    @let status = complaint()!.status;
                     <div class="flex flex-col items-end gap-2">
                         <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Estado de la
                             Denuncia</span>
-                        <span [class]="getStatusClass(complaint()!.status)"
-                            class="px-6 py-2.5 rounded-2xl text-sm font-black uppercase tracking-widest border-2 shadow-sm">
-                            {{ getStatusLabel(complaint()!.status) }}
-                        </span>
+                        <app-status-badge [variant]="getStatusVariant(status)" [icon]="getStatusIcon(status)" 
+                            class="text-sm font-black uppercase tracking-widest border-2 shadow-sm px-4 py-1">
+                            {{ getStatusLabel(status) }}
+                        </app-status-badge>
                     </div>
                 </div>
 
@@ -106,7 +107,7 @@
                             <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4 ml-1">
                                 Contenido Original</h4>
                             <div class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm text-gray-700 leading-relaxed news-content"
-                                [innerHTML]="getSafeHtml(complaint()!.description)"></div>
+                                [innerHTML]="complaint()!.description | safe:'html'"></div>
                         </div>
 
                         <!-- Attachments -->
@@ -114,26 +115,39 @@
                         <div class="space-y-4">
                             <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-4 ml-1">
                                 Documentación Aportada</h4>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="flex flex-wrap gap-3">
                                 @for (att of complaint()?.attachments; track att.id) {
-                                @if (!isImage(att.file_url)) {
-                                <a [href]="getFileUrl(att.file_url, att.file_original_name)" target="_blank"
-                                    class="flex items-center p-4 bg-white border border-gray-100 rounded-2xl hover:bg-white hover:border-inespasa-light/30 hover:shadow-lg transition-all group">
-                                    <div
-                                        class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center mr-4 border border-gray-100 group-hover:bg-inespasa group-hover:text-white group-hover:border-inespasa transition-all shadow-sm">
-                                        <ng-icon name="lucideFileText" class="text-xl"></ng-icon>
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p
-                                            class="text-xs font-bold text-gray-700 truncate group-hover:text-inespasa transition-colors">
-                                            {{ att.file_original_name || 'Archivo' }}</p>
-                                        <p class="text-[9px] font-black uppercase tracking-tighter text-gray-400">
-                                            Descargar documento</p>
-                                    </div>
-                                    <ng-icon name="lucideDownload"
-                                        class="text-gray-300 opacity-0 group-hover:opacity-100 transition-all"></ng-icon>
-                                </a>
-                                }
+                                    @if (isImage(att.file_url)) {
+                                        <div (click)="openPreview(att)"
+                                            class="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:border-inespasa-light transition-all group cursor-pointer">
+                                            <img [src]="getFileUrl(att.file_url, undefined)" class="w-full h-full object-cover" [alt]="att.file_original_name">
+                                            <div class="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black/60 to-transparent">
+                                                <p class="text-[6px] text-white font-bold truncate">{{ att.file_original_name }}</p>
+                                            </div>
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                <button type="button" (click)="openPreview(att); $event.stopPropagation()" class="p-1.5 bg-white/20 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all text-white">
+                                                    <ng-icon name="lucideMaximize"></ng-icon>
+                                                </button>
+                                                <a [href]="getFileUrl(att.file_url, undefined)" download="{{ att.file_original_name }}" target="_blank" (click)="$event.stopPropagation()" class="p-1.5 bg-white/20 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all text-white">
+                                                    <ng-icon name="lucideDownload"></ng-icon>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    } @else {
+                                        <div (click)="openPreview(att)"
+                                            class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-all group cursor-pointer">
+                                            <ng-icon name="lucideFileText" class="text-gray-400 group-hover:text-inespasa"></ng-icon>
+                                            <span class="text-[10px] font-bold text-gray-600 break-all">{{ att.file_original_name }}</span>
+                                            <div class="flex items-center gap-1 shrink-0">
+                                                <button type="button" (click)="openPreview(att); $event.stopPropagation()" class="p-1 hover:bg-gray-200 rounded text-gray-300 hover:text-inespasa transition-colors flex items-center justify-center">
+                                                    <ng-icon name="lucideMaximize"></ng-icon>
+                                                </button>
+                                                <a [href]="getFileUrl(att.file_url, undefined)" download="{{ att.file_original_name }}" target="_blank" (click)="$event.stopPropagation()" class="p-1 hover:bg-gray-200 rounded text-gray-300 hover:text-inespasa transition-colors flex items-center justify-center">
+                                                    <ng-icon name="lucideDownload"></ng-icon>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    }
                                 }
                             </div>
                         </div>
@@ -143,7 +157,9 @@
                     <!-- Metadata -->
                     <div class="space-y-6 min-w-0">
                         <div class="bg-white p-8 rounded-[2rem] border border-gray-100 shadow-sm space-y-6">
-                            <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Cronología</h4>
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Cronología</h4>
+                            </div>
 
                             <div class="space-y-6">
                                 <div class="flex gap-4">
@@ -193,11 +209,19 @@
             </div>
 
             <!-- Conversation Timeline -->
-            @if (complaint()?.comments && (complaint()?.comments?.length || 0) > 0) {
             <div class="space-y-6">
-                <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 ml-1">Historial de Comunicación</h3>
+                <div class="flex items-center gap-4 ml-1">
+                    <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Historial de Comunicación</h3>
+                    <div class="h-px bg-gray-100 flex-1"></div>
+                </div>
                 
                 <div class="space-y-4">
+                    @if ((complaint()?.comments?.length || 0) === 0) {
+                        <div class="bg-gray-50/50 rounded-[2rem] p-8 text-center border border-dashed border-gray-200">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No hay mensajes en este expediente todavía</p>
+                        </div>
+                    }
+                    
                     @for (comment of complaint()?.comments; track comment.id) {
                     <div class="bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 shadow-xl shadow-gray-200/50 relative overflow-hidden group animate-slideUp">
                         <!-- Author Badge -->
@@ -229,19 +253,41 @@
 
                         <!-- Content -->
                         <div class="text-sm text-gray-700 leading-relaxed news-content ml-1 lg:ml-13" 
-                            [innerHTML]="getSafeHtml(comment.content)">
+                            [innerHTML]="comment.content | safe:'html'">
                         </div>
 
                         <!-- Comment Attachments -->
                         @if (comment.attachments && comment.attachments.length > 0) {
-                        <div class="mt-4 ml-1 lg:ml-13 flex flex-wrap gap-2">
+                        <div class="mt-4 ml-1 lg:ml-13 flex flex-wrap gap-3">
                             @for (att of comment.attachments; track att.id) {
-                            <a [href]="getFileUrl(att.file_url, att.file_original_name)" target="_blank"
-                                class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-all group">
-                                <ng-icon name="lucideFileText" class="text-gray-400 group-hover:text-inespasa"></ng-icon>
-                                <span class="text-[10px] font-bold text-gray-600 truncate max-w-[150px]">{{ att.file_original_name }}</span>
-                                <ng-icon name="lucideDownload" class="text-gray-300"></ng-icon>
-                            </a>
+                                @if (isImage(att.file_url)) {
+                                    <div (click)="openPreview(att)"
+                                        class="relative w-20 h-20 rounded-xl overflow-hidden border border-gray-100 shadow-sm hover:border-inespasa-light transition-all group cursor-pointer">
+                                        <img [src]="getFileUrl(att.file_url, undefined)" class="w-full h-full object-cover" [alt]="att.file_original_name">
+                                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                    <button type="button" (click)="openPreview(att); $event.stopPropagation()" class="p-1.5 bg-white/20 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all text-white">
+                                                        <ng-icon name="lucideMaximize"></ng-icon>
+                                                    </button>
+                                                    <a [href]="getFileUrl(att.file_url, undefined)" download="{{ att.file_original_name }}" target="_blank" (click)="$event.stopPropagation()" class="p-1.5 bg-white/20 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all text-white">
+                                                        <ng-icon name="lucideDownload"></ng-icon>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                } @else {
+                                    <div (click)="openPreview(att)"
+                                        class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl hover:bg-gray-100 transition-all group cursor-pointer">
+                                        <ng-icon name="lucideFileText" class="text-gray-400 group-hover:text-inespasa"></ng-icon>
+                                        <span class="text-[10px] font-bold text-gray-600 break-all">{{ att.file_original_name }}</span>
+                                        <div class="flex items-center gap-1 shrink-0">
+                                            <button type="button" (click)="openPreview(att); $event.stopPropagation()" class="p-1 hover:bg-gray-200 rounded text-gray-300 hover:text-inespasa transition-colors flex items-center justify-center">
+                                                <ng-icon name="lucideMaximize"></ng-icon>
+                                            </button>
+                                            <a [href]="getFileUrl(att.file_url, undefined)" download="{{ att.file_original_name }}" target="_blank" (click)="$event.stopPropagation()" class="p-1 hover:bg-gray-200 rounded text-gray-300 hover:text-inespasa transition-colors flex items-center justify-center">
+                                                <ng-icon name="lucideDownload"></ng-icon>
+                                            </a>
+                                        </div>
+                                    </div>
+                                }
                             }
                         </div>
                         }
@@ -249,7 +295,6 @@
                     }
                 </div>
             </div>
-            }
 
             <!-- Reply Form -->
             <div class="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-xl shadow-gray-200/50 border border-gray-100 relative overflow-hidden animate-slideUp">
@@ -274,18 +319,58 @@
                         </app-rich-text-editor>
                     </div>
 
-                    <!-- Selected Files List -->
+                    <!-- Selected Files Preview -->
                     @if (selectedFiles().length > 0) {
-                    <div class="flex flex-wrap gap-3 mb-6 animate-fadeIn">
-                        @for (file of selectedFiles(); track $index) {
-                        <div class="flex items-center gap-3 bg-gray-50 border border-gray-100 px-4 py-2 rounded-xl group/file">
-                            <ng-icon name="lucideFileText" class="text-gray-400"></ng-icon>
-                            <span class="text-[10px] font-bold text-gray-700">{{ file.name }}</span>
-                            <button (click)="removeFile($index)" class="text-gray-400 hover:text-red-500 transition-colors">
-                                <ng-icon name="lucideX"></ng-icon>
-                            </button>
+                    <div class="space-y-4 mb-8 animate-fadeIn">
+                        <div class="flex items-center justify-between px-1">
+                            <h4 class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Archivos para adjuntar</h4>
+                            <span class="text-[9px] font-bold text-inespasa px-2 py-1 bg-inespasa/5 rounded-lg border border-inespasa/10">
+                                {{ selectedFiles().length }} {{ selectedFiles().length === 1 ? 'archivo' : 'archivos' }}
+                            </span>
                         </div>
-                        }
+                        
+                        <div class="space-y-4">
+                            <!-- Documentos -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                @for (fileObj of selectedFiles(); track $index) {
+                                    @if (!isImage(fileObj.file.name)) {
+                                    <div class="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm hover:border-inespasa-light/30 transition-all group">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            <span class="text-inespasa"><ng-icon name="lucideFileText"></ng-icon></span>
+                                            <span class="text-[11px] font-bold text-gray-700 break-all">{{ fileObj.file.name }}</span>
+                                        </div>
+                                        <button type="button" (click)="removeFile($index)"
+                                            class="h-7 w-7 rounded-lg bg-red-50 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
+                                            <ng-icon name="lucideX"></ng-icon>
+                                        </button>
+                                    </div>
+                                    }
+                                }
+                            </div>
+
+                            <!-- Imágenes -->
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                @for (fileObj of selectedFiles(); track $index) {
+                                    @if (isImage(fileObj.file.name)) {
+                                        <div class="relative group aspect-square rounded-2xl overflow-hidden border-2 border-white shadow-sm hover:border-inespasa-light transition-all bg-gray-50">
+                                            <img [src]="fileObj.url" class="w-full h-full object-cover" [alt]="fileObj.file.name">
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <div class="flex gap-2">
+                                                    <button type="button" (click)="openPreview({url: fileObj.url, file: fileObj.file}); $event.stopPropagation()"
+                                                        class="h-8 w-8 rounded-lg bg-white/20 text-white backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all">
+                                                        <ng-icon name="lucideMaximize" class="text-sm"></ng-icon>
+                                                    </button>
+                                                    <button type="button" (click)="removeFile($index); $event.stopPropagation()" 
+                                                        class="h-8 w-8 rounded-lg bg-red-500 text-white shadow-lg flex items-center justify-center hover:bg-red-600">
+                                                        <ng-icon name="lucideX" class="text-sm"></ng-icon>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
                     </div>
                     }
 
@@ -348,3 +433,11 @@
         }
     </div>
 </div>
+
+@if (activePreview()) {
+    @defer (on interaction) {
+        <app-file-preview-modal [fileUrl]="activePreview()!.url" [fileName]="activePreview()!.name" (close)="closePreview()" />
+    } @placeholder {
+        <div class="hidden"></div>
+    }
+}

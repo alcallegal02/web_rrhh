@@ -78,6 +78,9 @@ def validate_magic_numbers(content: bytes, filename: str) -> None:
         'webp': [b'RIFF'], # RIFF....WEBP (checks start only)
         'doc': [b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'],
         'docx': [b'PK\x03\x04'], # Zip format
+        'xls': [b'\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1'],
+        'xlsx': [b'PK\x03\x04'],
+        'csv': [], # No magic bytes
         'zip': [b'PK\x03\x04'],
         'txt': [], # No magic bytes
         'rtf': [b'{\\rtf1'],
@@ -93,7 +96,7 @@ def validate_magic_numbers(content: bytes, filename: str) -> None:
         return
 
     # Files without strict magic bytes validation requirement
-    if ext == 'txt':
+    if ext in ['txt', 'csv']:
         return
 
     allowed_sigs = signatures.get(ext)
@@ -108,7 +111,7 @@ def validate_magic_numbers(content: bytes, filename: str) -> None:
     else:
         # If extension is not in our specific list but was passed by allowed_extensions check,
         # we might be strict or lenient. For now, strict:
-        if ext in ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'webp', 'rtf']:
+        if ext in ['pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx', 'xls', 'xlsx', 'csv', 'webp', 'rtf']:
              # Should have matched above
              pass
         else:

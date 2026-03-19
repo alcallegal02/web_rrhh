@@ -1,15 +1,18 @@
 import { Component, signal, inject, viewChild, ChangeDetectionStrategy, computed, HostListener } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { DatePipe } from '@angular/common';
+import * as ComplaintUtils from '../../utils/complaint.utils';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { DatePipe, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../config/environment';
 import { AuthService } from '../../../../services/auth.service';
-import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-text-editor.component';
+import { FilePreviewModalComponent } from '../../../../shared/components/file-preview-modal/file-preview-modal.component';
+import { RichTextEditorComponent } from '../../../../shared/components/rich-text-editor/rich-text-editor.component';
 import { ComplaintService } from '../../../../services/complaint.service';
 import { Complaint } from '../../../../models/app.models';
 import { ComplaintListComponent } from '../../components/complaint-list/complaint-list.component';
-import { QuillConfigModule } from 'ngx-quill';
-import { NgIcon, provideIcons } from '@ng-icons/core';
+import { DialogService } from '../../../../services/dialog.service';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
   lucideScale, lucideClipboardType, lucideCalendarDays, lucideChevronRight,
   lucideClock, lucidePaperclip, lucideDownload, lucideWrench,
@@ -17,12 +20,27 @@ import {
   lucideHelpCircle, lucideMessageCircle, lucideUser, lucideShield,
   lucideSend, lucideLock, lucideFileText, lucideX, lucideFilter,
   lucideSearch, lucideShieldAlert, lucideMessageSquareText, lucideCheckCircle,
-  lucideXCircle, lucidePackageCheck
+  lucideXCircle, lucidePackageCheck,
+  lucideMaximize, lucideCopy, lucideEyeOff
 } from '@ng-icons/lucide';
+
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { FileUploaderComponent, SelectedFile } from '../../../../shared/components/file-uploader/file-uploader.component';
+import { SafePipe } from '../../../../shared/pipes/safe.pipe';
 
 @Component({
   selector: 'app-complaint-management',
-  imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIcon, ComplaintListComponent],
+  imports: [
+    FormsModule, 
+    RichTextEditorComponent, 
+    NgIconComponent, 
+    ComplaintListComponent, 
+    FilePreviewModalComponent,
+    StatusBadgeComponent,
+    FileUploaderComponent,
+    DatePipe,
+    SafePipe
+  ],
   templateUrl: './complaint-management.component.html',
   styleUrl: './complaint-management.component.scss',
   providers: [
@@ -33,57 +51,56 @@ import {
       lucideHelpCircle, lucideMessageCircle, lucideUser, lucideShield,
       lucideSend, lucideLock, lucideFileText, lucideX, lucideFilter,
       lucideSearch, lucideShieldAlert, lucideMessageSquareText, lucideCheckCircle,
-      lucideXCircle, lucidePackageCheck
+      lucideXCircle, lucidePackageCheck,
+      lucideMaximize, lucideCopy, lucideEyeOff
     })
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComplaintManagementComponent {
-  private complaintService = inject(ComplaintService);
-  authService = inject(AuthService);
-  private sanitizer = inject(DomSanitizer);
+  private readonly complaintService = inject(ComplaintService);
+  readonly authService = inject(AuthService);
+  private readonly sanitizer = inject(DomSanitizer);
+
+  private readonly dialogService = inject(DialogService);
 
   // Filters
-  filterStatus = signal<string[]>([]);
-  filterStartDate = signal<string>('');
-  filterEndDate = signal<string>('');
+  readonly filterStatus = signal<string[]>([]);
+  readonly filterStartDate = signal<string>('');
+  readonly filterEndDate = signal<string>('');
 
-  statusOptions = [
-    { value: 'entregada', label: 'Entregada', icon: 'lucidePackageCheck', iconColor: 'text-gray-400' },
-    { value: 'pendiente', label: 'Pendiente', icon: 'lucideClock', iconColor: 'text-amber-500' },
-    { value: 'en_analisis', label: 'En Análisis', icon: 'lucideSearch', iconColor: 'text-blue-500' },
-    { value: 'en_investigacion', label: 'En Investigación', icon: 'lucideShieldAlert', iconColor: 'text-purple-500' },
-    { value: 'informacion_requerida', label: 'Info. Requerida', icon: 'lucideMessageSquareText', iconColor: 'text-orange-500' },
-    { value: 'resuelta', label: 'Resuelta', icon: 'lucideCheckCircle', iconColor: 'text-emerald-500' },
-    { value: 'desestimada', label: 'Desestimada', icon: 'lucideXCircle', iconColor: 'text-red-500' }
-  ];
+  readonly statusOptions = ComplaintUtils.COMPLAINT_STATUS_OPTIONS;
+
+  // Data fetching using rxResource
+  readonly complaintsResource = rxResource<Complaint[], unknown>({
+    stream: () => this.complaintService.getAllComplaints()
+  });
 
   // UI state
-  activeStatusDropdown = signal(false);
+  readonly activeStatusDropdown = signal(false);
 
   @HostListener('document:click')
   closeDropdowns() {
     this.activeStatusDropdown.set(false);
   }
 
-  getStatusIcon(status: string): string {
-    return this.statusOptions.find(opt => opt.value === status)?.icon || 'lucideScale';
-  }
+  // Status Utility Mappings (Exposed for template)
+  readonly getStatusIcon = ComplaintUtils.getStatusIcon;
+  readonly getStatusIconColor = ComplaintUtils.getStatusIconColor;
+  readonly getStatusLabel = ComplaintUtils.getStatusLabel;
+  readonly getStatusVariant = ComplaintUtils.getStatusVariant;
+  readonly getStatusClass = ComplaintUtils.getStatusClass;
+  readonly getStatusStripeClass = ComplaintUtils.getStatusStripeClass;
 
-  getStatusIconColor(status: string): string {
-    return this.statusOptions.find(opt => opt.value === status)?.iconColor || 'text-gray-400';
-  }
-
-  // Computed signal from service with filtering
-  complaints = computed(() => {
+  // Computed signal from service store with filtering
+  readonly complaints = computed(() => {
+    // We use the central store via the service because the WS updates the store
     let items = this.complaintService.complaints();
     
-    // Filter by status
     if (this.filterStatus().length > 0) {
       items = items.filter(c => this.filterStatus().includes(c.status));
     }
     
-    // Filter by date
     if (this.filterStartDate()) {
       const start = new Date(this.filterStartDate());
       items = items.filter(c => new Date(c.created_at) >= start);
@@ -98,29 +115,30 @@ export class ComplaintManagementComponent {
     return items;
   });
 
-  selectedComplaintId = signal<string | null>(null);
-  selectedComplaint = computed(() => {
+  readonly selectedComplaintId = signal<string | null>(null);
+  readonly selectedComplaint = computed(() => {
     const id = this.selectedComplaintId();
     if (!id) return null;
     return this.complaints().find(c => c.id === id) || null;
-  });
+  }, { equal: (prev, curr) => prev?.id === curr?.id && prev?.updated_at === curr?.updated_at });
 
-  loading = signal(false);
-  submitting = signal(false);
+  readonly loading = computed(() => this.complaintsResource.isLoading());
+  readonly submitting = signal(false);
 
   // Management UI signals
-  activeTab = signal<'public' | 'internal'>('public');
-  adminCommentContent = signal('');
-  adminSelectedFiles = signal<File[]>([]);
+  readonly activeTab = signal<'public' | 'internal'>('public');
+  readonly adminCommentContent = signal('');
+  readonly adminSelectedFiles = signal<{ file: File, url: string }[]>([]);
+  readonly activePreview = signal<{ url: string, name: string } | null>(null);
 
-  commentEditor = viewChild('commentEditor', { read: RichTextEditorComponent });
+  readonly commentEditor = viewChild('commentEditor', { read: RichTextEditorComponent });
 
-  publicComments = computed(() => {
+  readonly publicComments = computed(() => {
     const selected = this.selectedComplaint();
     return selected?.comments?.filter(c => c.is_public) || [];
   });
 
-  internalComments = computed(() => {
+  readonly internalComments = computed(() => {
     const selected = this.selectedComplaint();
     return selected?.comments?.filter(c => !c.is_public) || [];
   });
@@ -140,25 +158,6 @@ export class ComplaintManagementComponent {
     ]
   };
 
-  constructor() {
-    this.loadComplaints();
-  }
-
-  loadComplaints(): void {
-    // Check if store already has data? Or always fetch fresh? 
-    // Fetching sets the store, so it's safe.
-    this.loading.set(true);
-    this.complaintService.getAllComplaints().subscribe({
-      next: () => {
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error loading complaints:', err);
-        this.loading.set(false);
-      }
-    });
-  }
-
   selectComplaint(c: Complaint): void {
     this.selectedComplaintId.set(c.id);
     this.editData = {
@@ -172,7 +171,7 @@ export class ComplaintManagementComponent {
 
   toggleStatusDropdown(event: Event): void {
     event.stopPropagation();
-    this.activeStatusDropdown.set(!this.activeStatusDropdown());
+    this.activeStatusDropdown.update(v => !v);
   }
 
   async changeStatusQuickly(newStatus: string): Promise<void> {
@@ -180,8 +179,6 @@ export class ComplaintManagementComponent {
     if (!complaint || complaint.status === newStatus) return;
     
     this.editData.new_status = newStatus;
-    // When changing quickly, we don't want to overwrite existing notes/desc if we are not editing them
-    // But the backend endpoint expects them. We'll send the current ones from selectedComplaint.
     this.editData.admin_notes = complaint.admin_response || '';
     this.editData.status_public_description = complaint.status_public_description || '';
     
@@ -201,9 +198,7 @@ export class ComplaintManagementComponent {
     formData.append('status_public_description', complaint.status_public_description || '');
 
     this.complaintService.updateComplaintStatus(event.complaintId, formData).subscribe({
-      next: () => {
-        this.submitting.set(false);
-      },
+      next: () => this.submitting.set(false),
       error: (err) => {
         console.error('Error updating status from list:', err);
         this.submitting.set(false);
@@ -224,9 +219,7 @@ export class ComplaintManagementComponent {
     formData.append('status_public_description', this.editData.status_public_description);
 
     this.complaintService.updateComplaintStatus(complaint.id, formData).subscribe({
-      next: (updated) => {
-        this.submitting.set(false);
-      },
+      next: () => this.submitting.set(false),
       error: (err) => {
         console.error('Error updating status:', err);
         this.submitting.set(false);
@@ -235,19 +228,20 @@ export class ComplaintManagementComponent {
     });
   }
 
-  deleteComplaint(): void {
+  async deleteComplaint(): Promise<void> {
     const complaint = this.selectedComplaint();
     if (!complaint) return;
 
-    const confirmMessage = `¿Estás seguro de que deseas eliminar permanentemente la denuncia "${complaint.title}"?\n\nEsta acción eliminará todos los registros, historial y archivos adjuntos del servidor de forma irreversible.`;
+    const confirmed = await this.dialogService.danger(
+      'Eliminar Denuncia',
+      `¿Estás seguro de que deseas eliminar permanentemente la denuncia "${complaint.title}"? Esta acción es irreversible.`
+    );
 
-    if (confirm(confirmMessage)) {
+    if (confirmed) {
       this.submitting.set(true);
       this.complaintService.deleteComplaint(complaint.id).subscribe({
         next: () => {
-          alert('Denuncia eliminada correctamente');
           this.selectedComplaintId.set(null);
-          // this.loadComplaints(); // WS Handle
           this.submitting.set(false);
         },
         error: (err) => {
@@ -259,72 +253,40 @@ export class ComplaintManagementComponent {
     }
   }
 
-  getStatusLabel(status: string): string {
-    const labels: { [key: string]: string } = {
-      'entregada': 'Entregada',
-      'pendiente': 'Pendiente',
-      'en_analisis': 'En Análisis',
-      'en_investigacion': 'En Investigación',
-      'informacion_requerida': 'Información Requerida',
-      'resuelta': 'Resuelta',
-      'desestimada': 'Desestimada'
-    };
-    return labels[status] || status;
-  }
 
-  getStatusClass(status: string): string {
-    const classes: { [key: string]: string } = {
-      'entregada': 'bg-gray-50 text-gray-700 border-gray-200',
-      'pendiente': 'bg-amber-50 text-amber-700 border-amber-200',
-      'en_analisis': 'bg-blue-50 text-blue-700 border-blue-200',
-      'en_investigacion': 'bg-purple-50 text-purple-700 border-purple-200',
-      'informacion_requerida': 'bg-orange-50 text-orange-700 border-orange-200',
-      'resuelta': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      'desestimada': 'bg-red-50 text-red-700 border-red-200'
-    };
-    return classes[status] || 'bg-gray-50 text-gray-700 border-gray-200';
-  }
-
-  getStatusStripeClass(status: string): string {
-    const classes: { [key: string]: string } = {
-      'entregada': 'bg-gray-300',
-      'pendiente': 'bg-amber-400',
-      'en_analisis': 'bg-blue-500',
-      'en_investigacion': 'bg-purple-500',
-      'informacion_requerida': 'bg-orange-500',
-      'resuelta': 'bg-emerald-500',
-      'desestimada': 'bg-red-500'
-    };
-    return classes[status] || 'bg-gray-300';
-  }
-
-  getFileUrl(path: string): string {
-    if (path.startsWith('http')) return path;
-    return `${environment.apiUrl.replace('/api', '')}${path}`;
-  }
-
-  getDownloadUrl(path: string, originalName: string | undefined): string {
-    const params = new URLSearchParams();
-    params.set('file_path', path);
-    if (originalName) {
-      params.set('original_name', originalName);
-    }
-    return `${environment.apiUrl}/upload/download?${params.toString()}`;
-  }
-
-  getSafeHtml(content: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(content);
+  onFilesChanged(files: SelectedFile[]): void {
+    this.adminSelectedFiles.set(files);
   }
 
   onFileSelected(event: any): void {
     const files = Array.from(event.target.files) as File[];
     if (files.length > 0) {
-      this.adminSelectedFiles.update(current => [...current, ...files]);
+      files.forEach(file => {
+        if (this.isImage(file.name)) {
+          const reader = new FileReader();
+          reader.onload = (e: any) => {
+            this.adminSelectedFiles.update(prev => [...prev, {
+              file: file,
+              url: e.target.result as string
+            }]);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          this.adminSelectedFiles.update(prev => [...prev, {
+            file: file,
+            url: ''
+          }]);
+        }
+      });
     }
     event.target.value = '';
   }
 
   removeFile(index: number): void {
+    const fileObj = this.adminSelectedFiles()[index];
+    if (fileObj.url && typeof fileObj.url === 'string' && fileObj.url.startsWith('blob:')) {
+      URL.revokeObjectURL(fileObj.url);
+    }
     this.adminSelectedFiles.update(files => files.filter((_, i) => i !== index));
   }
 
@@ -334,7 +296,6 @@ export class ComplaintManagementComponent {
 
     this.submitting.set(true);
 
-    // Procesar imágenes del editor de comentarios
     const editorNode = this.commentEditor();
     if (editorNode) {
       const processed = await editorNode.processImages();
@@ -347,11 +308,15 @@ export class ComplaintManagementComponent {
       complaintId, 
       this.adminCommentContent(), 
       isPublic,
-      this.adminSelectedFiles()
+      this.adminSelectedFiles().map(f => f.file)
     ).subscribe({
-      next: (comment) => {
-        // WS will handle the list update
+      next: () => {
         this.adminCommentContent.set('');
+        this.adminSelectedFiles().forEach(f => {
+          if (f.url && typeof f.url === 'string' && f.url.startsWith('blob:')) {
+            URL.revokeObjectURL(f.url);
+          }
+        });
         this.adminSelectedFiles.set([]);
         this.submitting.set(false);
       },
@@ -365,13 +330,9 @@ export class ComplaintManagementComponent {
 
   // --- Filter Actions ---
   toggleFilterStatus(status: string): void {
-    this.filterStatus.update(current => {
-      if (current.includes(status)) {
-        return current.filter(s => s !== status);
-      } else {
-        return [...current, status];
-      }
-    });
+    this.filterStatus.update(current => 
+      current.includes(status) ? current.filter(s => s !== status) : [...current, status]
+    );
   }
 
   isFilterStatusSelected(status: string): boolean {
@@ -390,5 +351,32 @@ export class ComplaintManagementComponent {
     this.filterStatus.set([]);
     this.filterStartDate.set('');
     this.filterEndDate.set('');
+  }
+
+  isImage(filename: string): boolean {
+    if (!filename) return false;
+    return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(filename);
+  }
+
+  getFileUrl(path: string, downloadName?: string): string {
+    if (!path) return '';
+    if (path.startsWith('data:')) return path;
+    const baseUrl = environment.apiUrl.replace('/api', '');
+    let url = `${baseUrl}${path}`;
+    if (downloadName) {
+      url += `?download=${encodeURIComponent(downloadName)}`;
+    }
+    return url;
+  }
+
+  openPreview(att: any): void {
+    this.activePreview.set({
+      url: this.getFileUrl(att.file_url || att.url),
+      name: att.file_original_name || att.file?.name || 'Archivo'
+    });
+  }
+
+  closePreview(): void {
+    this.activePreview.set(null);
   }
 }

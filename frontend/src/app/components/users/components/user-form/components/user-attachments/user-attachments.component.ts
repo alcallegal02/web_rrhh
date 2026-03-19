@@ -1,5 +1,4 @@
 import { Component, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { environment } from '../../../../../../config/environment';
 import { UserAttachment } from '../../user-form.models';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -9,7 +8,7 @@ import {
 
 @Component({
     selector: 'app-user-attachments',
-    imports: [CommonModule, NgIconComponent],
+    imports: [NgIconComponent],
     templateUrl: './user-attachments.component.html',
     providers: [
         provideIcons({

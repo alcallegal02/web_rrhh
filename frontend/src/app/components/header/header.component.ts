@@ -1,5 +1,4 @@
 import { Component, inject, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common'; // Still needed for pipes if any, though imports array in standalone handles component visibility
 import { RouterModule, Router, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
@@ -9,7 +8,7 @@ import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, RouterModule, UserProfileModalComponent, NgIconComponent],
+  imports: [RouterModule, UserProfileModalComponent, NgIconComponent],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

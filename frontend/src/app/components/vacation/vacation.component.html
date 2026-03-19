@@ -8,16 +8,25 @@
     </div>
 
     <!-- Balances Table View -->
+    @defer (on viewport) {
     <app-vacation-balances [balance]="balance()" [isMaternityVisible]="isMaternityVisible()">
     </app-vacation-balances>
+    } @placeholder {
+        <div class="h-32 bg-gray-50 rounded-2xl animate-pulse"></div>
+    }
 
     <!-- Annual Calendar Section -->
+    @defer (on viewport) {
     <app-vacation-calendar [currentYear]="currentYear()" [calendarMonths]="calendarMonths()"
         (yearChange)="changeYear($event)" (daySelected)="openDayModal($event)">
     </app-vacation-calendar>
+    } @placeholder {
+        <div class="h-96 bg-gray-50 rounded-2xl animate-pulse"></div>
+    }
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- New Request Form (Persistent at bottom) -->
+        <!-- New Request Form -->
+        @let currentPolicyId = selectedPolicyId();
         <div class="card bg-gray-900 text-white border-0 shadow-2xl">
             <h2 class="text-2xl font-bold mb-6 flex items-center">
                 <span class="mr-3"><ng-icon name="lucideSparkles"></ng-icon></span> Nueva Solicitud
@@ -26,7 +35,7 @@
                 <div class="mb-6">
                     <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">1. Selecciona
                         el Tipo de Permiso</label>
-                    <select [ngModel]="selectedPolicyId()" (ngModelChange)="setPolicy($event)"
+                    <select [ngModel]="currentPolicyId" (ngModelChange)="setPolicy($event)"
                         class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all font-bold">
                         <option [value]="null">Selecciona una política...</option>
                         @for (p of balance()?.balances; track p.policy_id) {
@@ -36,9 +45,9 @@
                     </select>
                 </div>
 
-                @if (selectedPolicyId()) {
+                @if (currentPolicyId) {
                 <div class="border-t border-gray-800 pt-6">
-                    <app-vacation-dynamic-form [policyId]="selectedPolicyId()!" [managers]="managers()"
+                    <app-vacation-dynamic-form [policyId]="currentPolicyId" [managers]="managers()"
                         [balance]="balance()" [loading]="loading()" (formSubmit)="submitRequest($event)">
                     </app-vacation-dynamic-form>
                 </div>
@@ -47,12 +56,18 @@
         </div>
 
         <!-- Recent Requests -->
+        @defer (on viewport) {
         <app-vacation-list [requests]="requests()" (requestSelected)="openRequestDetails($event)">
         </app-vacation-list>
+        } @placeholder {
+            <div class="h-64 bg-white rounded-2xl border-2 border-dashed border-gray-100 flex items-center justify-center">
+                <p class="text-gray-400 font-bold uppercase tracking-widest text-xs">Cargando solicitudes...</p>
+            </div>
+        }
     </div>
 
     <!-- Day Info Modal / Edit Modal -->
-    @if (isModalOpen) {
+    @if (isModalOpen()) {
     <div
         class="fixed inset-0 bg-black/80 overflow-y-auto h-full w-full z-50 flex items-center justify-center backdrop-blur-md animate-fadeIn p-4">
         <div
@@ -73,20 +88,18 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
-                <!-- Info contextual si se abrió desde el calendario -->
-                @if (selectedDay()?.holiday || selectedDay()?.request) {
+            <div class="grid grid-cols-1 gap-8">
+                @let day = selectedDay();
+                @if (day?.holiday || day?.request) {
                 <div class="bg-gray-800/50 rounded-2xl p-4 border border-gray-700/50 flex flex-wrap gap-4">
-                    @let h = selectedDay()?.holiday;
-                    @if (h) {
+                    @if (day?.holiday; as h) {
                     <div
                         class="flex items-center gap-2 px-3 py-1 bg-red-900/30 text-red-400 rounded-full border border-red-800/30 text-xs font-bold">
                         <span class="flex items-center gap-1"><ng-icon name="lucideFileText"></ng-icon> Festivo: {{
                             h.name }}</span>
                     </div>
                     }
-                    @let r = selectedDay()?.request;
-                    @if (r) {
+                    @if (day?.request; as r) {
                     <div
                         class="flex items-center gap-2 px-3 py-1 bg-blue-900/30 text-blue-400 rounded-full border border-blue-800/30 text-xs font-bold">
                         <span class="flex items-center gap-1"><ng-icon name="lucideClipboardList"></ng-icon> Ya tienes
@@ -99,7 +112,7 @@
                 <div class="mb-6">
                     <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">1. Selecciona
                         el Tipo de Permiso</label>
-                    <select [ngModel]="selectedPolicyId()" (ngModelChange)="setPolicy($event)"
+                    <select [ngModel]="currentPolicyId" (ngModelChange)="setPolicy($event)"
                         class="w-full bg-gray-800 border-gray-700 text-white rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all font-bold">
                         <option [value]="null">Selecciona una política...</option>
                         @for (p of balance()?.balances; track p.policy_id) {
@@ -109,9 +122,9 @@
                     </select>
                 </div>
 
-                @if (selectedPolicyId()) {
+                @if (currentPolicyId) {
                 <div class="border-t border-gray-800 pt-6">
-                    <app-vacation-dynamic-form [policyId]="selectedPolicyId()!" [managers]="managers()"
+                    <app-vacation-dynamic-form [policyId]="currentPolicyId" [managers]="managers()"
                         [balance]="balance()" [loading]="loading()" (formSubmit)="submitRequest($event)">
                     </app-vacation-dynamic-form>
                 </div>
@@ -122,8 +135,7 @@
     }
 
     <!-- Request Details Modal -->
-    @let req = selectedRequest();
-    @if (req) {
+    @if (selectedRequest(); as req) {
     <div class="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center backdrop-blur-md animate-fadeIn p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-scaleIn">
             <div class="p-6 border-b flex justify-between items-center bg-gray-50">

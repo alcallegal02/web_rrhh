@@ -1,34 +1,39 @@
-import { Component, signal, inject, viewChild, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, inject, viewChild, output, ChangeDetectionStrategy, computed } from '@angular/core';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-text-editor.component';
-import { CopyFieldComponent } from '../../../shared/copy-field/copy-field.component';
+import { RichTextEditorComponent } from '../../../../shared/components/rich-text-editor/rich-text-editor.component';
+import { CopyFieldComponent } from '../../../../shared/components/copy-field/copy-field.component';
 import { ComplaintService } from '../../../../services/complaint.service';
 import { ConfigService } from '../../../../services/config';
+import { FileUploaderComponent, SelectedFile } from '../../../../shared/components/file-uploader/file-uploader.component';
+import { COMPLAINT_STATUS_OPTIONS, calculateEmbeddedImagesSize } from '../../utils/complaint.utils';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
     lucideFilePlus, lucideFolderOpen, lucidePaperclip, lucideFileText,
     lucideX, lucideMail, lucideShieldCheck, lucideSend,
-    lucideCheck, lucideAlertOctagon, lucideSearch, lucideTriangleAlert, lucideHelpCircle
+    lucideCheck, lucideAlertOctagon, lucideSearch, lucideTriangleAlert, lucideHelpCircle,
+    lucideCopy, lucideEyeOff
 } from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-complaint-form',
-    imports: [CommonModule, FormsModule, RichTextEditorComponent, CopyFieldComponent, NgIconComponent],
+    imports: [FormsModule, RichTextEditorComponent, CopyFieldComponent, NgIconComponent, FileUploaderComponent],
     templateUrl: './complaint-form.component.html',
     styleUrl: './complaint-form.component.scss',
     providers: [
         provideIcons({
             lucideFilePlus, lucideFolderOpen, lucidePaperclip, lucideFileText,
             lucideX, lucideMail, lucideShieldCheck, lucideSend,
-            lucideCheck, lucideAlertOctagon, lucideSearch, lucideTriangleAlert, lucideHelpCircle
+            lucideCheck, lucideAlertOctagon, lucideSearch, lucideTriangleAlert, lucideHelpCircle,
+            lucideCopy, lucideEyeOff
         })
     ],
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComplaintFormComponent {
     private complaintService = inject(ComplaintService);
+    private sanitizer = inject(DomSanitizer);
     private router = inject(Router);
     public configService = inject(ConfigService);
 
@@ -38,19 +43,22 @@ export class ComplaintFormComponent {
     description = signal('');
     optionalEmail = signal('');
 
-    selectedFiles = signal<{ file: File, url: string }[]>([]);
-    totalSelectedSize = signal(0);
+    selectedFiles = signal<SelectedFile[]>([]);
     embeddedImagesSize = signal(0);
 
     loading = signal(false);
     submitted = signal(false);
     error = signal('');
+    // Form State & Validation (Signal-based)
+    isTitleValid = computed(() => this.title().trim().length >= 5);
+    isDescriptionValid = computed(() => this.description().trim().length >= 20);
+    isFormValid = computed(() => this.isTitleValid() && this.isDescriptionValid() && !this.loading());
 
     // Success State
     complaintCode = signal('');
     complaintToken = signal('');
 
-    editor = viewChild(RichTextEditorComponent);
+    editor = viewChild<RichTextEditorComponent>(RichTextEditorComponent);
 
     quillModules = {
         toolbar: [
@@ -70,72 +78,13 @@ export class ComplaintFormComponent {
         ]
     };
 
-    // Files
-    onFilesSelected(event: any): void {
-        const files: FileList = event.target.files;
-        if (files.length > 0) {
-            let currentTotalSize = this.totalSelectedSize();
-            const newFiles = [...this.selectedFiles()];
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const totalWithEmbedded = currentTotalSize + this.embeddedImagesSize();
-                if (totalWithEmbedded + file.size > this.configService.maxComplaintPayloadBytes) {
-                    this.error.set(`No se pueden añadir más archivos: se superaría el límite global de ${this.configService.limits().maxComplaintPayloadMB}MB.`);
-                    break;
-                }
-
-                currentTotalSize += file.size;
-                newFiles.push({
-                    file: file,
-                    url: URL.createObjectURL(file)
-                });
-            }
-
-            this.selectedFiles.set(newFiles);
-            this.totalSelectedSize.set(currentTotalSize);
-            this.error.set('');
-            event.target.value = '';
-        }
-    }
-
-    removeFile(index: number): void {
-        const files = [...this.selectedFiles()];
-        const removed = files.splice(index, 1)[0];
-        if (removed.url) URL.revokeObjectURL(removed.url);
-
-        this.selectedFiles.set(files);
-        this.totalSelectedSize.set(this.totalSelectedSize() - removed.file.size);
-        this.error.set('');
-    }
-
-    isImage(filename: string): boolean {
-        if (!filename) return false;
-        const ext = filename.split('.').pop()?.toLowerCase();
-        return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
-    }
-
     // Editor
     onEditorContentChange(html: string): void {
-        if (!html) {
-            this.embeddedImagesSize.set(0);
-            return;
-        }
-        // Simple logic to estimate embedded size
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const images = doc.querySelectorAll('img');
-        let totalSize = 0;
-        images.forEach(img => {
-            const src = img.getAttribute('src');
-            if (src && src.startsWith('data:image')) {
-                const base64Data = src.split(',')[1];
-                if (base64Data) {
-                    totalSize += (base64Data.length * 3) / 4;
-                }
-            }
-        });
-        this.embeddedImagesSize.set(totalSize);
+        this.embeddedImagesSize.set(calculateEmbeddedImagesSize(html));
+    }
+
+    getTotalFileSize(): number {
+        return this.selectedFiles().reduce((acc, f) => acc + f.file.size, 0);
     }
 
     // Submit
@@ -159,7 +108,7 @@ export class ComplaintFormComponent {
         }
 
         if (this.selectedFiles().length > 0) {
-            const totalSize = this.totalSelectedSize() + this.embeddedImagesSize();
+            const totalSize = this.getTotalFileSize() + this.embeddedImagesSize();
             if (totalSize > this.configService.maxComplaintPayloadBytes) {
                 this.error.set(`El tamaño total supera los ${this.configService.limits().maxComplaintPayloadMB}MB.`);
                 this.loading.set(false);
@@ -203,13 +152,10 @@ export class ComplaintFormComponent {
     }
 
     resetInternalForm(): void {
-        // Only resets inputs, not the success view state
         this.title.set('');
         this.description.set('');
         this.optionalEmail.set('');
-        this.selectedFiles().forEach(f => URL.revokeObjectURL(f.url));
         this.selectedFiles.set([]);
-        this.totalSelectedSize.set(0);
     }
 
     goToStatus(): void {

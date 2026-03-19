@@ -1,6 +1,7 @@
 <div class="p-2 md:p-4 bg-gray-50 min-h-screen">
     <div class="max-w-none mx-auto">
         <!-- Header & Navigation -->
+        @let id = policyId();
         <div class="mb-10 flex items-center justify-between">
             <div class="flex items-center gap-6">
                 <a routerLink="../"
@@ -9,11 +10,11 @@
                 </a>
                 <div>
                     <h2 class="text-3xl font-black text-gray-900 tracking-tight leading-none">
-                        {{ policyId() ? 'Editar Política' : 'Nueva Política' }}
+                        {{ id ? 'Editar Política' : 'Nueva Política' }}
                     </h2>
                     <p class="text-gray-500 mt-1.5 text-sm font-bold flex items-center gap-1.5">
                         <ng-icon name="lucideSettings" class="text-inespasa"></ng-icon>
-                        {{ policyId() ? 'Modificando parámetros de la política activa' : 'Definiendo nuevos derechos y
+                        {{ id ? 'Modificando parámetros de la política activa' : 'Definiendo nuevos derechos y
                         obligaciones laborales' }}
                     </p>
                 </div>

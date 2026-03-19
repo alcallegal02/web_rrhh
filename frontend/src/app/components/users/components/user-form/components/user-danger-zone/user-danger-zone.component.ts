@@ -1,5 +1,4 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
     lucideTriangleAlert, lucideBan, lucideCheck, lucideTrash, lucideHelpCircle
@@ -7,7 +6,7 @@ import {
 
 @Component({
     selector: 'app-user-danger-zone',
-    imports: [CommonModule, NgIconComponent],
+    imports: [NgIconComponent],
     templateUrl: './user-danger-zone.component.html',
     providers: [
         provideIcons({

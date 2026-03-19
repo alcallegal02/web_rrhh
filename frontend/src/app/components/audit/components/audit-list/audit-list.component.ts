@@ -1,5 +1,4 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { AuditLog } from '../../../../services/audit.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
@@ -12,7 +11,7 @@ import {
 
 @Component({
     selector: 'app-audit-list',
-    imports: [CommonModule, NgIconComponent],
+    imports: [NgIconComponent],
     templateUrl: './audit-list.component.html',
     providers: [
         provideIcons({

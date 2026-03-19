@@ -1,5 +1,4 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { PolicyService, PermissionPolicy } from '../../../services/policy.service';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -13,7 +12,7 @@ import {
 
 @Component({
     selector: 'app-policy-config',
-    imports: [CommonModule, RouterModule, NgIconComponent],
+    imports: [RouterModule, NgIconComponent],
     templateUrl: './policy-config.component.html',
     providers: [
         provideIcons({
@@ -26,14 +25,14 @@ import {
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PolicyConfigComponent {
-    private policyService = inject(PolicyService);
+    private readonly policyService = inject(PolicyService);
 
-    policiesResource = rxResource({
+    readonly policiesResource = rxResource<PermissionPolicy[], unknown>({
         stream: () => this.policyService.getPolicies()
     });
 
-    policies = computed(() => this.policiesResource.value() || []);
-    isLoading = computed(() => this.policiesResource.isLoading());
+    readonly policies = computed(() => this.policiesResource.value() ?? []);
+    readonly isLoading = computed(() => this.policiesResource.isLoading());
 
     toggleActive(policy: PermissionPolicy) {
         this.policyService.updatePolicy(policy.id, { is_active: !policy.is_active }).subscribe(() => {

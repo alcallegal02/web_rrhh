@@ -16,7 +16,7 @@
             <!-- Expand/Collapse Indicator (if has children) -->
             @if (node().children && node().children!.length > 0) {
             <div class="absolute -bottom-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full text-white text-xs font-bold border-2 border-white shadow-sm transition-colors"
-                [ngClass]="isExpanded() ? 'bg-red-400 hover:bg-red-500' : 'bg-green-500 hover:bg-green-600'">
+                [class]="isExpanded() ? 'bg-red-400 hover:bg-red-500' : 'bg-green-500 hover:bg-green-600'">
                 {{ isExpanded() ? '−' : '+' }}
             </div>
             }

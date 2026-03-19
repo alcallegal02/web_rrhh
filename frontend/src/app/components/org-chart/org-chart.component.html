@@ -14,15 +14,22 @@
     </app-org-chart-controls>
 
     <div class="w-full overflow-x-auto pb-20">
+        @let nodes = tree();
         <div class="min-w-max flex justify-center p-10">
-            @if (tree().length === 0) {
+            @if (nodes.length === 0) {
             <div class="text-center p-10 border-2 border-dashed border-gray-300 rounded-xl bg-white/50">
                 <p class="text-gray-500">No hay datos de estructura organizativa disponibles.</p>
             </div>
             } @else {
             <div class="flex gap-16">
-                @for (node of tree(); track node.id) {
-                <app-org-node [node]="node"></app-org-node>
+                @defer (on idle) {
+                    @for (node of nodes; track node.id) {
+                    <app-org-node [node]="node"></app-org-node>
+                    }
+                } @placeholder {
+                    <div class="h-64 flex items-center justify-center">
+                        <div class="w-12 h-12 border-4 border-inespasa-dark/10 border-t-inespasa-dark rounded-full animate-spin"></div>
+                    </div>
                 }
             </div>
             }

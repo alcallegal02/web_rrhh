@@ -137,7 +137,7 @@
                                 }}</span>
                             @if (key === 'content') {
                             <div class="text-xs text-gray-700 leading-relaxed prose prose-xs max-w-none line-clamp-6 [&>*]:mb-1"
-                                [innerHTML]="log().details![key]"></div>
+                                [innerHTML]="log().details![key] | safe:'html'"></div>
                             } @else {
                             <span class="text-xs font-bold text-gray-800 break-words">{{ log().details![key] ?? '-'
                                 }}</span>

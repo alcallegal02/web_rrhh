@@ -1,6 +1,7 @@
-import { Injectable, inject, computed } from '@angular/core';
+import { Injectable, inject, computed, DestroyRef } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from '../config/environment';
 import { StoreService } from './store.service';
 import { Complaint, ComplaintComment } from '../models/app.models';
@@ -9,7 +10,6 @@ import { Complaint, ComplaintComment } from '../models/app.models';
 export interface ComplaintCreateResponse {
     code: string;
     access_token: string;
-    // Include other fields from Complaint if needed, or extends Complaint
 }
 
 export interface ComplaintMessage {
@@ -26,23 +26,22 @@ import { WebSocketService } from './websocket.service';
     providedIn: 'root'
 })
 export class ComplaintService {
-    private http = inject(HttpClient);
-    private store = inject(StoreService);
-    private wsService = inject(WebSocketService);
-    private apiUrl = `${environment.apiUrl}/complaint`;
+    private readonly http = inject(HttpClient);
+    private readonly store = inject(StoreService);
+    private readonly wsService = inject(WebSocketService);
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly apiUrl = `${environment.apiUrl}/complaint`;
 
     // Expose signal from store
     complaints = computed(() => this.store.complaints().items as Complaint[]);
 
     constructor() {
-        this.initRealTimeUpdates();
-    }
-
-    private initRealTimeUpdates() {
-        this.wsService.messages$.subscribe(msg => {
-            if ((msg.type === 'db_update' && msg.data.table === 'complaints') || 
+        // takeUntilDestroyed() gestiona la limpieza automática sin necesitar ngOnDestroy
+        this.wsService.messages$.pipe(
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(msg => {
+            if ((msg.type === 'db_update' && msg.data.table === 'complaints') ||
                 msg.type === 'complaint_comment_added') {
-                // Refresh complaints list (Admin)
                 this.getAllComplaints().subscribe();
             }
         });

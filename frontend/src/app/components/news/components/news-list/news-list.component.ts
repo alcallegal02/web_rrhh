@@ -1,11 +1,11 @@
 import { Component, input, output, inject, ChangeDetectionStrategy, ViewEncapsulation, signal } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../config/environment';
 import { News } from '../../../../models/app.models';
 import { HostListener } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { FileUrlPipe } from '../../../../pipes/file-url.pipe';
+import { FileUrlPipe } from '../../../../shared/pipes/file-url.pipe';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
     lucideNewspaper, lucidePencil, lucideTrash2, lucideChevronRight,
@@ -15,7 +15,7 @@ import {
 
 @Component({
     selector: 'app-news-list',
-    imports: [CommonModule, DatePipe, RouterModule, FileUrlPipe, NgIconComponent],
+    imports: [DatePipe, RouterModule, FileUrlPipe, NgIconComponent],
     templateUrl: './news-list.component.html',
     styleUrl: './news-list.component.scss',
     providers: [

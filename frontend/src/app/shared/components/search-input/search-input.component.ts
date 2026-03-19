@@ -1,0 +1,38 @@
+import { Component, input, output, model, ChangeDetectionStrategy } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { lucideSearch, lucideX } from '@ng-icons/lucide';
+
+@Component({
+  selector: 'app-search-input',
+  imports: [FormsModule, NgIconComponent],
+  providers: [provideIcons({ lucideSearch, lucideX })],
+  template: `
+    <div class="relative group">
+      <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+        <ng-icon name="lucideSearch" 
+          class="text-gray-400 group-focus-within:text-inespasa-dark transition-colors"></ng-icon>
+      </div>
+      <input
+        type="text"
+        [ngModel]="value()"
+        (ngModelChange)="value.set($event)"
+        [placeholder]="placeholder()"
+        class="block w-full pl-11 pr-10 py-3 bg-gray-50 border-2 border-transparent rounded-2xl text-sm font-bold text-gray-700 placeholder-gray-400 focus:bg-white focus:border-inespasa-light/30 focus:ring-4 focus:ring-inespasa-light/10 transition-all outline-none shadow-sm group-hover:bg-gray-100/50"
+      >
+      @if (value()) {
+        <button 
+          (click)="value.set('')"
+          class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 transition-colors"
+        >
+          <ng-icon name="lucideX"></ng-icon>
+        </button>
+      }
+    </div>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush
+})
+export class SearchInputComponent {
+  value = model<string>('');
+  placeholder = input<string>('Buscar...');
+}

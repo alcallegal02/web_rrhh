@@ -1,10 +1,9 @@
 import { Component, input, output, signal, inject, effect, viewChild, ChangeDetectionStrategy, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { RichTextEditorComponent } from '../../../shared/rich-text-editor/rich-text-editor.component';
+import { RichTextEditorComponent } from '../../../../shared/components/rich-text-editor/rich-text-editor.component';
 import { NewsService } from '../../../../services/news.service';
 import { ConfigService } from '../../../../services/config';
 import { environment } from '../../../../config/environment';
@@ -30,7 +29,7 @@ export interface NewsFormModel {
 
 @Component({
     selector: 'app-news-form',
-    imports: [CommonModule, FormsModule, RichTextEditorComponent, NgIconComponent, DragDropModule],
+    imports: [FormsModule, RichTextEditorComponent, NgIconComponent, DragDropModule],
     templateUrl: './news-form.component.html',
     styleUrl: './news-form.component.scss',
     providers: [
@@ -53,7 +52,7 @@ export class NewsFormComponent {
     save = output<NewsFormModel>();
     cancel = output<void>();
 
-    editor = viewChild(RichTextEditorComponent);
+    editor = viewChild<RichTextEditorComponent>(RichTextEditorComponent);
 
     // Form State
     form = signal<NewsFormModel>({

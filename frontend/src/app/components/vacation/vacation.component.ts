@@ -1,6 +1,6 @@
 import { Component, signal, linkedSignal, inject, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { VacationService, VacationBalance, ResponsibleUser } from '../../services/vacation.service';
 import { ConvenioService, ConvenioConfig } from '../../services/convenio.service';
@@ -13,109 +13,101 @@ import { VacationBalancesComponent } from './components/vacation-balances/vacati
 import { VacationCalendarComponent } from './components/vacation-calendar/vacation-calendar.component';
 import { VacationListComponent } from './components/vacation-list/vacation-list.component';
 import { VacationDynamicFormComponent } from './components/vacation-dynamic-form/vacation-dynamic-form.component';
+import { DialogService } from '../../services/dialog.service';
 import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
   selector: 'app-vacation',
   imports: [
-    CommonModule,
     VacationBalancesComponent,
     VacationCalendarComponent,
     VacationListComponent,
     VacationDynamicFormComponent,
     FormsModule,
-    NgIconComponent
+    NgIconComponent,
+    DatePipe,
+    DecimalPipe
   ],
   templateUrl: './vacation.component.html',
   styleUrl: './vacation.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class VacationComponent implements OnInit {
-  private vacationService = inject(VacationService);
-  private convenioService = inject(ConvenioService);
-  private leaveTypeService = inject(LeaveTypeService);
-  authService = inject(AuthService);
+export class VacationComponent {
+  private readonly vacationService = inject(VacationService);
+  private readonly convenioService = inject(ConvenioService);
+  private readonly leaveTypeService = inject(LeaveTypeService);
+  readonly authService = inject(AuthService);
+  private readonly dialogService = inject(DialogService);
 
-  currentYear = signal(new Date().getFullYear());
+  readonly currentYear = signal(new Date().getFullYear());
 
-  // Resources
-  requestsResource = rxResource({
+  // --- Resources API ---
+  readonly requestsResource = rxResource({
     stream: () => this.vacationService.getMyRequests()
   });
 
-  balanceResource = rxResource({
+  readonly balanceResource = rxResource({
     stream: () => this.vacationService.getBalance()
   });
 
-  leaveTypesResource = rxResource({
+  readonly leaveTypesResource = rxResource({
     stream: () => this.leaveTypeService.getLeaveTypes(true)
   });
 
-  convenioConfigResource = rxResource({
+  readonly convenioConfigResource = rxResource({
     stream: () => this.convenioService.getAllConfigs()
   });
 
-  holidaysResource = rxResource({
+  readonly holidaysResource = rxResource({
     params: () => ({ year: this.currentYear() }),
-    stream: ({ params }) => {
-      const { year } = params;
-      return forkJoin([
-        this.vacationService.getHolidays(year - 1),
-        this.vacationService.getHolidays(year),
-        this.vacationService.getHolidays(year + 1)
-      ]);
-    }
+    stream: ({ params }) => forkJoin([
+        this.vacationService.getHolidays(params.year - 1),
+        this.vacationService.getHolidays(params.year),
+        this.vacationService.getHolidays(params.year + 1)
+    ])
   });
 
-  // State
-  requests = computed(() => this.requestsResource.value() || []);
-  balance = computed(() => this.balanceResource.value() || null);
+  // --- Computed States ---
+  readonly requests = computed(() => this.requestsResource.value() ?? []);
+  readonly balance = computed(() => this.balanceResource.value() ?? null);
+  readonly leaveTypes = computed(() => this.leaveTypesResource.value() ?? []);
 
-  leaveTypes = computed(() => this.leaveTypesResource.value() || []);
-
-  convenioConfig = computed(() => {
+  readonly convenioConfig = computed(() => {
     const configs = this.convenioConfigResource.value();
     if (!configs) return null;
     const now = new Date().toISOString().split('T')[0];
-    return configs.find(c => now >= c.valid_from && now <= c.valid_to) || configs[0] || null;
+    return configs.find(c => now >= c.valid_from && now <= c.valid_to) ?? configs[0] ?? null;
   });
 
-  holidays = computed(() => {
-    const data = this.holidaysResource.value();
-    if (!data) return [];
-    // flatten the 3 arrays
-    const all = [...data[0], ...data[1], ...data[2]];
-    return Array.from(new Map(all.map(h => [h.id, h])).values());
+  readonly holidays = computed(() => {
+    const data = this.holidaysResource.value() as any[];
+    if (!data || !Array.isArray(data)) return [];
+    const all = [...(data[0] || []), ...(data[1] || []), ...(data[2] || [])];
+    return Array.from(new Map(all.map((h: any) => [h.id, h])).values());
   });
 
-  loading = signal(false);
+  // --- UI State ---
+  readonly loading = signal(false);
+  readonly selectedDay = signal<CalendarDay | null>(null);
+  readonly selectedRequest = signal<VacationRequest | null>(null);
+  readonly selectedPolicyId = signal<string | null>(null);
+  readonly modalForceOpen = signal(false);
 
-  // Modal state
-  selectedDay = signal<CalendarDay | null>(null);
-  selectedRequest = signal<VacationRequest | null>(null);
-  selectedPolicyId = signal<string | null>(null);
-  private _modalForceOpen = false;
+  // El estado del modal es puramente derivado (Declarativo)
+  readonly isModalOpen = computed(() => this.selectedDay() !== null || this.modalForceOpen());
 
-  // Form State
-  newRequest = linkedSignal<CalendarDay | null, VacationRequestDraft>({
+  // --- Form State (linkedSignal para reseteo automático) ---
+  readonly newRequest = linkedSignal<CalendarDay | null, VacationRequestDraft>({
     source: this.selectedDay,
-    computation: (day, previous) => {
-      // If we are editing an existing request (which manually sets newRequest),
-      // or if day is null, we return a default or keep the previous value if it has an id.
-      // But actually, when selectedDay changes, we want to start a new request for that day.
+    computation: (day) => {
       if (!day) {
         return {
           id: '', request_type: 'vacaciones', leave_type_id: '', start_date: '', end_date: '',
           days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
         };
       }
-
       const d = day.date;
-      const year = d.getFullYear();
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
-      const date = d.getDate().toString().padStart(2, '0');
-      const dateStr = `${year}-${month}-${date}T08:00`;
-
+      const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}T08:00`;
       return {
         id: '', request_type: 'vacaciones', leave_type_id: '', start_date: dateStr, end_date: dateStr,
         days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
@@ -123,24 +115,21 @@ export class VacationComponent implements OnInit {
     }
   });
 
-  // Computed for Child Components
-  managers = computed(() => this.authService.user()?.managers || []);
+  readonly managers = computed(() => this.authService.user()?.managers ?? []);
 
-  isMaternityVisible = computed(() => {
+  readonly isMaternityVisible = computed(() => {
     const bal = this.balance()?.balances.find(b => b.slug === 'maternidad_paternidad');
-    if (!bal) return false;
-    return (bal.used_days > 0.01 || bal.pending_days > 0.01);
+    return bal ? (bal.used_days > 0.01 || bal.pending_days > 0.01) : false;
   });
 
-  monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  readonly monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
-  calendarMonths = computed(() => {
+  readonly calendarMonths = computed(() => {
     const year = this.currentYear();
-    const months: { month: number; name: string; days: CalendarDay[] }[] = [];
     const requests = this.requests();
     const holidays = this.holidays();
 
-    for (let month = 0; month < 12; month++) {
+    return this.monthNames.map((name, month) => {
       const firstDay = new Date(year, month, 1);
       const lastDay = new Date(year, month + 1, 0);
       const days: CalendarDay[] = [];
@@ -154,99 +143,85 @@ export class VacationComponent implements OnInit {
         const date = new Date(year, month, day);
         const dateStr = date.toISOString().split('T')[0];
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        const holiday = holidays.find(h => h.date === dateStr);
-        const req = requests.find(r => {
-          const start = new Date(r.start_date);
-          const end = new Date(r.end_date);
-          const current = new Date(dateStr);
-          return current >= start && current <= end;
-        });
-
+        
         days.push({
           date,
           day,
-          isToday: this.isToday(date),
+          isToday: this.checkIsToday(date),
           isWeekend,
-          holiday,
-          request: req
+          holiday: holidays.find(h => h.date === dateStr),
+          request: requests.find(r => {
+            const start = new Date(r.start_date).toISOString().split('T')[0];
+            const end = new Date(r.end_date).toISOString().split('T')[0];
+            return dateStr >= start && dateStr <= end;
+          })
         });
       }
-      months.push({ month, name: this.monthNames[month], days });
-    }
-    return months;
+      return { month, name, days };
+    });
   });
 
-  ngOnInit(): void {
-    // rxResource automatically reacts and fetches data upon initialization
-    // no need for loadAll() or explicit subscribe()
-  }
-
-  isToday(d: Date): boolean {
+  private checkIsToday(d: Date): boolean {
     const today = new Date();
     return d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
   }
 
-  changeYear(delta: number) {
+  changeYear(delta: number): void {
     this.currentYear.update(y => y + delta);
   }
 
-  setPolicy(id: any) {
+  setPolicy(id: string | null): void {
     this.selectedPolicyId.set(id);
   }
 
-  // Modal Logic
-  openDayModal(day: CalendarDay) {
+  openDayModal(day: CalendarDay): void {
     if (day.day === 0) return;
     this.selectedDay.set(day);
-    this.isModalOpen = true; // Wait it is automatically derived from selectedDay!
-    // But isModalOpen setter is used for force opening!
   }
 
-  closeDayModal() {
+  closeDayModal(): void {
     this.selectedDay.set(null);
-    this.isModalOpen = false;
+    this.modalForceOpen.set(false);
   }
 
-  get isModalOpen() { return this.selectedDay() !== null || this._modalForceOpen; }
-  set isModalOpen(v: boolean) { this._modalForceOpen = v; }
-
-  resetNewRequest() {
-    this.selectedDay.set(null); // Triggers linkedSignal reset
-    this.newRequest.set({
-      id: '', request_type: 'vacaciones', leave_type_id: '', start_date: '', end_date: '',
-      days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
-    });
+  resetNewRequest(): void {
+    this.selectedDay.set(null);
   }
 
-  openRequestDetails(request: VacationRequest) {
+  openRequestDetails(request: VacationRequest): void {
     this.selectedRequest.set(request);
   }
 
-  closeRequestDetails() {
+  closeRequestDetails(): void {
     this.selectedRequest.set(null);
   }
 
-  editRequest(req: VacationRequest) {
+  editRequest(req: VacationRequest): void {
     this.closeRequestDetails();
     this.newRequest.set({
       id: req.id,
       request_type: req.request_type,
-      leave_type_id: req.leave_type_id || '',
+      leave_type_id: req.leave_type_id ?? '',
       start_date: req.start_date,
-      end_date: req.end_date || '',
+      end_date: req.end_date ?? '',
       days_requested: req.days_requested,
-      assigned_manager_id: req.assigned_manager_id || '',
-      assigned_rrhh_id: req.assigned_rrhh_id || '',
-      description: req.description || '',
-      file_url: req.file_url || '',
-      attachments: req.attachments || []
+      assigned_manager_id: req.assigned_manager_id ?? '',
+      assigned_rrhh_id: req.assigned_rrhh_id ?? '',
+      description: req.description ?? '',
+      file_url: req.file_url ?? '',
+      attachments: req.attachments ?? []
     } as any);
-    this.selectedPolicyId.set(req.policy_id || null);
-    this.isModalOpen = true;
+    this.selectedPolicyId.set(req.policy_id ?? null);
+    this.modalForceOpen.set(true);
   }
 
-  sendRequestNow(req: VacationRequest) {
-    if (!confirm('¿Estás seguro de enviar esta solicitud? Una vez enviada se notificará a tu manager.')) return;
+  async sendRequestNow(req: VacationRequest) {
+    const confirmed = await this.dialogService.question(
+      'Enviar Solicitud',
+      '¿Estás seguro de enviar esta solicitud? Una vez enviada se notificará a tu responsable para su validación.'
+    );
+    if (!confirmed) return;
+
     this.loading.set(true);
     this.vacationService.submitExistingRequest(req.id).subscribe({
       next: () => {
@@ -259,44 +234,23 @@ export class VacationComponent implements OnInit {
     });
   }
 
-  deleteRequest(req: VacationRequest) {
-    if (!confirm('¿Estás seguro de eliminar esta solicitud?')) return;
+  async deleteRequest(req: VacationRequest) {
+    const confirmed = await this.dialogService.danger(
+      'Eliminar Solicitud',
+      '¿Estás seguro de eliminar esta solicitud? Esta acción no se puede deshacer.'
+    );
+    if (!confirmed) return;
+
     this.loading.set(true);
-    // Assuming service has deleteRequest, if not, I might break this. 
-    // Step 30 showed delete_news in Backend. 
-    // I can assume frontend service matches backend capability.
-    // If not, I should check service file first. But I'll assume standard CRUD.
-    // Wait, let's verify if I can call delete.
-    // I'll comment it out if unsure? No, I'll assume it exists or I'll add it if failed.
-    // Looking at Step 36 lines 1-680 (original TS), I don't see deleteRequest in usage.
-    // But backend likely supports it.
-    // I will use `this.vacationService.deleteRequest(id)` and hope.
-    // If invalid, compilation error. 
-    // I will include it.
-
-    // Actually, to be safe, I'll check if deleteRequest exists in VacationService?
-    // I can't check now easily without view_file.
-    // I'll include it.
-
-    /* 
-    this.vacationService.deleteRequest(req.id).subscribe(...)
-    */
-    // I'll stick to what I know: sendRequestNow existed. delete? I'll add it if user asks or I verify.
-    // I'll add it.
-    if ((this.vacationService as any).deleteRequest) {
-      (this.vacationService as any).deleteRequest(req.id).subscribe({
-        next: () => {
-          this.loading.set(false);
-          this.closeRequestDetails();
-          this.requestsResource.reload();
-          this.balanceResource.reload();
-        },
-        error: () => this.loading.set(false)
-      });
-    } else {
-      alert("Función eliminar no implementada en servicio frontend");
-      this.loading.set(false);
-    }
+    this.vacationService.deleteRequest(req.id).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.closeRequestDetails();
+        this.requestsResource.reload();
+        this.balanceResource.reload();
+      },
+      error: () => this.loading.set(false)
+    });
   }
 
   async submitRequest(event: { request: VacationRequestDraft, files: { file: File, url: string }[] }) {

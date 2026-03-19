@@ -1,10 +1,10 @@
 import { Component, input, output, signal, inject, effect, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { form, field } from '../../../../utils/signal-forms';
+import { DecimalPipe } from '@angular/common';
+import { form, field } from '../../../../shared/utils/signal-forms';
 import { PolicyService } from '../../../../services/policy.service';
 import { ResponsibleUser, VacationService, VacationBalance } from '../../../../services/vacation.service';
-import { VacationRequestDraft } from '../vacation-request-form/vacation-request-form.component';
+import { VacationRequestDraft } from '../../vacation.types';
 import { NgIconComponent } from '@ng-icons/core';
 
 export interface FormFieldSchema {
@@ -30,7 +30,7 @@ export interface DynamicFormSchema {
 
 @Component({
     selector: 'app-vacation-dynamic-form',
-    imports: [CommonModule, ReactiveFormsModule, NgIconComponent],
+    imports: [ReactiveFormsModule, NgIconComponent, DecimalPipe],
     templateUrl: './vacation-dynamic-form.component.html',
 })
 export class VacationDynamicFormComponent {

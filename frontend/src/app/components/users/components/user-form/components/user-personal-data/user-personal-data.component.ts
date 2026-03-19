@@ -1,5 +1,4 @@
 import { Component, EventEmitter, Input, Output, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserFormModel } from '../../user-form.component';
 import { environment } from '../../../../../../config/environment';
@@ -10,7 +9,7 @@ import {
 
 @Component({
     selector: 'app-user-personal-data',
-    imports: [CommonModule, FormsModule, NgIconComponent],
+    imports: [FormsModule, NgIconComponent],
     templateUrl: './user-personal-data.component.html',
     providers: [
         provideIcons({

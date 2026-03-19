@@ -79,55 +79,18 @@
             </div>
 
             <div class="flex flex-col gap-6">
-                <!-- Dropzone Area -->
-                <div class="relative group">
-                    <input type="file" (change)="onFilesSelected($event)" multiple
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" [disabled]="loading()">
-                    <div
-                        class="w-full py-10 border-2 border-dashed border-gray-200 rounded-[2rem] bg-white group-hover:border-inespasa-light group-hover:bg-inespasa-light/5 transition-all flex flex-col items-center justify-center gap-3">
-                        <div
-                            class="h-14 w-14 rounded-2xl bg-gray-50 text-gray-300 flex items-center justify-center group-hover:bg-inespasa-light group-hover:text-white transition-all shadow-sm">
-                            <ng-icon name="lucidePaperclip" class="text-2xl"></ng-icon>
-                        </div>
-                        <div class="text-center">
-                            <span
-                                class="block text-[11px] font-black uppercase tracking-widest text-gray-600 group-hover:text-inespasa transition-colors">Arrastra
-                                documentos o haz clic aquí</span>
-                            <span class="text-[10px] text-gray-400 mt-1 block">PDF, Word, JPG o PNG (Máx. {{
-                                configService.limits().maxComplaintPayloadMB }}MB)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Files List -->
-                @if (selectedFiles().length > 0) {
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    @for (fileObj of selectedFiles(); track $index) {
-                    @if (!isImage(fileObj.file.name)) {
-                    <div
-                        class="flex items-center justify-between bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm hover:border-inespasa-light/30 transition-all group">
-                        <div class="flex items-center gap-3 min-w-0">
-                            <span class="text-inespasa"><ng-icon name="lucideFileText"></ng-icon></span>
-                            <span class="text-[11px] font-bold text-gray-700 truncate max-w-[150px]">{{
-                                fileObj.file.name }}</span>
-                        </div>
-                        <button type="button" (click)="removeFile($index)"
-                            class="h-7 w-7 rounded-lg bg-red-50 text-red-400 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center">
-                            <ng-icon name="lucideX"></ng-icon>
-                        </button>
-                    </div>
-                    }
-                    }
-                </div>
-                }
+                <app-file-uploader 
+                    label="Arrastra documentos o haz clic aquí"
+                    [(files)]="selectedFiles"
+                    [multiple]="true">
+                </app-file-uploader>
 
                 @if (selectedFiles().length > 0 || embeddedImagesSize() > 0) {
                 <div class="text-[10px] font-black text-gray-400 uppercase tracking-tighter flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full"
-                        [class.bg-inespasa]="(totalSelectedSize() + embeddedImagesSize()) < configService.maxComplaintPayloadBytes"
-                        [class.bg-red-500]="(totalSelectedSize() + embeddedImagesSize()) >= configService.maxComplaintPayloadBytes"></span>
-                    Peso total: {{ ((totalSelectedSize() + embeddedImagesSize()) / 1024 / 1024).toFixed(2) }}MB / {{
+                        [class.bg-inespasa]="(getTotalFileSize() + embeddedImagesSize()) < configService.maxComplaintPayloadBytes"
+                        [class.bg-red-500]="(getTotalFileSize() + embeddedImagesSize()) >= configService.maxComplaintPayloadBytes"></span>
+                    Peso total: {{ ((getTotalFileSize() + embeddedImagesSize()) / 1024 / 1024).toFixed(2) }}MB / {{
                     configService.limits().maxComplaintPayloadMB }}MB
                 </div>
                 }
@@ -181,8 +144,11 @@
         </div>
 
         <!-- Form Actions -->
+        @let totalSize = getTotalFileSize() + embeddedImagesSize();
+        @let isOverSize = totalSize >= configService.maxComplaintPayloadBytes;
+
         <div class="flex flex-col sm:flex-row items-center gap-4 pt-4">
-            <button type="submit" [disabled]="loading() || !complaintForm.valid"
+            <button type="submit" [disabled]="!isFormValid() || isOverSize"
                 class="w-full sm:w-auto min-w-[240px] flex items-center justify-center gap-3 bg-inespasa text-white px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-inespasa-light/30 hover:bg-inespasa-dark hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all">
                 @if (!loading()) {
                 <ng-icon name="lucideSend" class="text-lg"></ng-icon>

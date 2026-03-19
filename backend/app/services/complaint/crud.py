@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, text
 
 from app.models.complaint import (
+    CommentAttachment,
     Complaint,
     ComplaintAttachment,
     ComplaintComment,
@@ -66,7 +67,7 @@ async def process_and_save_complaint_files(
     for i, file in enumerate(files):
         # Sanitize and validate each file
         original_filename = sanitize_filename(file.filename)
-        validate_file_extension(original_filename, {'.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png', '.webp'})
+        validate_file_extension(original_filename, {'.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.jpg', '.jpeg', '.png', '.webp'})
         
         content = file_contents[i]
         # Validate magic bytes

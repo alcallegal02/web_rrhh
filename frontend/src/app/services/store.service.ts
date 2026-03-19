@@ -156,6 +156,17 @@ export class StoreService {
         }));
     }
 
+    updateComplaintComments(id: string, comments: ComplaintComment[]) {
+        this._state.update(s => ({
+            ...s,
+            complaints: {
+                ...s.complaints,
+                items: s.complaints.items.map(i => i.id === id ? { ...i, comments } : i),
+                lastUpdated: new Date()
+            }
+        }));
+    }
+
     removeComplaint(id: string) {
         if (!id) return;
         this._state.update(s => ({

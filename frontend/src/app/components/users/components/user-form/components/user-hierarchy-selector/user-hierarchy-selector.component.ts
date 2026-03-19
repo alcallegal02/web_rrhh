@@ -1,5 +1,4 @@
 import { Component, input, output, computed, signal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../../config/environment';
 import { UserSummary } from '../../user-form.models';
@@ -13,7 +12,7 @@ export { UserSummary };
 
 @Component({
     selector: 'app-user-hierarchy-selector',
-    imports: [CommonModule, FormsModule, NgIconComponent],
+    imports: [FormsModule, NgIconComponent],
     templateUrl: './user-hierarchy-selector.component.html',
     providers: [
         provideIcons({

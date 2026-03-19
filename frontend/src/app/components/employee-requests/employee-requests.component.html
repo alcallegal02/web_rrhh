@@ -1,4 +1,7 @@
 <div class="space-y-8 animate-fadeIn">
+    @let teamPending = totalTeamPending();
+    @let personalCount = myRequests().length;
+
     <!-- Premium Header -->
     <div class="relative overflow-hidden bg-inespasa-dark p-8 rounded-[2rem] shadow-2xl text-white">
         <!-- Abstract background pattern -->
@@ -21,13 +24,13 @@
             </div>
             <div class="hidden md:flex gap-8 text-right">
                 <div>
-                    <div class="text-4xl font-black text-white">{{ (managerRequests().length + rrhhRequests().length) }}
+                    <div class="text-4xl font-black text-white">{{ teamPending }}
                     </div>
                     <div class="text-[10px] uppercase tracking-widest text-white/40 font-black">Equipo Pendiente</div>
                 </div>
                 <div class="w-px h-12 bg-white/10"></div>
                 <div>
-                    <div class="text-4xl font-black text-blue-400">{{ myRequests().length }}</div>
+                    <div class="text-4xl font-black text-blue-400">{{ personalCount }}</div>
                     <div class="text-[10px] uppercase tracking-widest text-white/40 font-black">Mis Solicitudes</div>
                 </div>
             </div>
@@ -41,9 +44,8 @@
                 [class]="activeMainTab() === 'personal' ? 'border-inespasa-dark text-inespasa-dark' : 'border-transparent text-slate-400 hover:text-slate-600'"
                 class="px-8 py-4 border-b-2 font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2">
                 <span class="flex items-center gap-1"><ng-icon name="lucideUser"></ng-icon> Mis Solicitudes</span>
-                @if (myRequests().length > 0) {
-                <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px]">{{ myRequests().length
-                    }}</span>
+                @if (personalCount > 0) {
+                <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[9px]">{{ personalCount }}</span>
                 }
             </button>
             @if (managerRequests().length > 0 || rrhhRequests().length > 0) {
@@ -51,9 +53,8 @@
                 [class]="activeMainTab() === 'team' ? 'border-inespasa-dark text-inespasa-dark' : 'border-transparent text-slate-400 hover:text-slate-600'"
                 class="px-8 py-4 border-b-2 font-black text-xs uppercase tracking-widest transition-all flex items-center gap-2">
                 <span class="flex items-center gap-1"><ng-icon name="lucideUsers"></ng-icon> Gestión de Equipo</span>
-                @if ((managerRequests().length + rrhhRequests().length) > 0) {
-                <span class="px-1.5 py-0.5 bg-red-500 text-white rounded text-[9px] animate-pulse">{{
-                    (managerRequests().length + rrhhRequests().length) }}</span>
+                @if (teamPending > 0) {
+                <span class="px-1.5 py-0.5 bg-red-500 text-white rounded text-[9px] animate-pulse">{{ teamPending }}</span>
                 }
             </button>
             }
@@ -100,28 +101,11 @@
                                     req.request_type }}</span>
 
                                 <!-- Status Badge -->
-                                @if (req.status === 'accepted') {
-                                <span
-                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-green-50 text-green-600 border border-green-100 flex items-center gap-1"><ng-icon
-                                        name="lucideCheckCircle2"></ng-icon>
-                                    Aceptada</span>
-                                } @else if (req.status === 'rejected' || req.status === 'rejected_manager' || req.status
-                                === 'rejected_rrhh') {
-                                <span
-                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-100 flex items-center gap-1"><ng-icon
-                                        name="lucideXCircle"></ng-icon>
-                                    Rechazada</span>
-                                } @else if (req.status === 'borrador') {
-                                <span
-                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200 flex items-center gap-1"><ng-icon
-                                        name="lucidePencil"></ng-icon>
-                                    Borrador</span>
-                                } @else {
-                                <span
-                                    class="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-100 animate-pulse flex items-center gap-1"><ng-icon
-                                        name="lucideHourglass"></ng-icon>
-                                    Pendiente</span>
-                                }
+                                <app-status-badge [variant]="getStatusVariant(req.status)">
+                                    {{ (req.status === 'accepted' || req.status === 'approved_rrhh') ? 'Aceptada' : 
+                                       (req.status === 'rejected' || req.status === 'rejected_manager' || req.status === 'rejected_rrhh' ? 'Rechazada' : 
+                                       (req.status === 'borrador' ? 'Borrador' : 'Pendiente')) }}
+                                </app-status-badge>
                             </div>
                             <h3 class="text-lg font-black text-slate-800 leading-tight">
                                 {{ req.days_requested }} días de {{ req.request_type | titlecase }}

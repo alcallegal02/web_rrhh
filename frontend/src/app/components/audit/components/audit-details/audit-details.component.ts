@@ -1,5 +1,4 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, JsonPipe } from '@angular/common';
 import { AuditLog } from '../../../../services/audit.service';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
@@ -7,9 +6,11 @@ import {
     lucideZap, lucideCalendar, lucideUser
 } from '@ng-icons/lucide';
 
+import { SafePipe } from '../../../../shared/pipes/safe.pipe';
+
 @Component({
     selector: 'app-audit-details',
-    imports: [CommonModule, NgIconComponent],
+    imports: [NgIconComponent, SafePipe],
     templateUrl: './audit-details.component.html',
     providers: [
         provideIcons({

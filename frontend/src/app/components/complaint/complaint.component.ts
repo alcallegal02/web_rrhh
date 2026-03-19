@@ -1,5 +1,4 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
 // Components
@@ -10,7 +9,7 @@ import { lucideMegaphone, lucideTriangleAlert, lucideShieldCheck } from '@ng-ico
 
 @Component({
   selector: 'app-complaint',
-  imports: [CommonModule, ComplaintFormComponent, ComplaintLookupComponent, NgIconComponent],
+  imports: [ComplaintFormComponent, ComplaintLookupComponent, NgIconComponent],
   templateUrl: './complaint.component.html',
   styleUrl: './complaint.component.scss',
   providers: [

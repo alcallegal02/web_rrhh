@@ -1,0 +1,18 @@
+<div class="relative w-full">
+    @let disabled = isDisabled();
+    @let isNative = useNative();
+
+    <!-- Native Time Picker (for <24h durations) -->
+    @if (isNative) {
+    <input type="time" [(ngModel)]="displayValue" (input)="onInput($event)" (blur)="onBlur()" [disabled]="disabled"
+        class="w-full text-center border rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-gray-700 bg-white shadow-sm"
+        [class.bg-gray-100]="disabled">
+    } @else {
+    <!-- Custom Text Input (for >24h durations or specific format) -->
+    @let error = hasError() || invalidFormat();
+    <input type="text" [(ngModel)]="displayValue" (input)="onInput($event)" (blur)="onBlur()"
+        (keydown)="onKeyDown($event)" [disabled]="disabled" [class.border-red-500]="error"
+        [class.border-gray-300]="!error" [class.bg-gray-100]="disabled" placeholder="HH:mm"
+        class="w-full text-center font-mono text-sm font-bold tracking-wider rounded border p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none text-gray-700 placeholder-gray-300 shadow-sm">
+    }
+</div>

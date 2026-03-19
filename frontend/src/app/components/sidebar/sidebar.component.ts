@@ -1,12 +1,11 @@
 import { Component, inject, ChangeDetectionStrategy, computed, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-sidebar',
-    imports: [CommonModule, RouterModule, NgIconComponent],
+    imports: [RouterModule, NgIconComponent],
     templateUrl: './sidebar.component.html',
     styleUrl: './sidebar.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush

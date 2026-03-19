@@ -1,103 +1,85 @@
-import { Component, OnInit, signal, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, inject, ChangeDetectionStrategy, computed } from '@angular/core';
+import { DatePipe, TitleCasePipe } from '@angular/common';
+import { rxResource } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { VacationService } from '../../services/vacation.service';
 import { VacationRequest } from '../../models/app.models';
 import { NgIconComponent } from '@ng-icons/core';
+import { of } from 'rxjs';
+import { StatusBadgeComponent } from '../../shared/components/status-badge/status-badge.component';
 
 @Component({
   selector: 'app-employee-requests',
-  imports: [CommonModule, FormsModule, NgIconComponent],
+  imports: [FormsModule, NgIconComponent, StatusBadgeComponent, DatePipe, TitleCasePipe],
   templateUrl: './employee-requests.component.html',
   styleUrl: './employee-requests.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class EmployeeRequestsComponent implements OnInit {
-  public authService = inject(AuthService);
-  private vacationService = inject(VacationService);
+export class EmployeeRequestsComponent {
+  public readonly authService = inject(AuthService);
+  private readonly vacationService = inject(VacationService);
 
   // Top level tabs: 'personal' | 'team'
-  activeMainTab = signal<'personal' | 'team'>('personal');
+  readonly activeMainTab = signal<'personal' | 'team'>('personal');
 
   // Team sub-tabs for RRHH: 'work' | 'hr' 
-  // For managers it will just be 'direct' (effectively 'work')
-  activeTeamTab = signal<'work' | 'hr'>('work');
+  readonly activeTeamTab = signal<'work' | 'hr'>('work');
 
-  myRequests = signal<VacationRequest[]>([]);
-  managerRequests = signal<VacationRequest[]>([]); // These are 'Work' responsibility
-  rrhhRequests = signal<VacationRequest[]>([]); // These are 'HR' responsibility
+  // --- Resources API ---
+  readonly myRequestsResource = rxResource<VacationRequest[], unknown>({
+    stream: () => this.vacationService.getMyRequests()
+  });
 
-  loadingPersonal = signal(false);
-  loadingManager = signal(false);
-  loadingRRHH = signal(false);
-  processing = signal<string | null>(null);
+  readonly managerRequestsResource = rxResource<VacationRequest[], unknown>({
+    stream: () => this.vacationService.getPendingManagerRequests()
+  });
 
-  ngOnInit() {
-    this.loadMyRequests();
-
-    // If user has subordinates or is RRHH, they might have 'team' tab available
-    // For now we load them if they have roles, but logic will hide tabs if empty
-    this.loadManagerRequests();
-    if (this.authService.isRRHH() || this.authService.isSuperadmin()) {
-      this.loadRRHHRequests();
+  readonly rrhhRequestsResource = rxResource<VacationRequest[], unknown>({
+    stream: () => {
+      if (this.authService.isRRHH() || this.authService.isSuperadmin()) {
+        return this.vacationService.getPendingRRHHRequests();
+      }
+      return of([] as VacationRequest[]);
     }
+  });
 
-    // Default to 'team' if there are pending team requests and no personal history? 
-    // Actually personal history is usually more important as 'Dashboard' style.
+  // --- Computed States ---
+  readonly myRequests = computed(() => this.myRequestsResource.value() ?? []);
+  readonly managerRequests = computed(() => this.managerRequestsResource.value() ?? []);
+  readonly rrhhRequests = computed(() => this.rrhhRequestsResource.value() ?? []);
+
+  readonly loadingPersonal = computed(() => this.myRequestsResource.isLoading());
+  readonly loadingManager = computed(() => this.managerRequestsResource.isLoading());
+  readonly loadingRRHH = computed(() => this.rrhhRequestsResource.isLoading());
+
+  readonly totalTeamPending = computed(() => this.managerRequests().length + this.rrhhRequests().length);
+
+  getStatusVariant(status: string): any {
+    const variants: Record<string, string> = {
+      'approved_rrhh': 'success',
+      'pending': 'warning',
+      'approved_manager': 'indigo',
+      'rejected_manager': 'error',
+      'rejected_rrhh': 'error',
+      'borrador': 'neutral'
+    };
+    return variants[status] || 'neutral';
   }
 
-  loadMyRequests() {
-    this.loadingPersonal.set(true);
-    this.vacationService.getMyRequests()
-      .subscribe({
-        next: (data) => {
-          this.myRequests.set(data);
-          this.loadingPersonal.set(false);
-        },
-        error: () => this.loadingPersonal.set(false)
-      });
-  }
+  readonly processing = signal<string | null>(null);
 
-  loadManagerRequests() {
-    this.loadingManager.set(true);
-    this.vacationService.getPendingManagerRequests()
-      .subscribe({
-        next: (data) => {
-          this.managerRequests.set(data);
-          this.loadingManager.set(false);
-        },
-        error: () => this.loadingManager.set(false)
-      });
-  }
-
-  loadRRHHRequests() {
-    this.loadingRRHH.set(true);
-    this.vacationService.getPendingRRHHRequests()
-      .subscribe({
-        next: (data) => {
-          this.rrhhRequests.set(data);
-          this.loadingRRHH.set(false);
-        },
-        error: () => this.loadingRRHH.set(false)
-      });
-  }
-
+  // --- Actions ---
   approveManager(req: VacationRequest) {
-    if (!req.user_name) return; // Should allow if defined
-    if (!confirm('¿Aprobar solicitud de ' + req.user_name + '?')) return;
+    if (!req.user_name || !confirm(`¿Aprobar solicitud de ${req.user_name}?`)) return;
 
     this.processing.set(req.id);
-    this.vacationService.approveManager(req.id)
-      .subscribe({
+    this.vacationService.approveManager(req.id).subscribe({
         next: () => {
           this.processing.set(null);
-          this.loadManagerRequests();
+          this.managerRequestsResource.reload();
         },
-        error: () => {
-          this.processing.set(null);
-          alert('Error al aprobar');
-        }
+        error: () => this.processing.set(null)
       });
   }
 
@@ -106,34 +88,25 @@ export class EmployeeRequestsComponent implements OnInit {
     if (!reason) return;
 
     this.processing.set(req.id);
-    this.vacationService.rejectManager(req.id, reason)
-      .subscribe({
+    this.vacationService.rejectManager(req.id, reason).subscribe({
         next: () => {
           this.processing.set(null);
-          this.loadManagerRequests();
+          this.managerRequestsResource.reload();
         },
-        error: () => {
-          this.processing.set(null);
-          alert('Error al rechazar');
-        }
+        error: () => this.processing.set(null)
       });
   }
 
   approveRRHH(req: VacationRequest) {
-    if (!req.user_name) return;
-    if (!confirm('¿Aprobar y finalizar solicitud de ' + req.user_name + '?')) return;
+    if (!req.user_name || !confirm(`¿Aprobar y finalizar solicitud de ${req.user_name}?`)) return;
 
     this.processing.set(req.id);
-    this.vacationService.approveRRHH(req.id)
-      .subscribe({
+    this.vacationService.approveRRHH(req.id).subscribe({
         next: () => {
           this.processing.set(null);
-          this.loadRRHHRequests();
+          this.rrhhRequestsResource.reload();
         },
-        error: () => {
-          this.processing.set(null);
-          alert('Error al aprobar');
-        }
+        error: () => this.processing.set(null)
       });
   }
 
@@ -142,16 +115,12 @@ export class EmployeeRequestsComponent implements OnInit {
     if (!reason) return;
 
     this.processing.set(req.id);
-    this.vacationService.rejectRRHH(req.id, reason)
-      .subscribe({
+    this.vacationService.rejectRRHH(req.id, reason).subscribe({
         next: () => {
           this.processing.set(null);
-          this.loadRRHHRequests();
+          this.rrhhRequestsResource.reload();
         },
-        error: () => {
-          this.processing.set(null);
-          alert('Error al rechazar');
-        }
+        error: () => this.processing.set(null)
       });
   }
 }

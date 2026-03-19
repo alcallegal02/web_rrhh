@@ -1,7 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, Validators } from '@angular/forms';
-import { form, field } from '../../../../utils/signal-forms';
+import { form, field } from '../../../../shared/utils/signal-forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PolicyService, PermissionPolicy, PermissionPolicyCreate, DurationUnit, Modality, PolicyResetType } from '../../../../services/policy.service';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
@@ -19,7 +18,7 @@ import {
 
 @Component({
     selector: 'app-policy-form',
-    imports: [CommonModule, ReactiveFormsModule, RouterModule, NgIconComponent],
+    imports: [ReactiveFormsModule, RouterModule, NgIconComponent],
     templateUrl: './policy-form.component.html',
     providers: [
         provideIcons({
@@ -34,23 +33,23 @@ import {
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class PolicyFormComponent {
-    private policyService = inject(PolicyService);
-    private router = inject(Router);
-    private route = inject(ActivatedRoute);
+    private readonly policyService = inject(PolicyService);
+    private readonly router = inject(Router);
+    private readonly route = inject(ActivatedRoute);
 
-    private paramMap = toSignal(this.route.paramMap);
-    policyId = computed(() => {
+    private readonly paramMap = toSignal(this.route.paramMap);
+    readonly policyId = computed(() => {
         const id = this.paramMap()?.get('id');
         return (id && id !== 'new') ? id : null;
     });
 
-    isSystemDefault = signal(false);
+    readonly isSystemDefault = signal(false);
 
-    policiesResource = rxResource({
+    readonly policiesResource = rxResource<PermissionPolicy[], unknown>({
         stream: () => this.policyService.getPolicies()
     });
 
-    form = form({
+    readonly form = form({
         slug: field('', [Validators.required, Validators.pattern(/^[a-z0-9_]+$/)]),
         name: field('', [Validators.required]),
         description: field(''),
@@ -88,17 +87,20 @@ export class PolicyFormComponent {
     });
 
     constructor() {
+        // Deshabilitar slug si estamos editando
         effect(() => {
-            if (this.policyId()) {
+            const id = this.policyId();
+            if (id) {
                 this.form.get('slug')?.disable();
             }
         });
 
+        // Cargar datos de la política al formulario
         effect(() => {
             const id = this.policyId();
             const policies = this.policiesResource.value();
             if (id && policies) {
-                const policy = policies.find(p => p.id === id);
+                const policy = (policies as PermissionPolicy[]).find(p => p.id === id);
                 if (policy) {
                     this.form.patchValue(policy);
                     this.isSystemDefault.set(policy.is_system_default);
@@ -106,14 +108,14 @@ export class PolicyFormComponent {
             }
         });
 
-        // Auto-generate slug from name if creating new
+        // Auto-generación de slug basada en el nombre (solo para nuevas)
         effect(() => {
             const name = this.form.get('name')?.value;
             if (!this.policyId() && name) {
                 const slug = name.toLowerCase()
                     .replace(/[^a-z0-9\s]/g, '')
                     .replace(/\s+/g, '_');
-                this.form.get('slug')?.setValue(slug);
+                this.form.get('slug')?.setValue(slug, { emitEvent: false });
             }
         });
     }
@@ -123,39 +125,15 @@ export class PolicyFormComponent {
 
         const val = this.form.getRawValue();
         const payload: PermissionPolicyCreate = {
-            name: val.name!,
-            slug: val.slug!,
+            ...val,
             description: val.description || undefined,
-            duration_value: val.duration_value!,
-            duration_unit: val.duration_unit as DurationUnit,
-            is_paid: val.is_paid!,
-            requires_justification: val.requires_justification!,
-            modality: val.modality as Modality,
             limit_age_child: val.limit_age_child || undefined,
-
-            allow_split: val.allow_split || false,
-            mandatory_immediate_duration: val.mandatory_immediate_duration || 0,
-            split_min_duration: val.split_min_duration || 0,
-
-            reset_type: val.reset_type as PolicyResetType,
-            reset_month: val.reset_month || 1,
-            reset_day: val.reset_day || 1,
             max_usos_por_periodo: val.max_usos_por_periodo || undefined,
-            max_days_per_period: val.max_days_per_period || 0,
             max_duration_per_day: val.max_duration_per_day || undefined,
-            validity_window_value: val.validity_window_value || 0,
-            validity_window_unit: val.validity_window_unit || 'months',
-            is_accumulable: val.is_accumulable || false,
-            accumulable_years: val.accumulable_years || 0,
-
-            travel_extension_days: val.travel_extension_days || 0,
             requires_document_type: val.requires_document_type || undefined,
-
             color: val.color || undefined,
-            icon: val.icon || undefined,
-            is_featured: val.is_featured || false,
-            is_public_dashboard: val.is_public_dashboard || false
-        };
+            icon: val.icon || undefined
+        } as PermissionPolicyCreate;
 
         try {
             if (this.policyId()) {
@@ -165,7 +143,7 @@ export class PolicyFormComponent {
             }
             this.router.navigate(['../'], { relativeTo: this.route });
         } catch (err: any) {
-            alert('Error saving policy: ' + (err.message || err));
+            alert('Error saving policy: ' + (err.error?.detail || err.message || err));
         }
     }
 }

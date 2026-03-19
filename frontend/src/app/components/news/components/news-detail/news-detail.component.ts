@@ -1,21 +1,22 @@
 import { Component, signal, inject, computed, effect, ChangeDetectionStrategy, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import { NewsService } from '../../../../services/news.service';
 import { AuthService } from '../../../../services/auth.service';
 import { News } from '../../../../models/app.models';
 import { environment } from '../../../../config/environment';
-import { FileUrlPipe } from '../../../../pipes/file-url.pipe';
+import { FileUrlPipe } from '../../../../shared/pipes/file-url.pipe';
+import { SafePipe } from '../../../../shared/pipes/safe.pipe';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { map, of } from 'rxjs';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { ImageCarouselComponent } from '../../../shared/image-carousel/image-carousel.component';
+import { ImageCarouselComponent } from '../../../../shared/components/image-carousel/image-carousel.component';
 import { lucideEye, lucideDownload, lucideX, lucideMaximize, lucideLoader2, lucideCalendarDays, lucideNewspaper, lucidePaperclip, lucideChevronRight, lucideImagePlus, lucideFileText } from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-news-detail',
-    imports: [CommonModule, RouterModule, DatePipe, FileUrlPipe, NgIconComponent, ImageCarouselComponent],
+    imports: [RouterModule, DatePipe, FileUrlPipe, NgIconComponent, ImageCarouselComponent, SafePipe],
     providers: [
         provideIcons({
             lucideEye, lucideDownload, lucideX, lucideMaximize, lucideLoader2, 
@@ -92,10 +93,6 @@ export class NewsDetailComponent implements OnInit {
 
     ngOnInit(): void {
         // Handled by rxResource
-    }
-
-    getSafeHtml(content: string): SafeHtml {
-        return this.sanitizer.bypassSecurityTrustHtml(content);
     }
 
     getDownloadUrl(path: string, originalName: string | undefined): string {

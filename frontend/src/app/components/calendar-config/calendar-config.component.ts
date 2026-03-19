@@ -1,6 +1,5 @@
 import { Component, signal, inject, ChangeDetectionStrategy, TemplateRef, ViewChild, computed } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HolidayService } from '../../services/holiday.service';
 import { Holiday, HolidayType, HolidayCreate, HolidayUpdate } from '../../interfaces/holiday.interface';
@@ -17,7 +16,7 @@ import {
 
 @Component({
     selector: 'app-calendar-config',
-    imports: [CommonModule, FormsModule, HolidayCalendarComponent, HolidayListComponent, HolidayFormComponent, NgIconComponent],
+    imports: [FormsModule, HolidayCalendarComponent, HolidayListComponent, HolidayFormComponent, NgIconComponent],
     templateUrl: './calendar-config.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
     providers: [

@@ -28,26 +28,45 @@
         <!-- Quick Action Widgets -->
         <div class="lg:col-span-8">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-                <app-vacation-balance-widget [balance]="vacationBalance()"></app-vacation-balance-widget>
-                <app-ethical-channel-widget></app-ethical-channel-widget>
+                @defer (on idle) {
+                    <app-vacation-balance-widget [balance]="vacationBalance()"></app-vacation-balance-widget>
+                } @placeholder {
+                    <div class="h-48 bg-gray-50 rounded-2xl animate-pulse"></div>
+                }
+                
+                @defer (on viewport) {
+                    <app-ethical-channel-widget></app-ethical-channel-widget>
+                } @placeholder {
+                    <div class="h-32 bg-gray-50 rounded-2xl animate-pulse"></div>
+                }
             </div>
         </div>
 
         <!-- Sidebar Widget -->
         <div class="lg:col-span-4">
-            <app-my-requests-status-widget [requests]="myRequests()"></app-my-requests-status-widget>
+            @defer (on viewport) {
+                <app-my-requests-status-widget [requests]="myRequests()"></app-my-requests-status-widget>
+            } @placeholder {
+                <div class="h-64 bg-gray-50 rounded-2xl animate-pulse"></div>
+            }
         </div>
     </div>
 
     <!-- News Carousel Section (Full Width) -->
-    @if (allNews().length > 0) {
+    @let newsItems = allNews();
+    @if (newsItems.length > 0) {
     <div class="animate-fadeIn" style="animation-delay: 100ms;">
-        <app-news-carousel-widget [news]="allNews()"></app-news-carousel-widget>
+        @defer (on viewport) {
+            <app-news-carousel-widget [news]="newsItems"></app-news-carousel-widget>
+        } @placeholder {
+            <div class="h-64 bg-gray-50 rounded-2xl animate-pulse"></div>
+        }
     </div>
     }
 
     <!-- Lower Content: Management Sections -->
-    @if (pendingRequests().length > 0) {
+    @let teamPending = pendingRequests();
+    @if (teamPending.length > 0) {
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div class="lg:col-span-8 space-y-8 animate-fadeIn" style="animation-delay: 200ms;">
             <div class="relative">
@@ -55,19 +74,24 @@
                     <ng-icon name="lucideUsers" class="text-xl"></ng-icon>
                     <h2 class="text-sm font-bold text-gray-400 uppercase tracking-widest">Gestión de Equipo</h2>
                     <span class="ml-2 bg-inespasa-dark text-white text-[10px] px-2 py-0.5 rounded-full font-bold">{{
-                        pendingRequests().length }} pendientes</span>
+                        teamPending.length }} pendientes</span>
                 </div>
-                <app-pending-requests-widget [requests]="pendingRequests()" [processingId]="processingRequestId()"
-                    (approve)="handleApprove($event)" (reject)="handleReject($event)">
-                </app-pending-requests-widget>
+                @defer (on viewport) {
+                    <app-pending-requests-widget [requests]="teamPending" [processingId]="processingRequestId()"
+                        (approve)="handleApprove($event)" (reject)="handleReject($event)">
+                    </app-pending-requests-widget>
+                } @placeholder {
+                    <div class="h-64 bg-gray-50 rounded-2xl animate-pulse"></div>
+                }
             </div>
         </div>
     </div>
     }
 
     <!-- Latest News Popup -->
-    @if (showNewsPopup() && latestNews()) {
-    <app-news-popup [news]="latestNews()!" (close)="closeNewsPopup()" (readMore)="navigateToNews()">
+    @let popupNews = latestNews();
+    @if (showNewsPopup() && popupNews) {
+    <app-news-popup [news]="popupNews" (close)="closeNewsPopup()" (readMore)="navigateToNews()">
     </app-news-popup>
     }
 </div>

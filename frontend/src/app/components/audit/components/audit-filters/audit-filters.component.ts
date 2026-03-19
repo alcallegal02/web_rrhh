@@ -1,5 +1,4 @@
 import { Component, signal, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import {
@@ -12,7 +11,7 @@ import {
 
 @Component({
     selector: 'app-audit-filters',
-    imports: [CommonModule, FormsModule, NgIconComponent],
+    imports: [FormsModule, NgIconComponent],
     templateUrl: './audit-filters.component.html',
     providers: [
         provideIcons({

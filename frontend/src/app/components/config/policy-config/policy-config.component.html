@@ -30,11 +30,11 @@
             <div class="w-12 h-12 border-4 border-inespasa border-t-transparent rounded-full animate-spin mb-4"></div>
             <p class="text-gray-400 font-bold text-sm uppercase tracking-widest">Sincronizando políticas...</p>
         </div>
-        }
-
-        @if (!isLoading()) {
+        } @else {
+        @let policyList = policies();
         <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
+                @defer (on viewport) {
                 <table class="min-w-full divide-y divide-gray-100">
                     <thead class="bg-gray-50/50">
                         <tr>
@@ -56,7 +56,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
-                        @for (policy of policies(); track policy.id) {
+                        @for (policy of policyList; track policy.id) {
                         <tr class="hover:bg-gray-50/50 transition-all group">
                             <td class="px-8 py-5">
                                 <div class="flex items-center gap-4">
@@ -95,11 +95,12 @@
                             <td class="px-8 py-5">
                                 <div class="flex items-center justify-center gap-3">
                                     <!-- Paid Badge -->
-                                    <div [title]="policy.is_paid ? 'Remunerado' : 'No Remunerado'"
+                                    @let isPaid = policy.is_paid;
+                                    <div [title]="isPaid ? 'Remunerado' : 'No Remunerado'"
                                         class="w-8 h-8 rounded-full flex items-center justify-center transition-all border"
-                                        [class]="policy.is_paid ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-500 border-red-100'">
+                                        [class]="isPaid ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-red-50 text-red-500 border-red-100'">
                                         <ng-icon
-                                            [name]="policy.is_paid ? 'lucideCheckCircle' : 'lucideXCircle'"></ng-icon>
+                                            [name]="isPaid ? 'lucideCheckCircle' : 'lucideXCircle'"></ng-icon>
                                     </div>
                                     <!-- Justification Badge -->
                                     <div [title]="policy.requires_justification ? 'Requiere Justificante' : 'No requiere justificante'"
@@ -133,8 +134,11 @@
                         }
                     </tbody>
                 </table>
+                } @placeholder {
+                    <div class="h-96 bg-white animate-pulse"></div>
+                }
             </div>
-            @if (policies().length === 0) {
+            @if (policyList.length === 0) {
             <div class="flex flex-col items-center justify-center py-20 text-center">
                 <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-200 mb-4">
                     <ng-icon name="lucideTags" class="text-4xl"></ng-icon>

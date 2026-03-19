@@ -84,17 +84,25 @@
 
         <!-- ROW 3: Allowances & Rights -->
         @if (form().role !== 'superadmin') {
+        @defer (on viewport) {
         <app-user-allowances-table [form]="form()" [concepts]="concepts()"
             (fieldChange)="updateField($event.field, $event.value)">
         </app-user-allowances-table>
+        } @placeholder {
+            <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed">Cargando derechos...</div>
+        }
         }
 
         <!-- ROW 4: Attachments -->
         @if (form().role !== 'superadmin') {
+        @defer (on viewport) {
         <app-user-attachments [attachments]="form().attachments" [uploadingAttachments]="uploadingAttachments()"
             [isLoading]="isLoading()" (attachmentsUpload)="onUploadAttachments($event)"
             (attachmentRemove)="onRemoveAttachment($event)">
         </app-user-attachments>
+        } @placeholder {
+            <div class="h-32 flex items-center justify-center bg-gray-50 rounded-lg border border-dashed">Cargando adjuntos...</div>
+        }
         }
     </form>
 

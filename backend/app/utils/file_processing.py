@@ -54,7 +54,9 @@ async def save_file_organized(content: bytes, filename: str, module: str, file_t
     safe_module = "".join(c for c in module if c.isalnum() or c in ('-', '_')).lower()
     safe_entity = "".join(c for c in entity_id if c.isalnum() or c in ('-', '_')).lower() if entity_id else "common"
     
+    logger.info(f"DEBUG: Attempting to save file in organized path. settings.UPLOAD_DIR is: '{settings.UPLOAD_DIR}'")
     upload_dir = Path(settings.UPLOAD_DIR) / safe_module / safe_entity / file_type
+    logger.info(f"DEBUG: Calculated upload_dir: '{upload_dir}' (Absolute: {upload_dir.absolute()})")
     upload_dir.mkdir(parents=True, exist_ok=True)
     
     final_filename = f"{file_hash}.{ext}"

@@ -11,6 +11,7 @@
                 [class]="getStatusStripeClass(c.status)"></div>
         </div>
 
+        @let status = c.status;
         <div class="relative pl-3 space-y-4">
             <div class="flex justify-between items-center">
                 <span
@@ -30,10 +31,10 @@
                 class="flex items-center justify-between text-[11px] text-gray-400 pt-3 border-t border-gray-50 mt-2">
                 <div class="relative">
                     <button (click)="toggleStatusDropdown($event, c.id)"
-                        [class]="getStatusClass(c.status)"
+                        [class]="getStatusClass(status)"
                         class="text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border shadow-sm flex items-center gap-2 transition-all hover:scale-105">
-                        <ng-icon [name]="getStatusIcon(c.status)" [class]="getStatusIconColor(c.status)" class="text-xs"></ng-icon>
-                        {{ getStatusLabel(c.status) }}
+                        <ng-icon [name]="getStatusIcon(status)" [class]="getStatusIconColor(status)" class="text-xs"></ng-icon>
+                        {{ getStatusLabel(status) }}
                         <ng-icon name="lucideChevronDown" class="text-[8px] opacity-50"></ng-icon>
                     </button>
 
@@ -43,8 +44,8 @@
                             @for (opt of statusOptions(); track opt.value) {
                                 <button (click)="changeStatus(c.id, opt.value)"
                                     class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors group/opt border-l-4 border-transparent"
-                                    [class.border-l-inespasa]="c.status === opt.value"
-                                    [class.bg-gray-50]="c.status === opt.value">
+                                    [class.border-l-inespasa]="status === opt.value"
+                                    [class.bg-gray-50]="status === opt.value">
                                     <ng-icon [name]="opt.icon" [class]="opt.iconColor" class="text-xs"></ng-icon>
                                     <span class="text-[9px] font-black uppercase tracking-wider text-gray-600 group-hover/opt:text-inespasa">
                                         {{ opt.label }}

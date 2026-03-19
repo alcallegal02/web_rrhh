@@ -1,5 +1,4 @@
 import { Component, input, output, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Holiday, HolidayType } from '../../../../interfaces/holiday.interface';
 
 interface CalendarDay {
@@ -12,7 +11,7 @@ interface CalendarDay {
 
 @Component({
     selector: 'app-holiday-calendar',
-    imports: [CommonModule],
+    imports: [],
     templateUrl: './holiday-calendar.component.html',
     styleUrl: './holiday-calendar.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush

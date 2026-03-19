@@ -119,14 +119,17 @@ export class WebSocketService {
     switch (message.type) {
       case 'vacation_status_change':
         // Handle vacation status change
-        // console.log('Vacation status changed:', message.data);
         break;
       case 'new_news':
         // Handle new news notification
-        // console.log('New news published:', message.data);
         break;
       case 'db_update':
         // Handled by StoreService
+        break;
+      case 'COMPLAINT_CREATED':
+      case 'COMPLAINT_COMMENT_ADDED':
+      case 'COMPLAINT_STATUS_CHANGED':
+        // Handled by individual components listening to messages$
         break;
       default:
         console.warn('Unknown message type:', message.type);

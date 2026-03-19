@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - ${POSTGRES_DATA_PATH:-./data/postgres_dev}:/var/lib/postgresql/data
+      - ${POSTGRES_DATA_PATH:-./data/postgres}:/var/lib/postgresql/data
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
@@ -16,6 +16,7 @@ services:
       interval: ${POSTGRES_HEALTHCHECK_INTERVAL:-10s}
       timeout: ${POSTGRES_HEALTHCHECK_TIMEOUT:-5s}
       retries: ${POSTGRES_HEALTHCHECK_RETRIES:-5}
+      start_period: 30s
     command: postgres -c 'shared_preload_libraries=pg_stat_statements'
     # Security Hardening
     read_only: true
@@ -252,31 +253,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  backups:
-    image: postgres:${POSTGRES_VERSION:-18-alpine}
-    container_name: ${COMPOSE_PROJECT_NAME:-web_rrhh}_backups_dev
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      BACKUP_KEEP_DAYS: 3
-    volumes:
-      - ./backups_dev:/backups
-      - ./media_data:/media:ro
-      - ./scripts/backup.sh:/usr/local/bin/backup.sh
-    networks:
-      - data_net
-    entrypoint: ["/bin/sh", "/usr/local/bin/backup.sh"]
-    restart: always
-    # Security Hardening
-    read_only: true
-    tmpfs:
-      - /tmp
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
 
 networks:
   frontend_net:

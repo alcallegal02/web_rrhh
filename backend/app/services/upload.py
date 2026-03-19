@@ -137,8 +137,9 @@ class UploadService:
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Unexpected error in process_upload: {str(e)}\n{traceback.format_exc()}")
+            logger.error(f"CRITICAL ERROR in process_upload: {str(e)}")
+            logger.error(traceback.format_exc())
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Upload processing error: {str(e)}"
+                detail=f"Error en el servidor de subidas: {str(e)}"
             )

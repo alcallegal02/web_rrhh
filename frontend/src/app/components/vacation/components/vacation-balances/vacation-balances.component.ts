@@ -1,10 +1,10 @@
 import { Component, computed, input } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { VacationBalance } from '../../../../services/vacation.service';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
     selector: 'app-vacation-balances',
-    imports: [CommonModule],
+    imports: [DecimalPipe],
     templateUrl: './vacation-balances.component.html',
 })
 export class VacationBalancesComponent {

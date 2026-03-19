@@ -1,5 +1,5 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { UpperCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserFormModel } from '../../user-form.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -7,7 +7,7 @@ import { lucideBriefcase, lucideHelpCircle } from '@ng-icons/lucide';
 
 @Component({
     selector: 'app-user-contract-info',
-    imports: [CommonModule, FormsModule, NgIconComponent],
+    imports: [FormsModule, NgIconComponent, UpperCasePipe],
     templateUrl: './user-contract-info.component.html',
     providers: [
         provideIcons({ lucideBriefcase, lucideHelpCircle })

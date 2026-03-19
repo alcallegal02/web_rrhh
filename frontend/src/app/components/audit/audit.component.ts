@@ -1,5 +1,4 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { AuditService, AuditLog } from '../../services/audit.service';
@@ -11,9 +10,12 @@ import { AuditFiltersComponent } from './components/audit-filters/audit-filters.
 import { AuditListComponent } from './components/audit-list/audit-list.component';
 import { AuditDetailsComponent } from './components/audit-details/audit-details.component';
 
+import { AppPageHeaderComponent, PageAction } from '../../shared/components/page-header/page-header.component';
+import { AppDataTableComponent, ColumnDef } from '../../shared/components/data-table/data-table.component';
+
 @Component({
     selector: 'app-audit',
-    imports: [CommonModule, AuditFiltersComponent, AuditListComponent, AuditDetailsComponent, NgIconComponent],
+    imports: [AuditFiltersComponent, AuditDetailsComponent, NgIconComponent, AppPageHeaderComponent, AppDataTableComponent],
     templateUrl: './audit.component.html',
     providers: [
         provideIcons({ lucideShieldCheck })
@@ -21,48 +23,65 @@ import { AuditDetailsComponent } from './components/audit-details/audit-details.
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AuditComponent {
-    private auditService = inject(AuditService);
+    private readonly auditService = inject(AuditService);
 
-    // State
-    // Filters
-    filterModule = signal<string[]>([]);
-    filterAction = signal<string[]>([]);
-    filterStartDate = signal<string | undefined>(undefined);
-    filterEndDate = signal<string | undefined>(undefined);
+    // Configuración de Cabecera
+    readonly pageActions: PageAction[] = [
+      { id: 'refresh', label: 'Refrescar', icon: 'lucideShieldCheck', variant: 'secondary' }
+    ];
+
+    // Configuración de Tabla
+    readonly tableColumns: ColumnDef[] = [
+      { key: 'created_at', label: 'Fecha y Hora', type: 'date' },
+      { key: 'module', label: 'Módulo', type: 'text' },
+      { key: 'action', label: 'Acción', type: 'text' },
+      { key: 'ip_address', label: 'IP Origen', type: 'text' }
+    ];
+
+    // Filters as signals
+    readonly filterModule = signal<string[]>([]);
+    readonly filterAction = signal<string[]>([]);
+    readonly filterStartDate = signal<string | undefined>(undefined);
+    readonly filterEndDate = signal<string | undefined>(undefined);
 
     // Pagination
-    currentPage = signal<number>(0);
-    pageSize = 50;
+    readonly currentPage = signal<number>(0);
+    readonly pageSize = 50;
 
-    // Resource for data fetching
-    logsResource = rxResource({
-        stream: () => {
-            const page = this.currentPage();
-            const module = this.filterModule();
-            const action = this.filterAction();
-            const start_date = this.filterStartDate();
-            const end_date = this.filterEndDate();
-
+    // Resource for data fetching - reactivo a los cambios de filtros y página
+    readonly logsResource = rxResource<AuditLog[], {
+        page: number,
+        module: string[],
+        action: string[],
+        start_date?: string,
+        end_date?: string
+    }>({
+        params: () => ({
+            page: this.currentPage(),
+            module: this.filterModule(),
+            action: this.filterAction(),
+            start_date: this.filterStartDate(),
+            end_date: this.filterEndDate()
+        }),
+        stream: ({ params }) => {
             const filters = {
-                module: module.length > 0 ? module : undefined,
-                action: action.length > 0 ? action : undefined,
-                start_date,
-                end_date
+                module: params.module.length > 0 ? params.module : undefined,
+                action: params.action.length > 0 ? params.action : undefined,
+                start_date: params.start_date,
+                end_date: params.end_date
             };
-
-            return of(0).pipe(
-                switchMap(() => this.auditService.getLogs(page, this.pageSize, filters)),
+            return this.auditService.getLogs(params.page, this.pageSize, filters).pipe(
                 catchError(() => of([]))
             );
         }
     });
 
     // Computed state
-    logs = computed(() => this.logsResource.value() || []);
-    loading = computed(() => this.logsResource.isLoading());
+    readonly logs = computed(() => this.logsResource.value() ?? []);
+    readonly loading = computed(() => this.logsResource.isLoading());
 
     // Selection
-    selectedLog = signal<AuditLog | null>(null);
+    readonly selectedLog = signal<AuditLog | null>(null);
 
     onFiltersChanged(filters: {
         module: string[],
@@ -75,12 +94,11 @@ export class AuditComponent {
         this.filterStartDate.set(filters.start_date);
         this.filterEndDate.set(filters.end_date);
         this.currentPage.set(0);
-        this.logsResource.reload();
+        // rxResource se recargará automáticamente al cambiar los signals en request()
     }
 
     onPageChange(page: number) {
         this.currentPage.set(page);
-        this.logsResource.reload();
     }
 
     onItemSelected(log: AuditLog) {

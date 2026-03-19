@@ -1,5 +1,4 @@
 import { Component, signal, computed, inject, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NewsService } from '../../../../services/news.service';
 import { WebSocketService, WebSocketMessage } from '../../../../services/websocket.service';
@@ -20,8 +19,7 @@ import {
 
 @Component({
     selector: 'app-news-archive',
-    standalone: true,
-    imports: [CommonModule, NewsListComponent, RouterModule, NgIconComponent],
+    imports: [NewsListComponent, RouterModule, NgIconComponent],
     providers: [
         provideIcons({ 
             lucideFilter, 

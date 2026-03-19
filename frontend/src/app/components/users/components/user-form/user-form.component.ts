@@ -1,11 +1,9 @@
-import { Component, input, output, signal, effect, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, output, signal, computed, linkedSignal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UserResponse } from '../../../../services/user.service';
-import { environment } from '../../../../config/environment';
 
 // Import shared models
-import { UserFormModel, AllowanceConcept, UserSummary, UserAttachment } from './user-form.models';
+import { UserFormModel, AllowanceConcept, UserSummary } from './user-form.models';
 
 // Re-export for external components
 export { UserFormModel };
@@ -19,14 +17,23 @@ import { UserAllowancesTableComponent } from './components/user-allowances-table
 import { UserAttachmentsComponent } from './components/user-attachments/user-attachments.component';
 import { UserDangerZoneComponent } from './components/user-danger-zone/user-danger-zone.component';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import {
-    lucideUser, lucideUserPlus, lucideSave, lucideX, lucideHelpCircle
-} from '@ng-icons/lucide';
+import { lucideUser, lucideUserPlus, lucideSave, lucideX, lucideHelpCircle } from '@ng-icons/lucide';
+import { calculateAllowanceRights } from '../../../../shared/utils/user.utils';
+
+/** Helper tipado para mapear un UserResponse a un UserSummary sin errores de tipo. */
+function toUserSummary(u: UserResponse): UserSummary {
+    return {
+        id: Number(u.id),
+        first_name: u.first_name,
+        last_name: u.last_name,
+        full_name: u.full_name,
+        photo_url: u.photo_url
+    };
+}
 
 @Component({
     selector: 'app-user-form',
     imports: [
-        CommonModule,
         FormsModule,
         UserPersonalDataComponent,
         UserContractInfoComponent,
@@ -38,14 +45,13 @@ import {
         NgIconComponent
     ],
     providers: [
-        provideIcons({
-            lucideUser, lucideUserPlus, lucideSave, lucideX, lucideHelpCircle
-        })
+        provideIcons({ lucideUser, lucideUserPlus, lucideSave, lucideX, lucideHelpCircle })
     ],
-    templateUrl: './user-form.component.html'
+    templateUrl: './user-form.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserFormComponent {
-    // Inputs
+    // --- Inputs ---
     initialForm = input.required<UserFormModel>();
     roles = input.required<string[]>();
     availableUsers = input<UserResponse[]>([]);
@@ -55,139 +61,79 @@ export class UserFormComponent {
     uploadingPhoto = input<boolean>(false);
     uploadingAttachments = input<boolean>(false);
 
-    // Outputs
+    // --- Outputs ---
     save = output<UserFormModel>();
     cancel = output<void>();
-    uploadPhoto = output<{ file: File, entityId: string | null }>();
-    uploadAttachments = output<{ files: File[], entityId: string | null }>();
+    uploadPhoto = output<{ file: File; entityId: string | null }>();
+    uploadAttachments = output<{ files: File[]; entityId: string | null }>();
     removeAttachment = output<number>();
     activate = output<void>();
     deactivate = output<void>();
     delete = output<void>();
-    
-    private tempId = window.crypto?.randomUUID?.() || `new-user-${Date.now()}`;
 
-    // Local State
-    form = signal<UserFormModel>({
-        id: undefined,
-        username: '',
-        email: '',
-        first_name: '',
-        last_name: '',
-        full_name: '',
-        role: 'empleado',
-        department: '',
-        position: '',
-        photo_url: '',
-        managers: [],
-        rrhh_ids: [],
-        attachments: [],
-        can_manage_complaints: false,
-        notif_own_requests: true,
-        notif_managed_requests: true,
-        notif_complaints: true,
-        notif_news: true
-    } as UserFormModel);
+    private readonly tempId = window.crypto?.randomUUID?.() || `new-user-${Date.now()}`;
+
+    // --- Estado local con linkedSignal ---
+    // linkedSignal sincroniza el formulario con el input inicial automáticamente.
+    // Se resetea al valor del input cuando `initialForm` cambia (nuevo usuario seleccionado).
+    form = linkedSignal<UserFormModel, UserFormModel>({
+        source: this.initialForm,
+        computation: (init) => init.id ? { ...init } : { ...init, id: undefined }
+    });
+
+    contractType = linkedSignal<UserFormModel, 'indefinite' | 'temporary'>({
+        source: this.initialForm,
+        computation: (init) => init.contract_expiration_date ? 'temporary' : 'indefinite'
+    });
 
     previewProfilePicUrl = signal<string | null>(null);
-    contractType = signal<'indefinite' | 'temporary'>('indefinite');
 
-    // Computed properties for hierarchy
-    availableUsersSummary = computed<UserSummary[]>(() => {
-        return this.availableUsers().map(u => ({
-            id: Number(u.id),
-            first_name: u.first_name,
-            last_name: u.last_name,
-            full_name: u.full_name,
-            photo_url: u.photo_url
-        }));
-    });
+    // --- Computed: jerarquía de usuarios ---
+    availableUsersSummary = computed<UserSummary[]>(() =>
+        this.availableUsers().map(toUserSummary)
+    );
 
     selectedParent = computed<UserSummary | null>(() => {
         const parentId = this.form().parent_id;
         if (!parentId) return null;
         const parent = this.availableUsers().find(u => u.id === parentId);
-        if (!parent) return null;
-        return {
-            id: Number(parent.id),
-            first_name: parent.first_name,
-            last_name: parent.last_name,
-            full_name: parent.full_name,
-            photo_url: parent.photo_url
-        };
+        return parent ? toUserSummary(parent) : null;
     });
 
-    selectedManagers = computed<UserSummary[]>(() => {
-        const managerIds = this.form().managers || [];
-        return managerIds.map(id => {
-            const manager = this.availableUsers().find(u => u.id === id);
-            if (!manager) return null;
-            return {
-                id: Number(manager.id),
-                first_name: manager.first_name,
-                last_name: manager.last_name,
-                full_name: manager.full_name,
-                photo_url: manager.photo_url
-            };
-        }).filter(m => m !== null) as UserSummary[];
-    });
+    selectedManagers = computed<UserSummary[]>(() =>
+        (this.form().managers ?? [])
+            .map(id => this.availableUsers().find(u => u.id === id))
+            .filter((u): u is UserResponse => u != null)
+            .map(toUserSummary)
+    );
 
-    selectedRrhh = computed<UserSummary[]>(() => {
-        const rrhhIds = this.form().rrhh_ids || [];
-        return rrhhIds.map(id => {
-            const rrhh = this.availableUsers().find(u => u.id === id);
-            if (!rrhh) return null;
-            return {
-                id: Number(rrhh.id),
-                first_name: rrhh.first_name,
-                last_name: rrhh.last_name,
-                full_name: rrhh.full_name,
-                photo_url: rrhh.photo_url
-            };
-        }).filter(r => r !== null) as UserSummary[];
-    });
+    selectedRrhh = computed<UserSummary[]>(() =>
+        (this.form().rrhh_ids ?? [])
+            .map(id => this.availableUsers().find(u => u.id === id))
+            .filter((u): u is UserResponse => u != null)
+            .map(toUserSummary)
+    );
 
-    constructor() {
-        effect(() => {
-            const init = this.initialForm();
-            if (init && init.id) {
-                this.form.set({ ...init });
-            } else {
-                this.form.set({ ...init, id: undefined });
-            }
-            
-            if (this.initialForm().contract_expiration_date) {
-                this.contractType.set('temporary');
-            } else {
-                this.contractType.set('indefinite');
-            }
-        }, { allowSignalWrites: true });
-    }
-
-    // Field update handler
-    updateField(field: string, value: any): void {
+    // --- Handlers de campo ---
+    updateField(field: string, value: unknown): void {
         this.form.update(f => ({ ...f, [field]: value }));
     }
 
-    // Contract handlers
+    // --- Handlers de contrato ---
     onContractTypeChange(type: 'indefinite' | 'temporary'): void {
         this.contractType.set(type);
-        this.form.update(f => {
-            const updated = { ...f };
-            if (type === 'indefinite') {
-                updated.contract_expiration_date = null;
-            }
-            return updated;
-        });
-        this.calculateRights();
+        if (type === 'indefinite') {
+            this.form.update(f => ({ ...f, contract_expiration_date: null }));
+        }
+        this.applyAllowanceRights();
     }
 
     onExpirationDateChange(date: string): void {
         this.form.update(f => ({ ...f, contract_expiration_date: date }));
-        this.calculateRights();
+        this.applyAllowanceRights();
     }
 
-    // Hierarchy handlers
+    // --- Handlers de jerarquía ---
     onParentChange(parent: UserSummary | null): void {
         this.form.update(f => ({ ...f, parent_id: parent ? String(parent.id) : undefined }));
     }
@@ -200,103 +146,42 @@ export class UserFormComponent {
         this.form.update(f => ({ ...f, rrhh_ids: rrhh.map(r => String(r.id)) }));
     }
 
-    // Photo upload handler
+    // --- Handlers de foto ---
     onUploadPhoto(event: Event): void {
         const input = event.target as HTMLInputElement;
-        if (input.files && input.files[0]) {
-            const file = input.files[0];
-            this.uploadPhoto.emit({ file, entityId: this.form().id || this.tempId });
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.previewProfilePicUrl.set(e.target?.result as string);
-            };
-            reader.readAsDataURL(file);
-        }
+        if (!input.files?.[0]) return;
+        const file = input.files[0];
+        this.uploadPhoto.emit({ file, entityId: this.form().id || this.tempId });
+        const reader = new FileReader();
+        reader.onload = (e) => this.previewProfilePicUrl.set(e.target?.result as string);
+        reader.readAsDataURL(file);
     }
 
-    // Attachments handlers
+    // --- Handlers de adjuntos ---
     onUploadAttachments(event: Event): void {
         const input = event.target as HTMLInputElement;
-        if (input.files && input.files.length > 0) {
-            const files = Array.from(input.files);
-            this.uploadAttachments.emit({ files, entityId: this.form().id || this.tempId });
-        }
+        if (!input.files?.length) return;
+        this.uploadAttachments.emit({ files: Array.from(input.files), entityId: this.form().id || this.tempId });
     }
 
     onRemoveAttachment(index: number): void {
         this.removeAttachment.emit(index);
     }
 
-    // Rights calculation
-    calculateRights(): void {
+    // --- Cálculo de derechos (delegado a utility pura) ---
+    applyAllowanceRights(): void {
         const config = this.convenioConfig();
-        const currentForm = this.form();
         if (!config) return;
-
-        let proportion = 1.0;
-
-        if (this.contractType() === 'temporary' && currentForm.contract_expiration_date) {
-            const end = new Date(currentForm.contract_expiration_date);
-            const currentYear = new Date().getFullYear();
-            const startOfYear = new Date(currentYear, 0, 1);
-
-            let effectiveStart = startOfYear;
-
-            if (currentForm.created_at) {
-                const createdAt = new Date(currentForm.created_at);
-                if (createdAt.getFullYear() === currentYear && createdAt > startOfYear) {
-                    effectiveStart = createdAt;
-                }
-            } else if (!currentForm.id) {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                if (today > startOfYear) {
-                    effectiveStart = today;
-                }
-            }
-
-            const diffTime = end.getTime() - effectiveStart.getTime();
-            let diffDays = Math.ceil(diffTime / (1000 * 3600 * 24));
-            if (diffDays < 0) diffDays = 0;
-            diffDays += 1;
-
-            proportion = diffDays / 365;
-            if (proportion > 1) proportion = 1.0;
-            if (proportion < 0) proportion = 0;
-
-        } else if (this.contractType() === 'indefinite') {
-            proportion = 1.0;
-        } else {
-            proportion = 0;
-        }
-
-        const calcHours = (base: number) => Number((base * proportion).toFixed(4));
-        const calcDays = (hours: number) => Number((hours / (config.daily_work_hours || 8)).toFixed(4));
-
-        this.form.update(f => ({
-            ...f,
-            vac_days: Math.ceil(config.vacation_days_annual * proportion),
-            vac_hours: Number((Math.ceil(config.vacation_days_annual * proportion) * config.daily_work_hours).toFixed(3)),
-            asuntos_propios_hours: calcHours(config.asuntos_propios_hours_annual || 0),
-            asuntos_propios_days: calcDays(calcHours(config.asuntos_propios_hours_annual || 0)),
-            dias_compensados_hours: calcHours(config.dias_compensados_hours_annual || 0),
-            dias_compensados_days: calcDays(calcHours(config.dias_compensados_hours_annual || 0)),
-            med_gral_hours: calcHours(config.med_gral_hours_annual || 0),
-            med_gral_days: calcDays(calcHours(config.med_gral_hours_annual || 0)),
-            med_especialista_hours: calcHours(config.med_especialista_hours_annual || 0),
-            med_especialista_days: calcDays(calcHours(config.med_especialista_hours_annual || 0)),
-            licencia_retribuida_hours: calcHours(config.licencia_retribuida_hours_annual || 0),
-            licencia_retribuida_days: calcDays(calcHours(config.licencia_retribuida_hours_annual || 0)),
-            bolsa_horas_hours: calcHours(config.bolsa_horas_hours_annual || 0),
-            bolsa_horas_days: calcDays(calcHours(config.bolsa_horas_hours_annual || 0)),
-            horas_sindicales_hours: calcHours(config.horas_sindicales_hours_annual || 0),
-            horas_sindicales_days: calcDays(calcHours(config.horas_sindicales_hours_annual || 0))
-        }));
+        const rights = calculateAllowanceRights(this.form(), this.contractType(), config);
+        this.form.update(f => ({ ...f, ...rights }));
     }
 
-    // Submit handler
+    // --- Submit ---
     onSubmit(): void {
         this.save.emit(this.form());
     }
 }
+
+// Por qué esta estructura es más escalable:
+// linkedSignal reemplaza el effect-en-constructor, sincronizando el formulario con el Input de forma
+// declarativa y reseteable sin gestión manual de suscripciones ni ciclos de vida.

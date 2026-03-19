@@ -1,12 +1,12 @@
 import { Component, input, output } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { VacationRequest } from '../../../../models/app.models';
 import { VacationUtils } from '../../vacation.utils';
 import { NgIconComponent } from '@ng-icons/core';
 
 @Component({
     selector: 'app-vacation-list',
-    imports: [CommonModule, DatePipe, NgIconComponent],
+    imports: [DatePipe, NgIconComponent],
     templateUrl: './vacation-list.component.html',
 })
 export class VacationListComponent {

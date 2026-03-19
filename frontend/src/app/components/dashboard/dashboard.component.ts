@@ -1,13 +1,12 @@
 import { Component, signal, inject, ChangeDetectionStrategy, computed, effect } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { WebSocketService, WebSocketMessage } from '../../services/websocket.service';
 import { NewsService } from '../../services/news.service';
 import { News, VacationRequest } from '../../models/app.models';
-import { VacationService, PolicyBalance } from '../../services/vacation.service';
+import { VacationService, PolicyBalance, VacationBalance } from '../../services/vacation.service';
 
 // Child Components
 import { PendingRequestsWidgetComponent, DashboardVacationRequest } from './components/pending-requests-widget/pending-requests-widget.component';
@@ -21,7 +20,6 @@ import { NgIconComponent } from '@ng-icons/core';
 @Component({
   selector: 'app-dashboard',
   imports: [
-    CommonModule,
     RouterModule,
     PendingRequestsWidgetComponent,
     NewsPopupComponent,
@@ -36,54 +34,55 @@ import { NgIconComponent } from '@ng-icons/core';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent {
-  authService = inject(AuthService);
-  wsService = inject(WebSocketService);
-  private newsService = inject(NewsService);
-  private vacationService = inject(VacationService);
-  private router = inject(Router);
+  readonly authService = inject(AuthService);
+  readonly wsService = inject(WebSocketService);
+  private readonly newsService = inject(NewsService);
+  private readonly vacationService = inject(VacationService);
+  private readonly router = inject(Router);
 
   // Computed Auth State
-  isRRHH = computed(() => this.authService.isRRHH() || this.authService.isAdmin() || this.authService.isSuperadmin());
+  readonly isRRHH = computed(() => this.authService.isRRHH() || this.authService.isAdmin() || this.authService.isSuperadmin());
 
   // Reactive Resources
-  pendingRequestsResource = rxResource({
+  readonly pendingRequestsResource = rxResource<VacationRequest[], { isRRHH: boolean }>({
     params: () => ({ isRRHH: this.isRRHH() }),
     stream: ({ params }) => params.isRRHH
       ? this.vacationService.getPendingRRHHRequests()
       : this.vacationService.getPendingManagerRequests()
   });
 
-  vacationDataResource = rxResource({
+  readonly vacationDataResource = rxResource<VacationBalance | null, unknown>({
     stream: () => this.vacationService.getBalance()
   });
 
-  myRequestsResource = rxResource({
+  readonly myRequestsResource = rxResource<VacationRequest[], unknown>({
     stream: () => this.vacationService.getMyRequests()
   });
 
-  allNewsResource = rxResource({
+  readonly allNewsResource = rxResource<News[], unknown>({
     stream: () => this.newsService.getAllNews(10, 0, ['publicada'])
   });
 
   // State
-  pendingRequests = computed(() => (this.pendingRequestsResource.value() as DashboardVacationRequest[]) ?? []);
-  vacationBalance = computed(() => {
+  readonly pendingRequests = computed(() => (this.pendingRequestsResource.value() as DashboardVacationRequest[]) ?? []);
+  readonly vacationBalance = computed(() => {
     const data = this.vacationDataResource.value();
-    if (data && data.balances && data.balances.length > 0) {
-      return data.balances.find(b => b.is_featured) || data.balances[0];
+    if (data?.balances?.length) {
+      return data.balances.find((b: any) => b.is_featured) ?? data.balances[0];
     }
     return null;
   });
-  myRequests = computed(() => this.myRequestsResource.value() ?? []);
-  allNews = computed(() => this.allNewsResource.value() ?? []);
+  readonly myRequests = computed(() => this.myRequestsResource.value() ?? []);
+  readonly allNews = computed(() => this.allNewsResource.value() ?? []);
 
-  processing = signal(false);
-  processingRequestId = signal<string | null>(null);
+  readonly processing = signal(false);
+  readonly processingRequestId = signal<string | null>(null);
 
-  latestNews = signal<News | null>(null);
-  showNewsPopup = signal(false);
+  readonly latestNews = signal<News | null>(null);
+  readonly showNewsPopup = signal(false);
 
   constructor() {
+    // Conexión reactiva al WebSocket
     effect(() => {
       if (this.authService.isAuthenticated()) {
         this.wsService.connect();
@@ -92,12 +91,18 @@ export class DashboardComponent {
 
     this.checkLatestNews();
 
-    this.wsService.messages().forEach((msg: WebSocketMessage) => {      if (msg.type === 'vacation_status_change') {
+    // Reacción a mensajes del WebSocket
+    effect(() => {
+      const messages = this.wsService.messages();
+      const lastMsg = messages[messages.length - 1];
+      if (!lastMsg) return;
+
+      if (lastMsg.type === 'vacation_status_change') {
         this.pendingRequestsResource.reload();
         this.myRequestsResource.reload();
         this.vacationDataResource.reload();
       }
-      if (msg.type === 'db_update' && msg.data.table === 'news') {
+      if (lastMsg.type === 'db_update' && lastMsg.data.table === 'news') {
         this.allNewsResource.reload();
       }
     });
@@ -130,8 +135,6 @@ export class DashboardComponent {
     try {
       await firstValueFrom(action$);
       this.pendingRequestsResource.reload();
-    } catch (err) {
-      console.error('Error approving request:', err);
     } finally {
       this.processing.set(false);
       this.processingRequestId.set(null);
@@ -149,15 +152,12 @@ export class DashboardComponent {
     try {
       await firstValueFrom(action$);
       this.pendingRequestsResource.reload();
-    } catch (err) {
-      console.error('Error rejecting request:', err);
     } finally {
       this.processing.set(false);
       this.processingRequestId.set(null);
     }
   }
 
-  // News Actions
   closeNewsPopup(): void {
     this.showNewsPopup.set(false);
   }

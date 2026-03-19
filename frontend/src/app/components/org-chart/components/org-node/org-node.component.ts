@@ -1,10 +1,9 @@
 import { Component, input, linkedSignal, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { OrgNode } from '../../../../services/org-chart.service';
 
 @Component({
     selector: 'app-org-node',
-    imports: [CommonModule, OrgNodeComponent],
+    imports: [OrgNodeComponent],
     templateUrl: './org-node.component.html',
     styleUrl: './org-node.component.scss',
     changeDetection: ChangeDetectionStrategy.OnPush

@@ -1,6 +1,6 @@
-import { Component, signal, inject, viewChild, ChangeDetectionStrategy } from '@angular/core';
+import { Component, signal, inject, viewChild, ChangeDetectionStrategy, computed } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { DatePipe, CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
@@ -8,17 +8,25 @@ import {
   lucideArrowLeft, lucideSearch, lucideLock, lucideFileText,
   lucideDownload, lucideCalendar, lucideRefreshCw, lucideShieldCheck,
   lucideScale, lucideInfo, lucideMessageSquare, lucideTriangleAlert,
-  lucideShield, lucideSend, lucidePaperclip, lucideX
+  lucideShield, lucideSend, lucidePaperclip, lucideX,
+  lucideMaximize, lucideCopy, lucideEyeOff, lucideClock, lucidePackageCheck,
+  lucideShieldAlert, lucideMessageSquareText, lucideCheckCircle, lucideXCircle
 } from '@ng-icons/lucide';
-import { RichTextEditorComponent } from '../../../../components/shared/rich-text-editor/rich-text-editor.component';
+import { StatusBadgeComponent } from '../../../../shared/components/status-badge/status-badge.component';
+import { SafePipe } from '../../../../shared/pipes/safe.pipe';
+import { RichTextEditorComponent } from '../../../../shared/components/rich-text-editor/rich-text-editor.component';
+import { FilePreviewModalComponent } from '../../../../shared/components/file-preview-modal/file-preview-modal.component';
 import { environment } from '../../../../config/environment';
 import { ConfigService } from '../../../../services/config';
 import { ComplaintService } from '../../../../services/complaint.service';
-import { Complaint } from '../../../../models/app.models';
+import { Complaint, ComplaintComment } from '../../../../models/app.models';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { timer, switchMap, of } from 'rxjs';
+import * as ComplaintUtils from '../../utils/complaint.utils';
 
 @Component({
   selector: 'app-complaint-status',
-  imports: [CommonModule, FormsModule, DatePipe, NgIconComponent, RichTextEditorComponent],
+  imports: [FormsModule, DatePipe, NgIconComponent, RichTextEditorComponent, FilePreviewModalComponent, StatusBadgeComponent, SafePipe],
   templateUrl: './complaint-status.component.html',
   styleUrl: './complaint-status.component.scss',
   providers: [
@@ -26,80 +34,90 @@ import { Complaint } from '../../../../models/app.models';
       lucideArrowLeft, lucideSearch, lucideLock, lucideFileText,
       lucideDownload, lucideCalendar, lucideRefreshCw, lucideShieldCheck,
       lucideScale, lucideInfo, lucideMessageSquare, lucideTriangleAlert,
-      lucideShield, lucideSend, lucidePaperclip, lucideX
+      lucideShield, lucideSend, lucidePaperclip, lucideX,
+      lucideMaximize, lucideCopy, lucideEyeOff
     })
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ComplaintStatusComponent {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private sanitizer = inject(DomSanitizer);
-  private configService = inject(ConfigService);
-  private complaintService = inject(ComplaintService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly configService = inject(ConfigService);
+  private readonly complaintService = inject(ComplaintService);
 
-  complaint = signal<Complaint | null>(null);
-  code = signal('');
-  token = signal('');
-  loading = signal(false);
-  error = signal('');
-  
-  // Reply signals
-  replyContent = signal('');
-  selectedFiles = signal<File[]>([]);
-  submittingReply = signal(false);
+  // --- Estado de búsqueda (parámetros de la query) ---
+  code = signal(this.route.snapshot.paramMap.get('code') ?? '');
+  token = signal(this.route.snapshot.queryParamMap.get('token') ?? '');
 
-  replyEditor = viewChild('replyEditor', { read: RichTextEditorComponent });
+  // Params como señal derivada para el resource
+  private readonly queryParams = computed(() => ({
+    code: this.code(),
+    token: this.token()
+  }));
 
-  constructor() {
-    const codeParam = this.route.snapshot.paramMap.get('code');
-    const tokenParam = this.route.snapshot.queryParamMap.get('token');
-
-    if (codeParam) {
-      this.code.set(codeParam);
+  // --- Resource API: reemplaza el patrón Subscription + OnDestroy + interval ---
+  // rxResource gestiona el ciclo de vida automáticamente; el polling de 20s
+  // se implementa con timer() como stream reactivo dentro del stream del resource.
+  private readonly complaintResource = rxResource({
+    params: () => {
+      const { code, token } = this.queryParams();
+      // Solo lanzar la petición si hay credenciales válidas
+      if (!code || !token) return null;
+      return { code, token };
+    },
+    stream: (params: { params: { code: string, token: string } | null }) => {
+      if (!params.params) return of(null);
+      const { code, token } = params.params;
+      // Poll cada 20s: timer(0, 20000) emite inmediatamente y luego cada 20s
+      return timer(0, 20_000).pipe(
+        switchMap(() => this.complaintService.getComplaintStatus(code, token))
+      );
     }
-    if (tokenParam) {
-      this.token.set(tokenParam);
-    }
+  });
 
-    if (this.code() && this.token()) {
-      this.loadComplaint();
-    }
-  }
+  // Señales derivadas del resource
+  readonly complaint = computed(() => this.complaintResource.value() as Complaint | null);
+  readonly loading = this.complaintResource.isLoading;
+  readonly error = signal('');
 
+  // --- Estado de UI para respuesta ---
+  readonly replyContent = signal('');
+  readonly selectedFiles = signal<{ file: File; url: string }[]>([]);
+  readonly submittingReply = signal(false);
+  readonly activePreview = signal<{ url: string; name: string } | null>(null);
+
+  readonly replyEditor = viewChild<RichTextEditorComponent>('replyEditor');
+
+  // Status Utility Mappings (Exposed for template)
+  readonly getStatusLabel = ComplaintUtils.getStatusLabel;
+  readonly getStatusClass = ComplaintUtils.getStatusClass;
+  readonly getStatusVariant = ComplaintUtils.getStatusVariant;
+  readonly getStatusIcon = ComplaintUtils.getStatusIcon;
+
+  // --- Acciones ---
   loadComplaint(): void {
-    if (!this.code() || !this.token()) return;
-
-    this.loading.set(true);
-    this.error.set('');
-
-    this.complaintService.getComplaintStatus(this.code(), this.token()).subscribe({
-      next: (data) => {
-        this.complaint.set(data);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        const errorDetail = err?.error?.detail || 'Error desconocido';
-        if (err.status === 403) {
-          this.handleSecurityError(errorDetail);
-        } else if (err.status === 429) {
-          this.error.set(errorDetail || 'Demasiados intentos. Por favor, espera un minuto.');
-        } else {
-          this.error.set(errorDetail || 'Denuncia no encontrada o clave incorrecta');
-        }
-        this.complaint.set(null);
-        this.loading.set(false);
-      }
-    });
+    this.complaintResource.reload();
   }
 
-  handleSecurityError(msg: string) {
+  reset(): void {
+    this.code.set('');
+    this.token.set('');
+    this.error.set('');
+    // Al limpiar code/token, el resource deja de hacer peticiones automáticamente
+  }
+
+  updateCode(value: string): void { this.code.set(value); }
+  updateToken(value: string): void { this.token.set(value); }
+
+  handleSecurityError(msg: string): void {
     this.error.set(msg || 'Acceso bloqueado por seguridad.');
     setTimeout(() => {
       const currentError = this.error().toLowerCase();
       if (currentError.includes('bloquead') || currentError.includes('intentos')) {
         const redirectUrl = this.configService.limits().bruteForceRedirectUrl;
-        if (redirectUrl && redirectUrl.startsWith('http')) {
+        if (redirectUrl?.startsWith('http')) {
           window.location.href = redirectUrl;
         } else if (redirectUrl) {
           this.router.navigate([redirectUrl]);
@@ -108,119 +126,82 @@ export class ComplaintStatusComponent {
     }, 5000);
   }
 
-  reset(): void {
-    this.code.set('');
-    this.token.set('');
-    this.complaint.set(null);
-    this.error.set('');
-  }
+  goBack(): void { this.router.navigate(['/complaint']); }
 
-  updateCode(value: string): void {
-    this.code.set(value);
-  }
-
-  updateToken(value: string): void {
-    this.token.set(value);
-  }
-
-  getStatusLabel(status: string): string {
-    const labels: { [key: string]: string } = {
-      'entregada': 'Entregada',
-      'pendiente': 'Pendiente',
-      'en_analisis': 'En Análisis',
-      'en_investigacion': 'En Investigación',
-      'informacion_requerida': 'Información Requerida',
-      'resuelta': 'Resuelta',
-      'desestimada': 'Desestimada'
-    };
-    return labels[status] || status;
-  }
-
-  getStatusClass(status: string): string {
-    const classes: { [key: string]: string } = {
-      'entregada': 'bg-gray-50 text-gray-700 border-gray-200',
-      'pendiente': 'bg-amber-50 text-amber-700 border-amber-200',
-      'en_analisis': 'bg-blue-50 text-blue-700 border-blue-200',
-      'en_investigacion': 'bg-purple-50 text-purple-700 border-purple-200',
-      'informacion_requerida': 'bg-orange-50 text-orange-700 border-orange-200',
-      'resuelta': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      'desestimada': 'bg-red-50 text-red-700 border-red-200'
-    };
-    return classes[status] || 'bg-gray-50 text-gray-700 border-gray-200';
-  }
-
-  goBack(): void {
-    this.router.navigate(['/complaint']);
-  }
-
-  getSafeHtml(content: string | undefined | null): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(content || '');
-  }
-
-  getFileUrl(path: string, originalName: string | undefined): string {
-    const params = new URLSearchParams();
-    params.set('file_path', path);
-    if (originalName) {
-      params.set('original_name', originalName);
-    }
-    return `${environment.apiUrl}/upload/download?${params.toString()}`;
+  getFileUrl(path: string, downloadName?: string): string {
+    if (!path) return '';
+    if (path.startsWith('data:')) return path;
+    const baseUrl = environment.apiUrl.replace('/api', '');
+    let url = `${baseUrl}${path}`;
+    if (downloadName) url += `?download=${encodeURIComponent(downloadName)}`;
+    return url;
   }
 
   isImage(filename: string): boolean {
-    if (!filename) return false;
-    const ext = filename.split('.').pop()?.toLowerCase();
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
+    return /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(filename ?? '');
   }
 
-  onFileSelected(event: any): void {
-    const files = Array.from(event.target.files) as File[];
-    if (files.length > 0) {
-      this.selectedFiles.update(current => [...current, ...files]);
-    }
-    // Reset input
-    event.target.value = '';
+  onFileSelected(event: Event): void {
+    const files = Array.from((event.target as HTMLInputElement).files ?? []) as File[];
+    files.forEach(file => {
+      if (this.isImage(file.name)) {
+        const reader = new FileReader();
+        reader.onload = (e: ProgressEvent<FileReader>) =>
+          this.selectedFiles.update(prev => [...prev, { file, url: e.target?.result as string }]);
+        reader.readAsDataURL(file);
+      } else {
+        this.selectedFiles.update(prev => [...prev, { file, url: '' }]);
+      }
+    });
+    (event.target as HTMLInputElement).value = '';
   }
 
   removeFile(index: number): void {
+    const fileObj = this.selectedFiles()[index];
+    if (fileObj.url?.startsWith('blob:')) URL.revokeObjectURL(fileObj.url);
     this.selectedFiles.update(files => files.filter((_, i) => i !== index));
   }
 
   async sendReply(): Promise<void> {
     if (!this.replyContent() || this.submittingReply()) return;
-
     this.submittingReply.set(true);
 
-    // Procesar imágenes del editor antes de enviar
     const editorNode = this.replyEditor();
     if (editorNode) {
-      const processed = await editorNode.processImages();
-      this.replyContent.set(processed);
+      this.replyContent.set(await editorNode.processImages());
     }
 
     this.complaintService.addPublicComment(
-      this.code(), 
-      this.token(), 
-      this.replyContent(), 
-      this.selectedFiles()
+      this.code(),
+      this.token(),
+      this.replyContent(),
+      this.selectedFiles().map(f => f.file)
     ).subscribe({
-      next: (comment) => {
-        // Optimistic update: Add comment to current complaint signal
-        const current = this.complaint();
-        if (current) {
-          this.complaint.set({
-            ...current,
-            comments: [...(current.comments || []), comment]
-          });
-        }
+      next: (comment: ComplaintComment) => {
+        // Recargar el resource para obtener el estado actualizado
+        this.complaintResource.reload();
         this.replyContent.set('');
+        this.selectedFiles().forEach(f => { if (f.url?.startsWith('blob:')) URL.revokeObjectURL(f.url); });
         this.selectedFiles.set([]);
         this.submittingReply.set(false);
       },
-      error: (err) => {
-        console.error('Error sending reply:', err);
+      error: () => {
         this.error.set('No se pudo enviar la respuesta. Por favor, inténtalo de nuevo.');
         this.submittingReply.set(false);
       }
     });
   }
+
+  openPreview(att: any): void {
+    this.activePreview.set({
+      url: this.getFileUrl(att.file_url || att.url),
+      name: att.file_original_name || att.file?.name || 'Archivo'
+    });
+  }
+
+  closePreview(): void { this.activePreview.set(null); }
 }
+
+// Por qué esta estructura es más escalable:
+// rxResource con timer() reemplaza Subscription+OnDestroy+interval, gestionando automáticamente
+// el ciclo de vida del polling y evitando memory leaks sin implementar ningún hook de destruction.

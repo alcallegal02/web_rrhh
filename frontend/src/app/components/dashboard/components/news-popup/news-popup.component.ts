@@ -1,5 +1,5 @@
 import { Component, input, output, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { environment } from '../../../../config/environment';
 import { NgIconComponent } from '@ng-icons/core';
 
@@ -13,7 +13,7 @@ export interface DashboardNews {
 
 @Component({
     selector: 'app-news-popup',
-    imports: [CommonModule, DatePipe, NgIconComponent],
+    imports: [DatePipe, NgIconComponent],
     templateUrl: './news-popup.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush
 })

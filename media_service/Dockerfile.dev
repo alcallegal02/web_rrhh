@@ -3,40 +3,36 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Install system dependencies for Pillow
+# Install system dependencies for Pillow and su-exec
 RUN apt-get update && apt-get install -y \
     gcc \
     zlib1g \
     zlib1g-dev \
     libjpeg62-turbo \
     libjpeg-dev \
+    su-exec \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
 RUN groupadd -g 1001 mediauser && \
     useradd -u 1001 -g mediauser -m -s /bin/false -l mediauser
 
-# Switch to non-root user
-USER mediauser
-
 # Copy requirements
-COPY --chown=mediauser:mediauser requirements.txt .
+COPY requirements.txt .
 
 # Install Python deps
-ENV PATH=/home/mediauser/.local/bin:$PATH
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir --user -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
-# Create media directory with correct permissions
-USER root
-RUN mkdir -p /media_data && chown -R mediauser:mediauser /media_data
-USER mediauser
-
-# Copy application code (will be overridden by volume in docker-compose)
-COPY --chown=mediauser:mediauser . .
+# Copy application code and entrypoint
+COPY . .
+RUN chmod +x entrypoint.sh
 
 # Expose port 8000
 EXPOSE 8000
 
-# Start Service with RELOAD enabled for development
+# Entrypoint gestiona permisos como root y cambia a mediauser
+ENTRYPOINT ["./entrypoint.sh"]
+
+# CMD es el comando por defecto para desarrollo
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
