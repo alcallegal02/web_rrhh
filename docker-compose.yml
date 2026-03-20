@@ -37,6 +37,20 @@ services:
     container_name: web_rrhh_media
     volumes:
       - ./media_data:/media_data
+    # Security Hardening
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+      - FOWNER
     networks:
       - web_rrhh_network
     restart: always
@@ -125,4 +139,3 @@ volumes:
 networks:
   web_rrhh_network:
     driver: bridge
-

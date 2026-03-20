@@ -36,14 +36,41 @@ class Settings(BaseSettings):
     ADMIN_ROLE: str = "superadmin"
     ADMIN_AUTO_CREATE: bool = True
     
-    # SMTP Configuration
-    SMTP_HOST: str | None = None
-    SMTP_PORT: int | None = None
-    SMTP_USER: str | None = None
-    SMTP_PASS: str | None = None
-    SMTP_TLS: bool = True
-    EMAIL_FROM_NAME: str | None = None
-    EMAIL_FROM_ADDRESS: str | None = None
+    # Auth/System SMTP Configuration
+    SMTP_AUTH_HOST: str | None = None
+    SMTP_AUTH_PORT: int | None = None
+    SMTP_AUTH_USER: str | None = None
+    SMTP_AUTH_PASS: str | None = None
+    SMTP_AUTH_TLS: bool | None = None
+    EMAIL_AUTH_FROM_NAME: str | None = None
+    EMAIL_AUTH_FROM_ADDRESS: str | None = None
+
+    # News SMTP Configuration
+    SMTP_NEWS_HOST: str | None = None
+    SMTP_NEWS_PORT: int | None = None
+    SMTP_NEWS_USER: str | None = None
+    SMTP_NEWS_PASS: str | None = None
+    SMTP_NEWS_TLS: bool | None = None
+    EMAIL_NEWS_FROM_NAME: str | None = None
+    EMAIL_NEWS_FROM_ADDRESS: str | None = None
+
+    # Vacation SMTP Configuration
+    SMTP_VACATION_HOST: str | None = None
+    SMTP_VACATION_PORT: int | None = None
+    SMTP_VACATION_USER: str | None = None
+    SMTP_VACATION_PASS: str | None = None
+    SMTP_VACATION_TLS: bool | None = None
+    EMAIL_VACATION_FROM_NAME: str | None = None
+    EMAIL_VACATION_FROM_ADDRESS: str | None = None
+
+    # Complaint SMTP Configuration
+    SMTP_COMPLAINT_HOST: str | None = None
+    SMTP_COMPLAINT_PORT: int | None = None
+    SMTP_COMPLAINT_USER: str | None = None
+    SMTP_COMPLAINT_PASS: str | None = None
+    SMTP_COMPLAINT_TLS: bool | None = None
+    EMAIL_COMPLAINT_FROM_NAME: str | None = None
+    EMAIL_COMPLAINT_FROM_ADDRESS: str | None = None
     
     # Brute-force Protection
     BRUTE_FORCE_MAX_ATTEMPTS: int = 3
@@ -95,6 +122,26 @@ class Settings(BaseSettings):
     @property
     def allowed_hosts_list(self) -> list[str]:
         return [host.strip() for host in self.ALLOWED_HOSTS.split(",")]
+
+    def get_smtp_settings(self, service: str) -> dict:
+        """Get the SMTP settings for a specific service. No global fallback."""
+        prefix = f"SMTP_{service.upper()}_"
+        email_prefix = f"EMAIL_{service.upper()}_"
+        
+        # If service is 'default' or not provided, use 'auth'
+        if service.lower() in ["default", "system"]:
+            prefix = "SMTP_AUTH_"
+            email_prefix = "EMAIL_AUTH_"
+
+        return {
+            "host": getattr(self, f"{prefix}HOST", None),
+            "port": getattr(self, f"{prefix}PORT", None),
+            "user": getattr(self, f"{prefix}USER", None),
+            "password": getattr(self, f"{prefix}PASS", None),
+            "tls": getattr(self, f"{prefix}TLS", True),
+            "from_name": getattr(self, f"{email_prefix}FROM_NAME", None) or "Web RRHH",
+            "from_address": getattr(self, f"{email_prefix}FROM_ADDRESS", None),
+        }
     
     model_config = ConfigDict(env_file=".env", case_sensitive=True)
 

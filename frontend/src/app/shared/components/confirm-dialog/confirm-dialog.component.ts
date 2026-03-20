@@ -19,52 +19,7 @@ export interface DialogOptions {
   providers: [
     provideIcons({ lucideAlertTriangle, lucideInfo, lucideHelpCircle, lucideTrash2, lucideX, lucideCheck })
   ],
-  template: `
-    @if (isOpen()) {
-      <div class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
-        <!-- Backdrop -->
-        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300" (click)="cancel()"></div>
-        
-        <!-- Dialog Card -->
-        <div class="relative bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
-          <!-- Top Accent Stripe -->
-          <div class="h-2 w-full" [class]="stripeClass()"></div>
-          
-          <div class="p-8">
-            <div class="flex items-start gap-6">
-              <div [class]="iconBgClass()" class="w-14 h-14 rounded-2xl flex-none flex items-center justify-center shadow-lg">
-                <ng-icon [name]="iconName()" class="text-2xl text-white"></ng-icon>
-              </div>
-              
-              <div class="space-y-2">
-                <h3 class="text-xl font-black text-gray-900 tracking-tight">{{ options()?.title }}</h3>
-                <p class="text-sm font-medium text-gray-500 leading-relaxed">{{ options()?.message }}</p>
-              </div>
-            </div>
-            
-            <div class="flex items-center gap-3 mt-10">
-              <button (click)="cancel()" 
-                class="flex-1 px-6 py-3.5 rounded-xl border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest text-[10px] hover:bg-gray-50 hover:text-gray-600 transition-all active:scale-95">
-                {{ options()?.cancelText || 'Cancelar' }}
-              </button>
-              
-              <button (click)="confirm()" 
-                [class]="confirmBtnClass()"
-                class="flex-1 px-6 py-3.5 rounded-xl text-white font-black uppercase tracking-widest text-[10px] shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
-                <ng-icon name="lucideCheck" class="text-sm"></ng-icon>
-                {{ options()?.confirmText || 'Confirmar' }}
-              </button>
-            </div>
-          </div>
-          
-          <!-- Close Button -->
-          <button (click)="cancel()" class="absolute top-4 right-4 text-gray-300 hover:text-gray-500 transition-colors p-2">
-            <ng-icon name="lucideX"></ng-icon>
-          </button>
-        </div>
-      </div>
-    }
-  `,
+  templateUrl: './confirm-dialog.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConfirmDialogComponent {

@@ -9,50 +9,7 @@ export interface SelectedFile {
 @Component({
   selector: 'app-file-uploader',
   imports: [NgIconComponent],
-  template: `
-    <div class="space-y-4">
-      <!-- Upload Trigger -->
-      <div class="flex items-center justify-between">
-        <label [for]="uploaderId" 
-          class="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-dashed border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-500 hover:text-blue-600 rounded-2xl cursor-pointer transition-all duration-300 group">
-          <ng-icon name="lucidePaperclip" class="text-lg group-hover:rotate-12 transition-transform"></ng-icon>
-          <span class="text-xs font-black uppercase tracking-widest">{{ label() }}</span>
-          <input type="file" [id]="uploaderId" [multiple]="multiple()" (change)="onFileSelected($event)" class="hidden">
-        </label>
-        
-        @if (files().length > 0) {
-          <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {{ files().length }} {{ files().length === 1 ? 'archivo' : 'archivos' }}
-          </span>
-        }
-      </div>
-
-      <!-- File List -->
-      @if (files().length > 0) {
-        <div class="flex flex-wrap gap-2 animate-fadeIn">
-          @for (file of files(); track $index) {
-            <div class="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl group hover:border-red-200 hover:bg-red-50 transition-all">
-              <div class="flex items-center gap-2">
-                @if (isImage(file.file.name)) {
-                  <div class="w-6 h-6 rounded-lg overflow-hidden border border-gray-200 bg-white">
-                    <img [src]="file.url" class="w-full h-full object-cover">
-                  </div>
-                } @else {
-                  <ng-icon name="lucideFileText" class="text-gray-400"></ng-icon>
-                }
-                <span class="text-[10px] font-bold text-gray-600 truncate max-w-[120px]" [title]="file.file.name">
-                  {{ file.file.name }}
-                </span>
-              </div>
-              <button (click)="removeFile($index)" class="text-gray-400 hover:text-red-500 transition-colors">
-                <ng-icon name="lucideX" class="text-sm"></ng-icon>
-              </button>
-            </div>
-          }
-        </div>
-      }
-    </div>
-  `,
+  templateUrl: './file-uploader.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FileUploaderComponent {

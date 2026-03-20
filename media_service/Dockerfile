@@ -1,21 +1,21 @@
 # Media Fortress Dockerfile
-FROM python:3.13-slim
+ARG PYTHON_VERSION=3.14-alpine
+FROM python:${PYTHON_VERSION}
 
 WORKDIR /app
 
 # Install system dependencies for Pillow and su-exec
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     gcc \
-    zlib1g \
-    zlib1g-dev \
-    libjpeg62-turbo \
-    libjpeg-dev \
+    musl-dev \
+    zlib-dev \
+    libjpeg-turbo-dev \
     su-exec \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/cache/apk/*
 
 # Create non-root user
-RUN groupadd -g 1001 mediauser && \
-    useradd -u 1001 -g mediauser -m -s /bin/false -l mediauser
+RUN addgroup -g 1001 mediauser && \
+    adduser -u 1001 -G mediauser -s /bin/false -D mediauser
 
 # Copy requirements
 COPY requirements.txt .
@@ -26,13 +26,16 @@ RUN pip install --upgrade pip && \
 
 # Copy application code and entrypoint
 COPY . .
-RUN chmod +x entrypoint.sh
+# Convertimos entrypoint a LF y lo movemos fuera de /app para que el volumen no lo sobrescriba
+RUN sed -i 's/\r$//' entrypoint.sh && \
+    chmod +x entrypoint.sh && \
+    cp entrypoint.sh /usr/local/bin/entrypoint.sh
 
 # Expose port 8000
 EXPOSE 8000
 
 # Entrypoint gestiona permisos como root y cambia a mediauser antes de ejecutar el CMD
-ENTRYPOINT ["./entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Comando de producción (sin reload)
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]

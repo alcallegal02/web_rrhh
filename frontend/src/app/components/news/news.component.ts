@@ -35,15 +35,15 @@ export class NewsComponent {
   readonly filterSchema: FilterField[] = [
     { key: 'search', label: 'Buscar por título', type: 'text', placeholder: 'Título de la noticia...' },
     { 
-      key: 'status', label: 'Estado', type: 'select', 
+      key: 'status', label: 'Estado', type: 'toggle', 
       options: [
-        { label: 'Borrador', value: 'borrador' },
-        { label: 'Publicada', value: 'publicada' },
-        { label: 'Archivada', value: 'archivada' }
+        { label: 'Borrador', value: 'borrador', icon: 'lucideFileEdit' },
+        { label: 'Publicada', value: 'publicada', icon: 'lucideSend' },
+        { label: 'Archivada', value: 'archivada', icon: 'lucideArchive' }
       ]
     },
-    { key: 'start_date', label: 'Fecha desde', type: 'date' },
-    { key: 'end_date', label: 'Fecha hasta', type: 'date' }
+    { key: 'start_date', label: 'De:', type: 'date' },
+    { key: 'end_date', label: 'Hasta:', type: 'date' }
   ];
 
   // Estado de filtros

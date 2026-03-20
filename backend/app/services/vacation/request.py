@@ -7,6 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
+from app.models.user import User, UserRrhhLink
 from app.models.vacation import (
     RequestStatus,
     VacationAttachment,
@@ -14,10 +15,46 @@ from app.models.vacation import (
     VacationRequestCreate,
 )
 from app.services.audit import log_action
+from app.utils.email import send_vacation_notification
 from app.services.vacation.balance import get_vacation_balance
 from app.services.vacation.validator import VacationValidator
 from app.utils.business_days import get_business_days_count
 from app.utils.duration import parse_duration
+
+
+async def _notify_new_request(session: AsyncSession, request: VacationRequest):
+    """Notify manager and/or RRHH about a new vacation request"""
+    try:
+        employee = await session.get(User, request.user_id)
+        if not employee: return
+
+        # Target Emails
+        targets = []
+        if request.assigned_manager_id:
+            manager = await session.get(User, request.assigned_manager_id)
+            if manager: targets.append(manager.email)
+        
+        if request.assigned_rrhh_id:
+            rrhh = await session.get(User, request.assigned_rrhh_id)
+            if rrhh: targets.append(rrhh.email)
+        elif not targets:
+            # Fallback to linked RRHH if no manager assigned
+            stmt = select(User).join(UserRrhhLink, User.id == UserRrhhLink.rrhh_id).where(UserRrhhLink.user_id == request.user_id)
+            rrhh_users = (await session.execute(stmt)).scalars().all()
+            for u in rrhh_users: targets.append(u.email)
+
+        for email in set(targets):
+            await send_vacation_notification(
+                email_to=email,
+                requester_name=f"{employee.first_name} {employee.last_name}",
+                start_date=request.start_date.strftime("%d/%m/%Y"),
+                end_date=request.end_date.strftime("%d/%m/%Y") if request.end_date else None,
+                days=request.days_requested,
+                type=request.request_type
+            )
+    except Exception:
+        import logging
+        logging.getLogger(__name__).error("Failed to send vacation notification", exc_info=True)
 
 
 async def get_user_vacation_requests(
@@ -154,9 +191,10 @@ async def create_vacation_request(
         ip_address=ip_address
     )
     
-    # Reload for response
-    # (Optional optimization: return request without reloading checking if FE needs relations immediately)
-    # FE usually needs attachments.
+    # 6. Email Notification
+    if request.status == RequestStatus.PENDING:
+        await _notify_new_request(session, request)
+
     return request
 
 
@@ -316,6 +354,9 @@ async def submit_vacation_request(
         ip_address=ip_address
     )
     
+    # Email Notification
+    await _notify_new_request(session, request)
+
     return request
 async def delete_vacation_request(
     session: AsyncSession,

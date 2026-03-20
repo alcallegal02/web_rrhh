@@ -1,0 +1,94 @@
+<div class="space-y-6 pb-8 animate-fadeIn">
+    
+    <!-- UNIFIED TOP BAR FOR EVERYONE -->
+    <div class="bg-white rounded-[2rem] p-4 lg:p-6 shadow-sm border border-gray-100 flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8 transition-all duration-500">
+        <!-- Left Icon Section (Title) -->
+        <div class="flex items-center gap-4 shrink-0">
+            <div class="h-12 w-12 rounded-2xl bg-[#3C65AB]/5 text-[#3C65AB] flex items-center justify-center shadow-inner">
+                <ng-icon name="lucideFilter" class="text-2xl"></ng-icon>
+            </div>
+            <div>
+                <h3 class="font-black text-gray-900 uppercase tracking-widest text-xs">Filtrar Noticias</h3>
+                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-[0.1em] mt-0.5">Explora el histórico</p>
+            </div>
+        </div>
+
+        <div class="flex-1 w-full lg:w-auto flex flex-wrap items-center justify-center gap-6 lg:gap-10">
+            
+            <!-- Column 1: Date Filters -->
+            <div class="flex flex-col items-center gap-4 bg-gray-50/50 p-3 rounded-[1.25rem] border border-gray-100 w-full sm:w-auto min-w-[260px]">
+                <div class="relative group w-full sm:w-48">
+                    <input type="date" [value]="startDate()" (input)="setStartDate($any($event.target).value)"
+                        class="w-full bg-white border border-gray-100 rounded-xl px-4 py-2.5 text-[11px] font-bold text-gray-700 focus:ring-2 focus:ring-[#3C65AB]/10 transition-all outline-none">
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs group-focus-within:text-[#3C65AB] transition-colors pointer-events-none">
+                        <ng-icon name="lucideCalendar"></ng-icon>
+                    </span>
+                    <span class="absolute -top-2 left-3 px-1 bg-white text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Desde</span>
+                </div>
+                <div class="relative group w-full sm:w-48">
+                    <input type="date" [value]="endDate()" (input)="setEndDate($any($event.target).value)"
+                        class="w-full bg-white border border-gray-100 rounded-xl px-4 py-2.5 text-[11px] font-bold text-gray-700 focus:ring-2 focus:ring-[#3C65AB]/10 transition-all outline-none">
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs group-focus-within:text-[#3C65AB] transition-colors pointer-events-none">
+                        <ng-icon name="lucideCalendar"></ng-icon>
+                    </span>
+                    <span class="absolute -top-2 left-3 px-1 bg-white text-[8px] font-black text-gray-400 uppercase tracking-widest leading-none">Hasta</span>
+                </div>
+            </div>
+
+            <!-- Column 2: Status Filters & Management -->
+            @if (isAdminUser()) {
+                <div class="flex flex-wrap items-center justify-center gap-4 lg:gap-8 lg:bg-gray-50/30 lg:p-2 lg:rounded-[1.5rem] lg:border lg:border-gray-100/50">
+                    <!-- Tools Group -->
+                    <div class="flex flex-wrap items-center justify-center gap-3 lg:gap-6">
+                        <div class="flex flex-wrap items-center justify-center gap-2">
+                            @for (status of statusOptions; track status.value) {
+                            <button (click)="toggleStatus(status.value)"
+                                class="flex items-center justify-center gap-2 px-4 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all shadow-sm active:scale-95"
+                                [class]="isSelected(status.value) ? 'bg-[#3C65AB] text-white border-[#3C65AB] shadow-blue-500/20' : 'bg-white text-gray-400 border-gray-100 hover:border-blue-200 hover:text-gray-600'">
+                                <ng-icon [name]="status.icon" class="text-sm shrink-0" strokeWidth="2.5"></ng-icon>
+                                {{ status.label }}
+                            </button>
+                            }
+                        </div>
+                        
+                        <div class="h-8 w-px bg-gray-200 hidden xl:block"></div>
+                        
+                        <a routerLink="/news/manage" 
+                            class="flex items-center justify-center gap-3 px-6 py-2.5 rounded-xl bg-[#3C65AB] text-white hover:bg-[#2C4D8B] transition-all text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/10 active:scale-95 shrink-0 whitespace-nowrap group min-w-[200px] sm:min-w-0">
+                            <ng-icon name="lucideSettings" class="text-sm shrink-0 group-hover:rotate-45 transition-transform duration-500" strokeWidth="2.5"></ng-icon>
+                            <span>Gestión de Noticias</span>
+                        </a>
+                    </div>
+                </div>
+            }
+
+            @if (hasActiveFilters()) {
+                <div class="flex items-center justify-center lg:ml-2">
+                    <button (click)="clearFilters()" 
+                        class="p-2.5 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-95 flex items-center justify-center shadow-sm"
+                        title="Limpiar filtros">
+                        <ng-icon name="lucideX" class="text-lg"></ng-icon>
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- News Grid (Full Width) -->
+    <div class="h-full">
+        <app-news-list 
+            [newsList]="newsItems()"
+            layout="grid"
+            [canManage]="isAdminUser()">
+        </app-news-list>
+
+        @if (newsItems().length === 0 && !newsResource.isLoading()) {
+            <div class="flex flex-col items-center justify-center py-24 bg-white rounded-3xl border-2 border-dashed border-gray-100">
+                <div class="h-24 w-24 rounded-full bg-gray-50 flex items-center justify-center mb-6">
+                    <ng-icon name="lucideNewspaper" class="text-5xl text-gray-100"></ng-icon>
+                </div>
+                <p class="text-gray-400 font-bold uppercase tracking-widest text-[10px]">No se encontraron noticias</p>
+            </div>
+        }
+    </div>
+</div>

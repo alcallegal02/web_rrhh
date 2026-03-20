@@ -1,25 +1,22 @@
-# Multi-stage build for FastAPI backend (Production)
-ARG PYTHON_VERSION=3.13-slim
+ARG PYTHON_VERSION=3.14-alpine
 FROM python:${PYTHON_VERSION} AS builder
-
 
 WORKDIR /app
 
-# Install system dependencies (as root)
-RUN apt-get update && apt-get install -y \
+# Install build dependencies
+RUN apk add --no-cache \
     gcc \
-    zlib1g-dev \
-    libjpeg-dev \
-    && rm -rf /var/lib/apt/lists/*
+    musl-dev \
+    zlib-dev \
+    libjpeg-turbo-dev \
+    postgresql-dev
 
-# Create a non-root user environment in builder
-RUN groupadd -r appuser && useradd -r -m -g appuser -u 999 appuser
+# Create a non-root user env in builder
+RUN addgroup -S appuser && adduser -S -G appuser -u 999 appuser
 
-# Switch to non-root user for pip installation
 USER appuser
 COPY --chown=appuser:appuser requirements.txt .
 
-# Configure path for user installs
 ENV PATH=/home/appuser/.local/bin:$PATH
 
 RUN pip install --upgrade pip && \
@@ -31,13 +28,14 @@ FROM python:${PYTHON_VERSION}
 WORKDIR /app
 
 # Create the same non-root user
-RUN groupadd -r appuser && useradd -r -m -g appuser -u 999 appuser
+RUN addgroup -S appuser && adduser -S -G appuser -u 999 appuser
 
-# Install runtime system dependencies for Pillow and others
-RUN apt-get update && apt-get install -y \
-    zlib1g \
-    libjpeg62-turbo \
-    && rm -rf /var/lib/apt/lists/*
+# Install runtime system dependencies
+RUN apk add --no-cache \
+    zlib \
+    libjpeg-turbo \
+    libpq \
+    libmagic
 
 # Copy installed packages from builder (already owned by appuser)
 COPY --from=builder --chown=appuser:appuser /home/appuser/.local /home/appuser/.local

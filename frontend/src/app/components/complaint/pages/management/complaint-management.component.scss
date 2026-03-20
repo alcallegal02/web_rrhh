@@ -108,9 +108,10 @@
 
     .filters-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 2.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
         align-items: start;
+        text-align: center; // Center text labels
 
         .status-col {
             grid-column: span 2;
@@ -118,14 +119,58 @@
 
         .filter-buttons {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+            justify-content: center; // Center grid items
         }
 
         .date-inputs {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
+            justify-content: center;
+        }
+
+        label {
+            margin-left: 0 !important; // Remove left margin when centered
+            display: block;
+            width: 100%;
+        }
+    }
+}
+
+// Additional mobile/tablet breakpoints
+@media (max-width: 1200px) {
+    .filters-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center; // Center the columns in flex mode
+
+        .filter-buttons {
+            width: 100%;
+            max-width: 800px; // Prevent extreme stretching
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            justify-content: center;
+        }
+
+        .date-inputs {
+            width: 100%;
+            max-width: 500px;
+        }
+    }
+}
+
+@media (max-width: 640px) {
+    .filters-grid {
+        .filter-buttons {
+            grid-template-columns: 1fr;
+            width: 100%;
+        }
+
+        .date-inputs {
+            grid-template-columns: 1fr;
+            width: 100%;
         }
     }
 }

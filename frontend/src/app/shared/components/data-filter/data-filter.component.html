@@ -1,0 +1,81 @@
+<div class="filter-container bg-white rounded-[2rem] border border-gray-100 shadow-sm p-6 mb-4 animate-fadeIn">
+  <div class="flex items-center gap-3 mb-6 sm:justify-start justify-center">
+    <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+      <ng-icon name="lucideFilter" class="text-xl"></ng-icon>
+    </div>
+    <div class="sm:text-left text-center">
+      <h3 class="text-sm font-black text-gray-800 uppercase tracking-widest">Filtros de Búsqueda</h3>
+      <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Refina los resultados según tus criterios</p>
+    </div>
+  </div>
+
+  <div class="space-y-6">
+    @for (field of fields(); track field.key) {
+      <div class="space-y-2.5">
+        <label class="filter-label block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{{ field.label }}</label>
+        
+        @switch (field.type) {
+          @case ('text') {
+            <div class="text-input-wrapper relative group">
+              <ng-icon name="lucideSearch" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors"></ng-icon>
+              <input type="text" 
+                [placeholder]="field.placeholder || 'Buscar...'"
+                [(ngModel)]="currentFilters()[field.key]"
+                (ngModelChange)="emitChange()"
+                class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl text-[11px] font-bold text-gray-700 focus:bg-white focus:border-blue-100 outline-none transition-all shadow-sm">
+            </div>
+          }
+          
+          @case ('toggle') {
+            <div class="toggle-group flex flex-wrap gap-2">
+              @for (opt of field.options; track opt.value) {
+                <button (click)="toggleValue(field.key, opt.value)"
+                  class="filter-toggle-btn"
+                  [class.active]="isToggleSelected(field.key, opt.value)">
+                  @if (opt.icon) {
+                    <ng-icon [name]="opt.icon" class="text-sm shrink-0"></ng-icon>
+                  }
+                  {{ opt.label }}
+                </button>
+              }
+            </div>
+          }
+
+          @case ('select') {
+            <div class="text-input-wrapper relative group">
+              <select [(ngModel)]="currentFilters()[field.key]" 
+                (ngModelChange)="emitChange()"
+                class="w-full px-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl text-[11px] font-bold text-gray-700 focus:bg-white focus:border-blue-100 outline-none transition-all shadow-sm cursor-pointer appearance-none bg-no-repeat bg-[right_1rem_center]"
+                style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239CA3AF%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');">
+                <option [value]="undefined">Todos</option>
+                @for (opt of field.options; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+          }
+          
+          @case ('date') {
+            <div class="date-input-wrapper relative group">
+              <ng-icon name="lucideCalendar" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors"></ng-icon>
+              <input type="date" 
+                [(ngModel)]="currentFilters()[field.key]"
+                (ngModelChange)="emitChange()"
+                class="w-full pl-11 pr-4 py-3 bg-gray-50 border-2 border-transparent rounded-2xl text-[11px] font-bold text-gray-700 focus:bg-white focus:border-blue-100 outline-none transition-all shadow-sm">
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+
+  @if (hasActiveFilters()) {
+    <div class="mt-6 pt-4 border-t border-gray-100 flex sm:justify-end justify-center">
+      <button (click)="clearAll()" 
+        class="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm border border-red-100">
+        <ng-icon name="lucideX" class="text-sm"></ng-icon>
+        Limpiar Filtros
+      </button>
+    </div>
+  }
+</div>

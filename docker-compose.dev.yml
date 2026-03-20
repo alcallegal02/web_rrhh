@@ -100,6 +100,12 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+      - FOWNER
     restart: always
     logging:
       driver: "json-file"
@@ -113,7 +119,7 @@ services:
       context: ./backend
       dockerfile: ${BACKEND_DOCKERFILE:-Dockerfile.dev}
       args:
-        PYTHON_VERSION: ${PYTHON_VERSION:-3.13-slim}
+        PYTHON_VERSION: ${PYTHON_VERSION:-3.14-alpine}
     container_name: ${COMPOSE_PROJECT_NAME:-web_rrhh}_backend_dev
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
@@ -243,6 +249,7 @@ services:
       - CHOWN
       - SETGID
       - SETUID
+      - DAC_OVERRIDE
     networks:
       - frontend_net
       - backend_net
@@ -264,5 +271,3 @@ networks:
 
 volumes:
   redis_data_dev:
-
-

@@ -1,4 +1,4 @@
-export type FilterType = 'text' | 'select' | 'multi-select' | 'date' | 'date-range';
+export type FilterType = 'text' | 'select' | 'multi-select' | 'date' | 'date-range' | 'toggle';
 
 export interface FilterField {
   key: string;               // El campo del objeto que vamos a filtrar (ej: 'status')

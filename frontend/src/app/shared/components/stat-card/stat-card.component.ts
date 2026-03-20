@@ -6,42 +6,7 @@ export type StatCardVariant = 'primary' | 'success' | 'warning' | 'danger' | 'in
 @Component({
   selector: 'app-stat-card',
   imports: [NgIconComponent],
-  template: `
-    <div class="bg-white rounded-[2rem] p-6 md:p-8 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 relative overflow-hidden group">
-      <!-- Decorative Background Shape -->
-      <div class="absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-20 blur-2xl group-hover:scale-150 transition-transform duration-700 pointer-events-none"
-           [class]="bgGlowClass()">
-      </div>
-
-      <div class="relative z-10 flex items-start gap-5">
-        <!-- Icon Container -->
-        <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-none shadow-md transition-transform group-hover:scale-110"
-             [class]="iconContainerClass()">
-          <ng-icon [name]="icon()" class="text-2xl"></ng-icon>
-        </div>
-
-        <!-- Content -->
-        <div class="flex-1 min-w-0">
-          <h3 class="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-1 truncate">{{ title() }}</h3>
-          <div class="flex items-baseline gap-2">
-            <span class="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">{{ value() }}</span>
-            @if (suffix()) {
-              <span class="text-sm font-bold text-gray-500">{{ suffix() }}</span>
-            }
-          </div>
-          
-          @if (description()) {
-            <p class="text-xs font-medium text-gray-500 mt-2 line-clamp-2">{{ description() }}</p>
-          }
-        </div>
-      </div>
-      
-      <!-- Optional Action / Footer Area -->
-      <div class="mt-6">
-          <ng-content></ng-content>
-      </div>
-    </div>
-  `,
+  templateUrl: './stat-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatCardComponent {

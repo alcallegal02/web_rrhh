@@ -2,10 +2,10 @@
 
     <!-- Sidebar: News Directory -->
     <div
-        class="w-full xl:w-[30%] min-w-[380px] max-w-[500px] flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden shrink-0 order-2 xl:order-1">
+        class="w-full xl:w-[30%] min-w-[380px] xl:max-w-[500px] flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden shrink-0 order-2 xl:order-1">
         
         <!-- Generic Data Filter -->
-        <div class="p-4 bg-gray-50/50 border-b border-gray-100">
+        <div class="p-2 sm:p-4 bg-gray-50/50 border-b border-gray-100 flex-none">
             <app-data-filter [fields]="filterSchema" (filterChange)="onFiltersChanged($event)">
             </app-data-filter>
 

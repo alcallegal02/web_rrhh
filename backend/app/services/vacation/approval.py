@@ -7,6 +7,7 @@ from sqlmodel import select
 from app.models.user import User, UserRrhhLink
 from app.models.vacation import RequestStatus, VacationRequest
 from app.services.audit import log_action
+from app.utils.email import send_vacation_status_notification, send_vacation_notification
 
 
 async def get_pending_manager_requests(
@@ -81,7 +82,6 @@ async def approve_by_manager(
         request.status = RequestStatus.ACCEPTED
     
     # Audit Log
-    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=manager_uuid,
@@ -98,6 +98,38 @@ async def approve_by_manager(
     await session.commit()
     await session.refresh(request)
     
+    # Email Notification
+    try:
+        employee = await session.get(User, request.user_id)
+        manager = await session.get(User, manager_uuid)
+        if employee and manager:
+            status_text = "Aprobada por Responsable" if request.status == RequestStatus.APPROVED_MANAGER else "Aprobada"
+            await send_vacation_status_notification(
+                email_to=employee.email,
+                status=status_text,
+                manager_name=f"{manager.first_name} {manager.last_name}"
+            )
+            if request.status == RequestStatus.APPROVED_MANAGER:
+                rrhh_email = None
+                if request.assigned_rrhh_id:
+                    rrhh_user = await session.get(User, request.assigned_rrhh_id)
+                    if rrhh_user: rrhh_email = rrhh_user.email
+                else:
+                    stmt = select(User).join(UserRrhhLink, User.id == UserRrhhLink.rrhh_id).where(UserRrhhLink.user_id == request.user_id)
+                    rrhh_user = (await session.execute(stmt)).scalars().first()
+                    if rrhh_user: rrhh_email = rrhh_user.email
+                if rrhh_email:
+                    await send_vacation_notification(
+                        email_to=rrhh_email,
+                        requester_name=f"{employee.first_name} {employee.last_name}",
+                        start_date=request.start_date.strftime("%d/%m/%Y"),
+                        end_date=request.end_date.strftime("%d/%m/%Y") if request.end_date else None,
+                        days=request.days_requested,
+                        type=request.request_type
+                    )
+    except Exception:
+        pass
+
     return request
 
 
@@ -129,7 +161,6 @@ async def reject_by_manager(
     request.rejection_reason = reason
     
     # Audit Log
-    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=manager_uuid,
@@ -147,6 +178,20 @@ async def reject_by_manager(
     await session.commit()
     await session.refresh(request)
     
+    # Email Notification
+    try:
+        employee = await session.get(User, request.user_id)
+        manager = await session.get(User, manager_uuid)
+        if employee and manager:
+            await send_vacation_status_notification(
+                email_to=employee.email,
+                status="Rechazada",
+                manager_name=f"{manager.first_name} {manager.last_name}",
+                reason=reason
+            )
+    except Exception:
+        pass
+
     return request
 
 
@@ -195,7 +240,6 @@ async def approve_by_rrhh(
         request.status = RequestStatus.ACCEPTED
     
     # Audit Log
-    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=rrhh_uuid,
@@ -212,6 +256,20 @@ async def approve_by_rrhh(
     await session.commit()
     await session.refresh(request)
     
+    # Email Notification
+    try:
+        employee = await session.get(User, request.user_id)
+        rrhh = await session.get(User, rrhh_uuid)
+        if employee and rrhh:
+            status_text = "Aprobada" if request.status == RequestStatus.ACCEPTED else "Aprobada por RRHH"
+            await send_vacation_status_notification(
+                email_to=employee.email,
+                status=status_text,
+                manager_name=f"{rrhh.first_name} {rrhh.last_name}"
+            )
+    except Exception:
+        pass
+
     return request
 
 
@@ -259,7 +317,6 @@ async def reject_by_rrhh(
     request.rejection_reason = reason
     
     # Audit Log
-    from app.services.audit import log_action
     await log_action(
         session=session,
         user_id=rrhh_uuid,
@@ -277,4 +334,18 @@ async def reject_by_rrhh(
     await session.commit()
     await session.refresh(request)
     
+    # Email Notification
+    try:
+        employee = await session.get(User, request.user_id)
+        rrhh = await session.get(User, rrhh_uuid)
+        if employee and rrhh:
+            await send_vacation_status_notification(
+                email_to=employee.email,
+                status="Rechazada",
+                manager_name=f"{rrhh.first_name} {rrhh.last_name}",
+                reason=reason
+            )
+    except Exception:
+        pass
+
     return request

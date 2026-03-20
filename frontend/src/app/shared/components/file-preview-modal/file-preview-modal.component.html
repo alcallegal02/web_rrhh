@@ -1,0 +1,62 @@
+<div class="fixed inset-0 z-[999] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-4 md:p-8 animate-fadeIn"
+     (click)="close.emit()">
+  
+  <!-- Close Button -->
+  <button (click)="close.emit(); $event.stopPropagation()" 
+          class="absolute top-6 right-6 h-12 w-12 rounded-2xl bg-white/10 text-white hover:bg-white/20 transition-all flex items-center justify-center z-[1000] backdrop-blur-md border border-white/10 shadow-2xl">
+    <ng-icon name="lucideX" class="text-2xl"></ng-icon>
+  </button>
+
+  <!-- Content Container -->
+  <div class="relative w-full max-w-6xl h-full flex flex-col items-center justify-center pointer-events-none"
+       (click)="$event.stopPropagation()">
+    
+    <div class="w-full h-full flex items-center justify-center pointer-events-auto overflow-hidden rounded-[2rem] bg-white/5 border border-white/10 shadow-2xl relative group">
+      
+      @if (isImage()) {
+        <img [src]="fileUrl()" 
+             class="max-w-full max-h-full object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] select-none">
+      } @else if (isPdf()) {
+        <iframe [src]="safePdfUrl()" 
+                class="w-full h-full border-none rounded-[2rem]"
+                title="PDF Preview">
+        </iframe>
+      } @else {
+        <div class="flex flex-col items-center gap-6 p-12 text-center">
+          <div class="w-24 h-24 rounded-3xl bg-inespasa/20 text-inespasa flex items-center justify-center shadow-xl">
+            <ng-icon name="lucideFileText" class="text-5xl"></ng-icon>
+          </div>
+          <div>
+            <h3 class="text-xl font-black text-white tracking-tight">{{ fileName() }}</h3>
+            <p class="text-gray-400 mt-2">Este tipo de archivo no puede previsualizarse directamente.</p>
+          </div>
+          <a [href]="fileUrl()" [download]="fileName()"
+             class="flex items-center gap-3 bg-white text-gray-900 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-inespasa hover:text-white transition-all shadow-xl">
+            <ng-icon name="lucideDownload"></ng-icon>
+            <span>Descargar para ver</span>
+          </a>
+        </div>
+      }
+
+      <!-- Header Overlay (visible on hover) -->
+      <div class="absolute top-0 left-0 right-0 p-6 bg-gradient-to-b from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] text-white/60">Vista previa del archivo</p>
+            <h2 class="text-sm font-bold text-white truncate max-w-md">{{ fileName() }}</h2>
+          </div>
+          
+          <a [href]="fileUrl()" [download]="fileName()"
+             class="p-3 rounded-xl bg-white/10 text-white hover:bg-white/20 transition-all border border-white/10 backdrop-blur-md">
+            <ng-icon name="lucideDownload" class="text-lg"></ng-icon>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Info -->
+    <div class="mt-4 text-[9px] font-black uppercase tracking-[0.4em] text-white/30">
+      ESC PARA CERRAR — {{ fileName() }}
+    </div>
+  </div>
+</div>

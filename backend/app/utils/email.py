@@ -10,13 +10,36 @@ logger = logging.getLogger(__name__)
 from starlette.concurrency import run_in_threadpool
 
 
-def _send_credentials_email_sync(email_to: str, code: str, token: str):
-    """Sync implementation of email sending"""
-    if not settings.SMTP_HOST or not settings.EMAIL_FROM_ADDRESS:
-        logger.warning("SMTP configuration is incomplete. Skipping email sending.")
+def _send_smtp_email(email_to: str, subject: str, html_content: str, service: str):
+    """Generic helper to send SMTP emails using service-specific or default settings"""
+    smtp_settings = settings.get_smtp_settings(service)
+    
+    if not smtp_settings["host"] or not smtp_settings["from_address"]:
+        logger.warning(f"SMTP configuration for {service} is incomplete. Skipping email sending.")
         return
 
-    # Professional HTML Template
+    message = MIMEMultipart("alternative")
+    message["Subject"] = subject
+    message["From"] = f"{smtp_settings['from_name']} <{smtp_settings['from_address']}>"
+    message["To"] = email_to
+
+    message.attach(MIMEText(html_content, "html"))
+
+    try:
+        with smtplib.SMTP(smtp_settings["host"], smtp_settings["port"]) as server:
+            if smtp_settings["tls"]:
+                server.starttls()
+            
+            if smtp_settings["user"] and smtp_settings["password"]:
+                server.login(smtp_settings["user"], smtp_settings["password"])
+            
+            server.send_message(message)
+            logger.info(f"{service.capitalize()} email sent successfully to {email_to}")
+    except Exception as e:
+        logger.error(f"Error sending {service} email to {email_to}: {str(e)}", exc_info=True)
+
+def _send_credentials_email_sync(email_to: str, code: str, token: str):
+    """Sync implementation of email sending for complaints credentials"""
     html_content = f"""
     <html>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -46,39 +69,14 @@ def _send_credentials_email_sync(email_to: str, code: str, token: str):
     </body>
     </html>
     """
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = "Credenciales de Seguimiento - Canal de Denuncias"
-    message["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>"
-    message["To"] = email_to
-
-    message.attach(MIMEText(html_content, "html"))
-
-    try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            if settings.SMTP_TLS:
-                server.starttls()
-            
-            if settings.SMTP_USER and settings.SMTP_PASS:
-                server.login(settings.SMTP_USER, settings.SMTP_PASS)
-            
-            server.send_message(message)
-            logger.info(f"Credentials email sent successfully to {email_to[:3]}...@{email_to.split('@')[-1]}")
-    except Exception as e:
-        logger.error(f"Error sending credentials email: {str(e)}", exc_info=True)
+    _send_smtp_email(email_to, "Credenciales de Seguimiento - Canal de Denuncias", html_content, "complaint")
 
 async def send_credentials_email(email_to: str, code: str, token: str):
-    """
-    Async wrapper for sending credentials email.
-    """
+    """Async wrapper for sending credentials email."""
     await run_in_threadpool(_send_credentials_email_sync, email_to, code, token)
 
 def _send_password_reset_otp_sync(email_to: str, otp: str):
     """Sync implementation of OTP email sending"""
-    if not settings.SMTP_HOST or not settings.EMAIL_FROM_ADDRESS:
-        logger.warning("SMTP configuration is incomplete. Skipping email sending.")
-        return
-
     html_content = f"""
     <html>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -103,37 +101,20 @@ def _send_password_reset_otp_sync(email_to: str, otp: str):
     </body>
     </html>
     """
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = "Código de Verificación - Cambio de Contraseña"
-    message["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>"
-    message["To"] = email_to
-
-    message.attach(MIMEText(html_content, "html"))
-
-    try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            if settings.SMTP_TLS:
-                server.starttls()
-            
-            if settings.SMTP_USER and settings.SMTP_PASS:
-                server.login(settings.SMTP_USER, settings.SMTP_PASS)
-            
-            server.send_message(message)
-            logger.info(f"OTP email sent successfully to {email_to}")
-    except Exception as e:
-        logger.error(f"Error sending OTP email: {str(e)}", exc_info=True)
+    # Password reset uses default SMTP (or could be auth if we add it)
+    _send_smtp_email(email_to, "Código de Verificación - Cambio de Contraseña", html_content, "auth")
 
 async def send_password_reset_otp(email_to: str, otp: str):
-    """
-    Async wrapper for sending OTP email.
-    """
+    """Async wrapper for sending OTP email."""
     await run_in_threadpool(_send_password_reset_otp_sync, email_to, otp)
 
 def _send_complaint_notification_email_sync(email_to: str, complaint_code: str, complaint_title: str):
     """Sync implementation for notifying admins about a new complaint"""
-    if not settings.SMTP_HOST or not settings.EMAIL_FROM_ADDRESS:
-        return
+    base_url = "http://localhost:4200"
+    if settings.CORS_ORIGINS:
+        origins = settings.CORS_ORIGINS.split(',')
+        if origins:
+            base_url = origins[0].strip()
 
     html_content = f"""
     <html>
@@ -154,7 +135,7 @@ def _send_complaint_notification_email_sync(email_to: str, complaint_code: str, 
             </div>
             
             <div style="text-align: center; margin: 40px 0;">
-                <a href="{settings.CORS_ORIGINS.split(',')[0]}/admin/complaints" style="background-color: #3C65AB; color: #ffffff; padding: 14px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; transition: background-color 0.2s;">Gestionar Denuncia</a>
+                <a href="{base_url}/admin/complaints" style="background-color: #3C65AB; color: #ffffff; padding: 14px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; transition: background-color 0.2s;">Gestionar Denuncia</a>
             </div>
             
             <p style="font-size: 14px; color: #4b5563; text-align: center;">
@@ -170,36 +151,14 @@ def _send_complaint_notification_email_sync(email_to: str, complaint_code: str, 
     </body>
     </html>
     """
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = f"ALERTA: Nueva Denuncia Registrada ({complaint_code})"
-    message["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>"
-    message["To"] = email_to
-
-    message.attach(MIMEText(html_content, "html"))
-
-    try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            if settings.SMTP_TLS:
-                server.starttls()
-            if settings.SMTP_USER and settings.SMTP_PASS:
-                server.login(settings.SMTP_USER, settings.SMTP_PASS)
-            server.send_message(message)
-            logger.info(f"Complaint notification email sent successfully to {email_to}")
-    except Exception as e:
-        logger.error(f"Error sending complaint notification: {str(e)}", exc_info=True)
+    _send_smtp_email(email_to, f"ALERTA: Nueva Denuncia Registrada ({complaint_code})", html_content, "complaint")
 
 async def send_complaint_notification(email_to: str, code: str, title: str):
     """Async wrapper for sending complaint notification email"""
     await run_in_threadpool(_send_complaint_notification_email_sync, email_to, code, title)
 
-
 def _send_news_notification_email_sync(email_to: str, news_title: str, news_summary: str, news_id: str):
     """Sync implementation for notifying users about new published news"""
-    if not settings.SMTP_HOST or not settings.EMAIL_FROM_ADDRESS:
-        return
-
-    # Try to get the first CORS origin as base URL for the news link
     base_url = "http://localhost:4200"
     if settings.CORS_ORIGINS:
         origins = settings.CORS_ORIGINS.split(',')
@@ -240,25 +199,84 @@ def _send_news_notification_email_sync(email_to: str, news_title: str, news_summ
     </body>
     </html>
     """
-
-    message = MIMEMultipart("alternative")
-    message["Subject"] = f"Nueva Noticia: {news_title}"
-    message["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.EMAIL_FROM_ADDRESS}>"
-    message["To"] = email_to
-
-    message.attach(MIMEText(html_content, "html"))
-
-    try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            if settings.SMTP_TLS:
-                server.starttls()
-            if settings.SMTP_USER and settings.SMTP_PASS:
-                server.login(settings.SMTP_USER, settings.SMTP_PASS)
-            server.send_message(message)
-            logger.info(f"News notification email sent successfully to {email_to}")
-    except Exception as e:
-        logger.error(f"Error sending news notification to {email_to}: {str(e)}", exc_info=True)
+    _send_smtp_email(email_to, f"Nueva Noticia: {news_title}", html_content, "news")
 
 async def send_news_notification(email_to: str, title: str, summary: str, news_id: str):
     """Async wrapper for sending news notification email"""
     await run_in_threadpool(_send_news_notification_email_sync, email_to, title, summary, news_id)
+
+def _send_vacation_notification_email_sync(email_to: str, requester_name: str, start_date: str, end_date: str, days: float, type: str):
+    """Sync implementation for notifying managers/RRHH about a new vacation request"""
+    base_url = "http://localhost:4200"
+    if settings.CORS_ORIGINS:
+        origins = settings.CORS_ORIGINS.split(',')
+        if origins:
+            base_url = origins[0].strip()
+
+    html_content = f"""
+    <html>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f3f4f6; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb;">
+            <div style="background-color: #3C65AB; padding: 30px; text-align: center;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800;">Nueva Solicitud de Vacaciones</h2>
+            </div>
+            
+            <div style="padding: 40px;">
+                <p style="font-size: 16px; color: #111827;"><strong>{requester_name}</strong> ha enviado una nueva solicitud de ausencia.</p>
+                
+                <div style="background-color: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #e5e7eb;">
+                    <p style="margin: 5px 0;"><strong>Tipo:</strong> {type}</p>
+                    <p style="margin: 5px 0;"><strong>Desde:</strong> {start_date}</p>
+                    <p style="margin: 5px 0;"><strong>Hasta:</strong> {end_date or start_date}</p>
+                    <p style="margin: 5px 0;"><strong>Total días:</strong> {days}</p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 35px;">
+                    <a href="{base_url}/admin/vacations" style="background-color: #3C65AB; color: #ffffff; padding: 14px 32px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">Revisar Solicitud</a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    _send_smtp_email(email_to, f"Nueva Solicitud de Vacaciones - {requester_name}", html_content, "vacation")
+
+async def send_vacation_notification(email_to: str, requester_name: str, start_date: str, end_date: str, days: float, type: str):
+    """Async wrapper for sending vacation notification email"""
+    await run_in_threadpool(_send_vacation_notification_email_sync, email_to, requester_name, start_date, end_date, days, type)
+
+def _send_vacation_status_email_sync(email_to: str, status: str, manager_name: str, reason: str | None = None):
+    """Sync implementation for notifying user about their vacation request status"""
+    status_colors = {
+        "Aprobada": "#10b981",
+        "Rechazada": "#ef4444",
+        "Pendiente": "#f59e0b"
+    }
+    color = status_colors.get(status, "#3C65AB")
+
+    html_content = f"""
+    <html>
+    <body style="font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f3f4f6; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb;">
+            <div style="background-color: {color}; padding: 30px; text-align: center;">
+                <h2 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800;">Estado de Solicitud: {status}</h2>
+            </div>
+            
+            <div style="padding: 40px;">
+                <p style="font-size: 16px; color: #111827;">Tu solicitud de vacaciones ha sido gestionada por <strong>{manager_name}</strong>.</p>
+                
+                <p style="font-size: 18px; font-weight: bold; color: {color}; margin: 20px 0;">Estado Actual: {status}</p>
+                
+                {f'<div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444; margin: 20px 0;"><p style="margin: 0; color: #991b1b;"><strong>Motivo:</strong> {reason}</p></div>' if reason else ''}
+                
+                <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">Puedes consultar los detalles en tu panel de empleado.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    _send_smtp_email(email_to, f"Actualización de Solicitud de Vacaciones: {status}", html_content, "vacation")
+
+async def send_vacation_status_notification(email_to: str, status: str, manager_name: str, reason: str | None = None):
+    """Async wrapper for sending vacation status update email"""
+    await run_in_threadpool(_send_vacation_status_email_sync, email_to, status, manager_name, reason)

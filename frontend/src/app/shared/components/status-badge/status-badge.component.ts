@@ -6,14 +6,7 @@ export type BadgeVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral' 
 @Component({
   selector: 'app-status-badge',
   imports: [NgIconComponent],
-  template: `
-    <span [class]="containerClass()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all">
-      @if (icon()) {
-        <ng-icon [name]="icon()!" [class]="iconClass()"></ng-icon>
-      }
-      <ng-content></ng-content>
-    </span>
-  `,
+  templateUrl: './status-badge.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class StatusBadgeComponent {

@@ -1,21 +1,19 @@
 # Development Dockerfile for FastAPI backend
-ARG PYTHON_VERSION=3.13-slim
+ARG PYTHON_VERSION=3.14-alpine
 FROM python:${PYTHON_VERSION}
 
 WORKDIR /app
 
-
 # Install system dependencies (as root)
-# Install system dependencies (as root)
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     gcc \
-    zlib1g-dev \
-    libjpeg-dev \
-    # Clean up to keep image small
-    && rm -rf /var/lib/apt/lists/*
+    musl-dev \
+    zlib-dev \
+    libjpeg-turbo-dev \
+    postgresql-dev
 
 # Create a non-root user
-RUN groupadd -r appuser && useradd -r -m -g appuser -u 1000 appuser
+RUN addgroup -S appuser && adduser -S -G appuser -u 1000 appuser
 
 # Switch to non-root user
 USER appuser

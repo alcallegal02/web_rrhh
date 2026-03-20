@@ -5,10 +5,9 @@ set -e
 # 775: Propietario(rwx), Grupo(rwx), Otros(r-x)
 echo "Configurando entorno de seguridad para volúmenes..."
 mkdir -p /media_data
-chown -R mediauser:mediauser /media_data
-chmod -R 775 /media_data
+chown -R mediauser:mediauser /media_data || echo "Warning: No se pudo cambiar dueño de /media_data (normal en Windows)"
+chmod -R 775 /media_data || echo "Warning: No se pudo cambiar permisos de /media_data (normal en Windows)"
 
-# Ejecutar el comando recibido (CMD) cambiando al usuario limitado 'mediauser'
-# su-exec es más seguro y eficiente que sudo/su en Docker
+# su-exec es más seguro y eficiente que sudo/su en Docker (disponible en Alpine)
 echo "Cediendo privilegios a mediauser y arrancando servicio..."
 exec su-exec mediauser "$@"

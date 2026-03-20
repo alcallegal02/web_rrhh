@@ -1,0 +1,86 @@
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+@media (max-width: 1280px) {
+  .filter-container {
+    text-align: center;
+    
+    .filter-label {
+      margin-left: 0 !important;
+      @apply w-full block;
+    }
+
+    .toggle-group {
+      @apply justify-center;
+    }
+    
+    .date-input-wrapper {
+      @apply max-w-md mx-auto;
+    }
+
+    .text-input-wrapper {
+      @apply max-w-xl mx-auto;
+    }
+  }
+}
+
+/* Toggle Buttons */
+.filter-toggle-btn {
+  @apply flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all duration-300 shadow-sm active:scale-95 overflow-hidden relative;
+  
+  &.active {
+    @apply bg-blue-500 text-white border-blue-500 shadow-md shadow-blue-500/20;
+    
+    ng-icon {
+      @apply text-white;
+    }
+  }
+
+  &:not(.active) {
+    @apply bg-gray-50 text-gray-400 border-gray-100 hover:border-blue-200 hover:text-gray-600;
+    
+    ng-icon {
+      @apply text-gray-300;
+    }
+  }
+
+  &::after {
+    content: '';
+    @apply absolute inset-0 bg-white opacity-0 transition-opacity duration-300;
+  }
+
+  &:hover::after {
+    @apply opacity-10;
+  }
+}
+
+/* Inputs */
+input, select {
+  &::placeholder {
+    @apply text-gray-300 font-medium;
+  }
+}
