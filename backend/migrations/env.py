@@ -42,10 +42,12 @@ sys.path.append(os.getcwd())
 
 # Try to get URL from environment first, or fall back to code config
 db_url = os.getenv("DATABASE_URL")
-if not db_url:
-    # Fallback: try to load from .env file directly if running locally without docker envs active
+    # Fallback: try to load from .env first, then .env.dev
     from dotenv import load_dotenv
-    load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env.dev"))
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+    if not os.path.exists(env_path):
+        env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env.dev")
+    load_dotenv(env_path)
     db_url = os.getenv("DATABASE_URL")
 
 # Fix asyncpg protocol

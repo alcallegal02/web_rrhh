@@ -57,20 +57,33 @@ export class VacationComponent {
   readonly convenioConfigResource = rxResource({
     stream: () => this.convenioService.getAllConfigs()
   });
-
   readonly holidaysResource = rxResource({
-    params: () => ({ year: this.currentYear() }),
-    stream: ({ params }) => forkJoin([
-        this.vacationService.getHolidays(params.year - 1),
-        this.vacationService.getHolidays(params.year),
-        this.vacationService.getHolidays(params.year + 1)
+    stream: () => forkJoin([
+      this.vacationService.getHolidays(this.currentYear() - 1),
+      this.vacationService.getHolidays(this.currentYear()),
+      this.vacationService.getHolidays(this.currentYear() + 1)
     ])
+  });
+  
+  readonly managedRequestsResource = rxResource({
+    stream: () => this.vacationService.getManagedRequests()
+  });
+
+  readonly managedStatsResource = rxResource({
+    stream: () => this.vacationService.getManagedStats()
   });
 
   // --- Computed States ---
   readonly requests = computed(() => this.requestsResource.value() ?? []);
+  readonly managedRequests = computed(() => this.managedRequestsResource.value() ?? []);
+  readonly managedStats = computed(() => this.managedStatsResource.value() ?? { total: 0, pending: 0, approved: 0, rejected: 0 });
   readonly balance = computed(() => this.balanceResource.value() ?? null);
   readonly leaveTypes = computed(() => this.leaveTypesResource.value() ?? []);
+  
+  readonly canManage = computed(() => {
+    const user = this.authService.user();
+    return user?.role === 'superadmin' || user?.role === 'rrhh' || (user?.managed_users_count ?? 0) > 0;
+  });
 
   readonly convenioConfig = computed(() => {
     const configs = this.convenioConfigResource.value();
@@ -88,29 +101,38 @@ export class VacationComponent {
 
   // --- UI State ---
   readonly loading = signal(false);
-  readonly selectedDay = signal<CalendarDay | null>(null);
+  readonly selectedRange = signal<{start: CalendarDay, end: CalendarDay} | null>(null);
   readonly selectedRequest = signal<VacationRequest | null>(null);
   readonly selectedPolicyId = signal<string | null>(null);
   readonly modalForceOpen = signal(false);
+  readonly selectedTab = signal<'mine' | 'team'>('mine');
 
-  // El estado del modal es puramente derivado (Declarativo)
-  readonly isModalOpen = computed(() => this.selectedDay() !== null || this.modalForceOpen());
+  // El estado del modal pasa a ser puramente para Edición manual, no auto-popup por seleccionar
+  readonly isModalOpen = computed(() => this.modalForceOpen());
 
   // --- Form State (linkedSignal para reseteo automático) ---
-  readonly newRequest = linkedSignal<CalendarDay | null, VacationRequestDraft>({
-    source: this.selectedDay,
-    computation: (day) => {
-      if (!day) {
+  readonly newRequest = linkedSignal<{start: CalendarDay, end: CalendarDay} | null, VacationRequestDraft>({
+    source: this.selectedRange,
+    computation: (range) => {
+      if (!range) {
         return {
           id: '', request_type: 'vacaciones', leave_type_id: '', start_date: '', end_date: '',
           days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
         };
       }
-      const d = day.date;
-      const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}T08:00`;
+      
+      const s = range.start.date;
+      const e = range.end.date;
+      
+      const startStr = `${s.getFullYear()}-${(s.getMonth() + 1).toString().padStart(2, '0')}-${s.getDate().toString().padStart(2, '0')}T08:00`;
+      const endStr = `${e.getFullYear()}-${(e.getMonth() + 1).toString().padStart(2, '0')}-${e.getDate().toString().padStart(2, '0')}T18:00`;
+      
+      const diffTime = Math.abs(e.getTime() - s.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
       return {
-        id: '', request_type: 'vacaciones', leave_type_id: '', start_date: dateStr, end_date: dateStr,
-        days_requested: 1, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
+        id: '', request_type: 'vacaciones', leave_type_id: '', start_date: startStr, end_date: endStr,
+        days_requested: diffDays, assigned_manager_id: '', assigned_rrhh_id: '', description: '', file_url: '', attachments: []
       };
     }
   });
@@ -174,18 +196,22 @@ export class VacationComponent {
     this.selectedPolicyId.set(id);
   }
 
-  openDayModal(day: CalendarDay): void {
-    if (day.day === 0) return;
-    this.selectedDay.set(day);
+  openRangeModal(range: {start: CalendarDay, end: CalendarDay}): void {
+    this.selectedRange.set(range);
+    
+    // Auto scroll down to the bottom form smoothly
+    setTimeout(() => {
+        document.getElementById('new-request-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   }
 
   closeDayModal(): void {
-    this.selectedDay.set(null);
+    this.selectedRange.set(null);
     this.modalForceOpen.set(false);
   }
 
   resetNewRequest(): void {
-    this.selectedDay.set(null);
+    this.selectedRange.set(null);
   }
 
   openRequestDetails(request: VacationRequest): void {
@@ -301,5 +327,70 @@ export class VacationComponent {
       uploaded.push({ file_url: res.url, file_original_name: res.original_filename });
     }
     return uploaded;
+  }
+
+  toggleTab(tab: 'mine' | 'team'): void {
+    this.selectedTab.set(tab);
+    if (tab === 'team') {
+      this.managedRequestsResource.reload();
+      this.managedStatsResource.reload();
+    } else {
+      this.requestsResource.reload();
+      this.balanceResource.reload();
+    }
+  }
+
+  async approveRequest(req: VacationRequest) {
+    const userRole = this.authService.user()?.role;
+    const isRRHH = userRole === 'rrhh' || userRole === 'superadmin';
+    const actionStr = isRRHH ? 'Aprobar definitivamente' : 'Validar como Responsable';
+    
+    const confirmed = await this.dialogService.question(
+      actionStr,
+      `¿Estás seguro de validar esta solicitud de ${req.user_name || 'empleado'}?`
+    );
+    if (!confirmed) return;
+
+    this.loading.set(true);
+    const obs = isRRHH 
+      ? this.vacationService.approveRRHH(req.id)
+      : this.vacationService.approveManager(req.id);
+      
+    obs.subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.closeRequestDetails();
+        this.managedRequestsResource.reload();
+        this.managedStatsResource.reload();
+        this.requestsResource.reload();
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  async rejectRequest(req: VacationRequest) {
+    const reason = prompt('Indica el motivo del rechazo:');
+    if (reason === null) return;
+    if (!reason.trim()) {
+        alert('El motivo es obligatorio');
+        return;
+    }
+
+    const userRole = this.authService.user()?.role;
+    const isRRHH = userRole === 'rrhh' || userRole === 'superadmin';
+    this.loading.set(true);
+    const obs = isRRHH
+      ? this.vacationService.rejectRRHH(req.id, reason)
+      : this.vacationService.rejectManager(req.id, reason);
+
+    obs.subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.closeRequestDetails();
+        this.managedRequestsResource.reload();
+        this.managedStatsResource.reload();
+      },
+      error: () => this.loading.set(false)
+    });
   }
 }

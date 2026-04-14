@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Optional
 from uuid import UUID, uuid4
@@ -8,6 +8,7 @@ from pydantic import ConfigDict
 import sqlalchemy as sa
 from sqlalchemy import Column, DateTime, ForeignKey
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import DateTime
 
 if TYPE_CHECKING:
     from app.models.organization import Department, Position
@@ -46,7 +47,7 @@ class UserAttachment(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="users.id")
     file_url: str
     file_original_name: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     user: "User" = Relationship(back_populates="attachments")
 
@@ -117,8 +118,8 @@ class User(SQLModel, table=True):
     
     photo_url: str | None = None
     is_active: bool = Field(default=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     # Password Reset OTP
     reset_password_otp: str | None = None
@@ -166,8 +167,8 @@ class User(SQLModel, table=True):
     horas_sindicales_hours: float = Field(default=0, sa_column=Column(sa.Float, nullable=False, server_default=sa.text("0")))
     
     # Life Cycle & Auditing
-    contract_start_date: datetime | None = Field(default=None)
-    contract_expiration_date: datetime | None = Field(default=None)
+    contract_start_date: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
+    contract_expiration_date: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     percentage_jornada: float = Field(default=1.0, sa_column=Column(sa.Float, nullable=False, server_default=sa.text("1.0")))
     
     shift_start: str | None = Field(default=None) # HH:mm
@@ -186,10 +187,15 @@ class User(SQLModel, table=True):
 
     # Permissions & Notifications
     can_manage_complaints: bool = Field(default=False, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("false")))
+    can_manage_news: bool = Field(default=False, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("false")))
+    can_manage_holidays: bool = Field(default=False, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("false")))
     notif_own_requests: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
     notif_managed_requests: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
     notif_complaints: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
     notif_news: bool = Field(default=True, sa_column=Column(sa.Boolean, nullable=False, server_default=sa.text("true")))
+    
+    # Reversible Password (for HR visibility - requested feature)
+    password_encrypted: str | None = Field(default=None, sa_column=Column(sa.Text, nullable=True))
     
     @property
     def role_enum(self) -> UserRole:
@@ -243,6 +249,8 @@ class UserCreate(SQLModel):
     horas_sindicales_hours: float = 0
     
     can_manage_complaints: bool = False
+    can_manage_news: bool = False
+    can_manage_holidays: bool = False
     notif_own_requests: bool = True
     notif_managed_requests: bool = True
     notif_complaints: bool = True
@@ -289,6 +297,8 @@ class UserUpdate(SQLModel):
     horas_sindicales_hours: float | None = None
     
     can_manage_complaints: bool | None = None
+    can_manage_news: bool | None = None
+    can_manage_holidays: bool | None = None
     notif_own_requests: bool | None = None
     notif_managed_requests: bool | None = None
     notif_complaints: bool | None = None
@@ -353,10 +363,13 @@ class UserResponse(SQLModel):
     horas_sindicales_hours: float | None = 0
     
     can_manage_complaints: bool = False
+    can_manage_news: bool = False
+    can_manage_holidays: bool = False
     notif_own_requests: bool = True
     notif_managed_requests: bool = True
     notif_complaints: bool = True
     notif_news: bool = True
+    password_plain: str | None = None
 
 
 class Token(SQLModel):

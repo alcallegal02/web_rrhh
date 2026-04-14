@@ -1,12 +1,10 @@
 # Multi-stage build for Angular frontend (Production)
-ARG NODE_VERSION=22-alpine
+ARG NODE_VERSION=24-alpine
 ARG NGINX_VERSION=alpine
 
 # Build stage
 FROM node:${NODE_VERSION} AS builder
 
-# Upgrade npm to latest to avoid version notice
-RUN npm install -g npm@latest
 
 WORKDIR /app
 

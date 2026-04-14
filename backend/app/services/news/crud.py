@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from fastapi import BackgroundTasks
+from fastapi import BackgroundTasks, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import select
@@ -15,7 +15,7 @@ from app.utils.html_sanitizer import sanitize_html
 from app.utils.email import send_news_notification
 
 
-async def _notify_users_new_news(session: AsyncSession, news: News, background_tasks: BackgroundTasks):
+async def _notify_users_new_news(session: AsyncSession, news: News, background_tasks: BackgroundTasks, request: Request | None = None):
     """Helper to notify all users with news notifications active"""
     # 1. Get all active users with notif_news = True
     result = await session.execute(
@@ -30,7 +30,8 @@ async def _notify_users_new_news(session: AsyncSession, news: News, background_t
             email, 
             news.title, 
             news.summary or "", 
-            str(news.id)
+            str(news.id),
+            request
         )
 
 
@@ -39,7 +40,8 @@ async def create_news(
     author_id: str,
     news_data: NewsCreate,
     background_tasks: BackgroundTasks | None = None,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    request: Request | None = None
 ) -> News:
     """Create a new news item"""
     author_uuid = UUID(author_id) if isinstance(author_id, str) else author_id
@@ -102,7 +104,7 @@ async def create_news(
 
     # If published, notify users
     if is_publishing and background_tasks:
-        await _notify_users_new_news(session, reloaded_news, background_tasks)
+        await _notify_users_new_news(session, reloaded_news, background_tasks, request)
 
     # Audit Log
     await log_action(
@@ -132,7 +134,8 @@ async def update_news_status(
     new_status: str,
     user_id: str,
     background_tasks: BackgroundTasks | None = None,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    request: Request | None = None
 ) -> News | None:
     """Update news status"""
     news_uuid = UUID(news_id) if isinstance(news_id, str) else news_id
@@ -182,7 +185,7 @@ async def update_news_status(
 
     # If it just became published, notify users
     if is_becoming_published and background_tasks:
-        await _notify_users_new_news(session, reloaded_news, background_tasks)
+        await _notify_users_new_news(session, reloaded_news, background_tasks, request)
     
     return reloaded_news
 
@@ -257,7 +260,8 @@ async def update_news(
     news_data: dict,
     current_user_id: str,
     background_tasks: BackgroundTasks | None = None,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    request: Request | None = None
 ) -> News | None:
     """Update a news item"""
     news_uuid = UUID(news_id) if isinstance(news_id, str) else news_id
@@ -414,6 +418,6 @@ async def update_news(
 
     # If it just became published, notify users
     if is_becoming_published and background_tasks:
-        await _notify_users_new_news(session, reloaded_news, background_tasks)
+        await _notify_users_new_news(session, reloaded_news, background_tasks, request)
     
     return reloaded_news

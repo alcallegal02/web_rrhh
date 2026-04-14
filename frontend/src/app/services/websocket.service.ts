@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { AuthService } from './auth.service';
+import { NotificationService } from './notification.service';
 import { environment } from '../config/environment';
 
 export interface WebSocketMessage {
@@ -15,6 +16,7 @@ export interface WebSocketMessage {
 export class WebSocketService {
   // Inject services using inject() function (Angular 21 modern syntax)
   private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
 
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
@@ -32,12 +34,16 @@ export class WebSocketService {
   // Public observable for the Store
   messages$ = this.messageSubject.asObservable();
 
-  connect(): void {
-    const token = this.authService.getToken();
-    if (!token || this.authService.isTokenExpired(token)) {
-      console.warn('Cannot connect WebSocket: No authentication token or token expired');
-      this._connected.set(false);
-      return;
+  connect(publicToken?: string): void {
+    let token: string | null = publicToken || null;
+    
+    if (!token) {
+      token = this.authService.getToken();
+      if (!token || this.authService.isTokenExpired(token)) {
+        console.warn('Cannot connect WebSocket: No authentication token or token expired');
+        this._connected.set(false);
+        return;
+      }
     }
 
     try {
@@ -126,10 +132,15 @@ export class WebSocketService {
       case 'db_update':
         // Handled by StoreService
         break;
-      case 'COMPLAINT_CREATED':
-      case 'COMPLAINT_COMMENT_ADDED':
       case 'COMPLAINT_STATUS_CHANGED':
-        // Handled by individual components listening to messages$
+      case 'COMPLAINT_CREATED':
+      case 'COMPLAINT_UPDATED':
+      case 'COMPLAINT_DELETED':
+      case 'COMPLAINT_COMMENT_ADDED':
+        // Handled by individual services listening to messages$ (e.g., StoreService, ComplaintService)
+        break;
+      case 'notification':
+        this.notificationService.addNotificationFromSocket(message);
         break;
       default:
         console.warn('Unknown message type:', message.type);

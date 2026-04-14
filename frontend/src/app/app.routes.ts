@@ -1,4 +1,6 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Routes, Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
 import { authGuard } from './guards/auth.guard';
 import { rrhhGuard } from './guards/rrhh.guard';
 import { adminGuard } from './guards/admin.guard';
@@ -33,7 +35,7 @@ export const routes: Routes = [
   {
     path: 'users',
     loadComponent: () => import('./components/users/users.component').then(m => m.UsersComponent),
-    canActivate: [adminGuard],
+    canActivate: [() => inject(AuthService).canManageUsers() || inject(Router).createUrlTree(['/dashboard'])],
     data: { title: 'Usuarios' }
   },
   {
@@ -51,7 +53,7 @@ export const routes: Routes = [
   {
     path: 'news/manage',
     loadComponent: () => import('./components/news/news.component').then(m => m.NewsComponent),
-    canActivate: [rrhhGuard],
+    canActivate: [() => inject(AuthService).canManageNews() || inject(Router).createUrlTree(['/dashboard'])],
     data: { title: 'Gestión de Noticias' }
   },
   {
@@ -63,13 +65,13 @@ export const routes: Routes = [
   {
     path: 'complaint/admin',
     loadComponent: () => import('./components/complaint/pages/management/complaint-management.component').then(m => m.ComplaintManagementComponent),
-    canActivate: [rrhhGuard],
+    canActivate: [() => inject(AuthService).canManageComplaints() || inject(Router).createUrlTree(['/dashboard'])],
     data: { title: 'Gestión de Denuncias' }
   },
   {
     path: 'calendar-config',
     loadComponent: () => import('./components/calendar-config/calendar-config.component').then(m => m.CalendarConfigComponent),
-    canActivate: [rrhhGuard],
+    canActivate: [() => inject(AuthService).canManageHolidays() || inject(Router).createUrlTree(['/dashboard'])],
     data: { title: 'Configuración Calendario' }
   },
   {
@@ -90,19 +92,19 @@ export const routes: Routes = [
   {
     path: 'audit',
     loadComponent: () => import('./components/audit/audit.component').then(m => m.AuditComponent),
-    canActivate: [rrhhGuard],
+    canActivate: [() => inject(AuthService).isSuperadmin() || inject(Router).createUrlTree(['/dashboard'])],
     data: { title: 'Auditoría' }
   },
   {
     path: 'config/absence-types',
     loadComponent: () => import('./components/config/policy-config/policy-config.component').then(m => m.PolicyConfigComponent),
-    canActivate: [rrhhGuard],
+    canActivate: [() => inject(AuthService).isSuperadmin() || inject(Router).createUrlTree(['/dashboard'])],
     data: { title: 'Tipos de Ausencia' }
   },
   {
     path: 'config/absence-types/:id',
     loadComponent: () => import('./components/config/policy-config/policy-form/policy-form.component').then(m => m.PolicyFormComponent),
-    canActivate: [rrhhGuard],
+    canActivate: [() => inject(AuthService).isSuperadmin() || inject(Router).createUrlTree(['/dashboard'])],
     data: { title: 'Editar Tipo de Ausencia' }
   },
   { path: '**', redirectTo: '/login' }

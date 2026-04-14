@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     container_name: web_rrhh_postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -9,8 +9,6 @@ services:
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -65,39 +63,21 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: web_rrhh_backend
+    env_file:
+      - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      MEDIA_SERVICE_URL: http://media:8000
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      SECRET_KEY: ${SECRET_KEY}
-      ALGORITHM: ${ALGORITHM:-HS256}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
-      CORS_ORIGINS: ${CORS_ORIGINS}
-      ENVIRONMENT: ${ENVIRONMENT:-production}
-      MAX_IMAGE_SIZE_MB: ${MAX_IMAGE_SIZE_MB}
-      MAX_DOCUMENT_SIZE_MB: ${MAX_DOCUMENT_SIZE_MB}
-      MAX_COMPLAINT_PAYLOAD_MB: ${MAX_COMPLAINT_PAYLOAD_MB}
-      MAX_NEWS_PAYLOAD_MB: ${MAX_NEWS_PAYLOAD_MB}
-      DAILY_UPLOAD_QUOTA_MB: ${DAILY_UPLOAD_QUOTA_MB}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      SMTP_TLS: ${SMTP_TLS}
-      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME}
-      EMAIL_FROM_ADDRESS: ${EMAIL_FROM_ADDRESS}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_INTERNAL_PORT}/${POSTGRES_DB}
+      MEDIA_SERVICE_URL: http://${MEDIA_HOST}:${MEDIA_INTERNAL_PORT}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_INTERNAL_PORT}
+      ENVIRONMENT: production
     volumes:
-      - ./backend:/app
-      - ./media_data:/app/media_data
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - ./media_data:/media_data
     depends_on:
       postgres:
         condition: service_healthy
     networks:
       - web_rrhh_network
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
     build:
@@ -105,33 +85,44 @@ services:
       dockerfile: Dockerfile
     container_name: web_rrhh_frontend
     environment:
-      API_URL: ${API_URL:-http://localhost/api}
-      WS_URL: ${WS_URL:-ws://localhost/ws}
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    ports:
-      - "${FRONTEND_PORT:-4200}:4200"
+      API_URL: ${API_URL:-/api}
+      WS_URL: ${WS_URL:-/ws}
     depends_on:
       - backend
     networks:
       - web_rrhh_network
-    command: npm start
 
   nginx:
     image: nginx:alpine
     container_name: web_rrhh_nginx
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/nginx.prod.template:/etc/nginx/templates/nginx.conf.template:ro
       - ./nginx/error_pages:/usr/share/nginx/error_pages:ro
       - ./media_data:/media:ro
+    environment:
+      - NGINX_INTERNAL_PORT=${NGINX_INTERNAL_PORT}
+      - FRONTEND_HOST=${FRONTEND_HOST}
+      - FRONTEND_PROD_PORT=${FRONTEND_PROD_PORT}
+      - BACKEND_HOST=${BACKEND_HOST}
+      - BACKEND_PORT=${BACKEND_INTERNAL_PORT}
+      - CSP_FRAME_SOURCES=${CSP_FRAME_SOURCES}
     ports:
-      - "${HTTP_PORT:-80}:80"
+      - "${NGINX_EXTERNAL_PORT}:${NGINX_INTERNAL_PORT}"
     depends_on:
       - frontend
       - backend
     networks:
       - web_rrhh_network
+    # Security Hardening (Added tmpfs for templates)
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/cache/nginx
+      - /var/log/nginx
+      - /var/run
+      - /etc/nginx/conf.d
+
+
 
 volumes:
   redis_data:

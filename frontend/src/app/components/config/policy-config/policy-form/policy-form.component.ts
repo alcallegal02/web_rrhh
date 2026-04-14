@@ -83,7 +83,20 @@ export class PolicyFormComponent {
         color: field('#3B82F6'),
         icon: field(''),
         is_featured: field(false),
-        is_public_dashboard: field(false)
+        is_public_dashboard: field(false),
+        
+        // Advanced Constraints
+        min_advance_notice_days: field(0),
+        requires_attachment: field(false),
+        min_consecutive_days: field<number | null>(null),
+        max_consecutive_days: field<number | null>(null),
+
+        // Casuísticas Avanzadas
+        min_seniority_months: field(0),
+        max_days_from_event: field<number | null>(null),
+        justification_deadline_days: field(0),
+        attachment_type_label: field<string | null>(null),
+        mandatory_request_fields: field<string | null>(null)
     });
 
     constructor() {
@@ -120,6 +133,46 @@ export class PolicyFormComponent {
         });
     }
 
+    hasMandatoryField(fieldName: string): boolean {
+        try {
+            const val = this.form.get('mandatory_request_fields')?.value;
+            if (!val) return false;
+            const arr = JSON.parse(val);
+            return Array.isArray(arr) && arr.includes(fieldName);
+        } catch {
+            return false;
+        }
+    }
+
+    toggleMandatoryField(fieldName: string, event: Event): void {
+        const isChecked = (event.target as HTMLInputElement).checked;
+        let arr: string[] = [];
+        try {
+            const val = this.form.get('mandatory_request_fields')?.value;
+            if (val) arr = JSON.parse(val);
+            if (!Array.isArray(arr)) arr = [];
+        } catch {
+            arr = [];
+        }
+
+        const addOrRemove = (val: string, add: boolean) => {
+            if (add) {
+                if (!arr.includes(val)) arr.push(val);
+            } else {
+                arr = arr.filter(f => f !== val);
+            }
+        };
+
+        if (fieldName === 'child_data') {
+            addOrRemove('child_name', isChecked);
+            addOrRemove('child_birthdate', isChecked);
+        } else {
+            addOrRemove(fieldName, isChecked);
+        }
+
+        this.form.get('mandatory_request_fields')?.setValue(arr.length > 0 ? JSON.stringify(arr) : null);
+    }
+
     async onSubmit() {
         if (this.form.invalid) return;
 
@@ -131,6 +184,11 @@ export class PolicyFormComponent {
             max_usos_por_periodo: val.max_usos_por_periodo || undefined,
             max_duration_per_day: val.max_duration_per_day || undefined,
             requires_document_type: val.requires_document_type || undefined,
+            min_consecutive_days: val.min_consecutive_days || undefined,
+            max_consecutive_days: val.max_consecutive_days || undefined,
+            max_days_from_event: val.max_days_from_event || undefined,
+            attachment_type_label: val.attachment_type_label || undefined,
+            mandatory_request_fields: val.mandatory_request_fields || undefined,
             color: val.color || undefined,
             icon: val.icon || undefined
         } as PermissionPolicyCreate;

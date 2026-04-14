@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import ConfigDict
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import DateTime
 
 
 class ComplaintStatus(str, Enum):
@@ -54,7 +55,7 @@ class ComplaintAttachment(SQLModel, table=True):
     complaint_id: UUID = Field(foreign_key="complaints.id")
     file_url: str
     file_original_name: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     complaint: "Complaint" = Relationship(back_populates="attachments")
 
@@ -66,7 +67,7 @@ class CommentAttachment(SQLModel, table=True):
     comment_id: UUID = Field(foreign_key="complaint_comments.id")
     file_url: str
     file_original_name: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     comment: "ComplaintComment" = Relationship(back_populates="attachments")
 
@@ -80,7 +81,7 @@ class ComplaintComment(SQLModel, table=True):
     content: str
     is_public: bool = Field(default=True)
     complaint_status: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     complaint: "Complaint" = Relationship(back_populates="comments")
     author: Optional["User"] = Relationship()
@@ -100,8 +101,8 @@ class Complaint(SQLModel, table=True):
     status_public_description: str | None = None
     admin_response: str | None = None
     access_token: str = Field(index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True, sa_type=DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
 
     attachments: List["ComplaintAttachment"] = Relationship(back_populates="complaint", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     comments: List["ComplaintComment"] = Relationship(back_populates="complaint", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
@@ -153,4 +154,4 @@ class ComplaintStatusLog(SQLModel, table=True):
     new_status: str
     admin_notes: str | None = None
     changed_by_id: UUID = Field(foreign_key="users.id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))

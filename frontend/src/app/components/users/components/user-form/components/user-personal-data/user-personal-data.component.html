@@ -88,12 +88,21 @@
                     </div>
                 </div>
             </label>
-            <input class="input-field-new" [ngModel]="form().password" (ngModelChange)="updateField('password', $event)"
-                name="password" [required]="!form().id" type="password"
-                [placeholder]="form().id ? '••••••••' : 'Indique contraseña...'" />
-            @if (form().id) {
-            <p class="text-[10px] text-gray-400 mt-1 italic">Solo rellene para cambiar la actual.</p>
-            }
+            <div class="relative">
+                <input class="input-field-new pr-10" 
+                    [ngModel]="form().password" 
+                    (ngModelChange)="updateField('password', $event)"
+                    name="password" 
+                    [required]="!form().id" 
+                    [type]="showPassword() ? 'text' : 'password'"
+                    [placeholder]="form().id ? '••••••••' : 'Indique contraseña...'" />
+                
+                <button type="button" 
+                    (click)="togglePasswordVisibility()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors p-1">
+                    <ng-icon [name]="showPassword() ? 'lucideEyeOff' : 'lucideEye'" class="text-lg"></ng-icon>
+                </button>
+            </div>
         </div>
     </div>
 </div>

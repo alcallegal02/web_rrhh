@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from uuid import UUID, uuid4
 
 from pydantic import ConfigDict
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import DateTime
 
 
 class NewsStatus(str, Enum):
@@ -36,7 +37,7 @@ class NewsAttachment(SQLModel, table=True):
     news_id: UUID = Field(foreign_key="news.id")
     file_url: str
     file_original_name: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     news: "News" = Relationship(back_populates="attachments")
 
@@ -47,7 +48,7 @@ class NewsCarouselImage(SQLModel, table=True):
     news_id: UUID = Field(foreign_key="news.id")
     file_url: str
     order: int = Field(default=0)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     news: "News" = Relationship(back_populates="carousel_images")
 
@@ -61,9 +62,9 @@ class News(SQLModel, table=True):
     cover_image_url: str | None = None
     author_id: UUID = Field(foreign_key="users.id", index=True)
     status: str = Field(default="borrador", index=True)
-    publish_date: datetime | None = Field(default=None, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    publish_date: datetime | None = Field(default=None, index=True, sa_type=DateTime(timezone=True))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     attachments: list["NewsAttachment"] = Relationship(back_populates="news", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     carousel_images: list["NewsCarouselImage"] = Relationship(back_populates="news", sa_relationship_kwargs={"cascade": "all, delete-orphan"})

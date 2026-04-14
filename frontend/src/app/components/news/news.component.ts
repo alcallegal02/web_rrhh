@@ -158,11 +158,12 @@ export class NewsComponent {
     this.loading.set(true);
     const id = this.editingNewsId();
 
-    // Map null to undefined for cover_image_url to match NewsCreate/Partial<NewsCreate>
-    const payload = {
-      ...formData,
-      cover_image_url: formData.cover_image_url === null ? undefined : formData.cover_image_url
-    } as any;
+    // Clean payload: Remove empty fields so the backend uses default None/null values
+    const payload: any = { ...formData };
+    
+    if (!payload.publish_date) delete payload.publish_date;
+    if (!payload.cover_image_url) delete payload.cover_image_url;
+    if (!payload.summary) delete payload.summary;
 
     const request$ = id 
       ? this.newsService.updateNews(id, payload)

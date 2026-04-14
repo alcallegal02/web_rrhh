@@ -1,4 +1,4 @@
-import { Component, signal, inject, viewChild, ChangeDetectionStrategy, computed } from '@angular/core';
+import { Component, signal, inject, viewChild, ChangeDetectionStrategy, computed, effect } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,8 +19,9 @@ import { FilePreviewModalComponent } from '../../../../shared/components/file-pr
 import { environment } from '../../../../config/environment';
 import { ConfigService } from '../../../../services/config';
 import { ComplaintService } from '../../../../services/complaint.service';
+import { WebSocketService } from '../../../../services/websocket.service';
 import { Complaint, ComplaintComment } from '../../../../models/app.models';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { timer, switchMap, of } from 'rxjs';
 import * as ComplaintUtils from '../../utils/complaint.utils';
 
@@ -35,7 +36,8 @@ import * as ComplaintUtils from '../../utils/complaint.utils';
       lucideDownload, lucideCalendar, lucideRefreshCw, lucideShieldCheck,
       lucideScale, lucideInfo, lucideMessageSquare, lucideTriangleAlert,
       lucideShield, lucideSend, lucidePaperclip, lucideX,
-      lucideMaximize, lucideCopy, lucideEyeOff
+      lucideMaximize, lucideCopy, lucideEyeOff, lucideClock, lucidePackageCheck,
+      lucideShieldAlert, lucideMessageSquareText, lucideCheckCircle, lucideXCircle
     })
   ],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -46,10 +48,35 @@ export class ComplaintStatusComponent {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly configService = inject(ConfigService);
   private readonly complaintService = inject(ComplaintService);
+  private readonly wsService = inject(WebSocketService);
 
   // --- Estado de búsqueda (parámetros de la query) ---
   code = signal(this.route.snapshot.paramMap.get('code') ?? '');
   token = signal(this.route.snapshot.queryParamMap.get('token') ?? '');
+
+  constructor() {
+    // Escuchar mensajes en tiempo real vía WebSocket
+    this.wsService.messages$.pipe(
+      takeUntilDestroyed()
+    ).subscribe(msg => {
+      const complaintId = this.complaint()?.id;
+      if (complaintId && (msg.type === 'COMPLAINT_COMMENT_ADDED' || msg.type === 'COMPLAINT_STATUS_CHANGED')) {
+        // Solo recargar si el mensaje es para esta denuncia específica
+        if (msg.data?.complaint_id === complaintId) {
+          this.complaintResource.reload();
+        }
+      }
+    });
+
+    // Efecto para conectar al WS cuando tengamos el token de acceso
+    effect(() => {
+      const currentToken = this.token();
+      if (currentToken) {
+        // Conectar como usuario "público" usando el access_token de la denuncia
+        this.wsService.connect(`public-${currentToken}`);
+      }
+    });
+  }
 
   // Params como señal derivada para el resource
   private readonly queryParams = computed(() => ({
@@ -57,21 +84,18 @@ export class ComplaintStatusComponent {
     token: this.token()
   }));
 
-  // --- Resource API: reemplaza el patrón Subscription + OnDestroy + interval ---
-  // rxResource gestiona el ciclo de vida automáticamente; el polling de 20s
-  // se implementa con timer() como stream reactivo dentro del stream del resource.
+  // --- Resource API ---
   private readonly complaintResource = rxResource({
     params: () => {
       const { code, token } = this.queryParams();
-      // Solo lanzar la petición si hay credenciales válidas
       if (!code || !token) return null;
       return { code, token };
     },
     stream: (params: { params: { code: string, token: string } | null }) => {
       if (!params.params) return of(null);
       const { code, token } = params.params;
-      // Poll cada 20s: timer(0, 20000) emite inmediatamente y luego cada 20s
-      return timer(0, 20_000).pipe(
+      // Reducimos el polling a 60s ya que ahora tenemos WebSockets (esto queda como fallback)
+      return timer(0, 60_000).pipe(
         switchMap(() => this.complaintService.getComplaintStatus(code, token))
       );
     }

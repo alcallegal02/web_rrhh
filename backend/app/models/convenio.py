@@ -1,8 +1,8 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
-
+from sqlalchemy import DateTime
 
 class ConvenioConfig(SQLModel, table=True):
     __tablename__ = "convenio_config"
@@ -23,8 +23,8 @@ class ConvenioConfig(SQLModel, table=True):
     valid_from: date = Field(default_factory=date.today)
     valid_to: date = Field(default_factory=date.today)
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
 
 class ConvenioConfigCreate(SQLModel):
     year_reference: int

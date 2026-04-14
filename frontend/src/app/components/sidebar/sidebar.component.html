@@ -71,7 +71,7 @@
             }
         </a>
 
-        @if (authService.isRRHH() || authService.isSuperadmin()) {
+        @if (authService.hasAdminAccess()) {
         @if (!isCollapsed()) {
         <div class="pt-6 pb-2 px-4 text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] whitespace-nowrap">
             Administración</div>
@@ -80,6 +80,7 @@
         <div class="h-px bg-gray-100 my-4 mx-2"></div>
         }
 
+        @if (authService.canManageUsers()) {
         <a routerLink="/users" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
@@ -88,7 +89,9 @@
             <span class="whitespace-nowrap">Usuarios</span>
             }
         </a>
+        }
 
+        @if (authService.canManageComplaints()) {
         <a routerLink="/complaint/admin" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
@@ -97,8 +100,10 @@
             <span class="whitespace-nowrap">Denuncias</span>
             }
         </a>
+        }
 
 
+        @if (authService.canManageHolidays()) {
         <a routerLink="/calendar-config" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
@@ -108,7 +113,9 @@
             <span class="whitespace-nowrap">Calendario</span>
             }
         </a>
+        }
 
+        @if (authService.canManageNews()) {
         <a routerLink="/news/manage" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"
             (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
@@ -117,7 +124,9 @@
             <span class="whitespace-nowrap">Gestión Noticias</span>
             }
         </a>
+        }
 
+        @if (authService.isSuperadmin()) {
         <a routerLink="/config/absence-types"
             routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg" (click)="close()"
             class="flex items-center px-4 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 hover:text-inespasa-dark transition-all font-medium group">
@@ -137,7 +146,8 @@
             }
         </a>
         }
-        }
+    }
+}
 
         @if (!authService.isAuthenticated()) {
         <a routerLink="/login" routerLinkActive="bg-inespasa-dark text-white shadow-blue-900/10 shadow-lg"

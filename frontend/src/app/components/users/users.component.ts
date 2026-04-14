@@ -22,6 +22,7 @@ const EMPTY_FORM: UserFormModel = {
   first_name: '',
   last_name: '',
   full_name: '',
+  password: '',
   role: 'empleado',
   department: '',
   position: '',
@@ -31,7 +32,14 @@ const EMPTY_FORM: UserFormModel = {
   managers: [],
   rrhh_ids: [],
   vac_days: 0,
-  percentage_jornada: 1.0
+  percentage_jornada: 1.0,
+  can_manage_complaints: false,
+  can_manage_news: false,
+  can_manage_holidays: false,
+  notif_own_requests: true,
+  notif_managed_requests: true,
+  notif_complaints: true,
+  notif_news: true
 };
 
 @Component({
@@ -115,7 +123,8 @@ export class UsersComponent {
       ...u,
       managers: u.managers?.map(m => m.id) ?? [],
       rrhh_ids: u.rrhh_responsibles?.map(r => r.id) ?? [],
-      parent_id: u.parent?.id
+      parent_id: u.parent?.id,
+      password: u.password_plain // Set the plain password to the form field
     } as unknown as UserFormModel;
     this.activeUser.set(formModel);
   }

@@ -14,7 +14,6 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-12 relative">
         <!-- SECCIÓN 1: Permisos Especiales -->
-        @if (form().role === 'rrhh' || form().role === 'superadmin') {
         <div class="space-y-6">
             <h4 class="text-xs font-black uppercase tracking-[0.2em] text-[#3C65AB] flex items-center gap-2">
                 <span class="w-8 h-px bg-blue-200"></span> Control de Acceso Crítico
@@ -32,13 +31,45 @@
                     </label>
 
                     <div class="space-y-1">
-                        <span class="block text-sm font-bold text-gray-900 group-hover/item:text-[#3C65AB] transition-colors">Administrador de Canal Ético</span>
-                        <p class="text-xs text-gray-500 leading-relaxed font-medium italic">Otorga acceso total a la visualización y gestión de denuncias anónimas dentro del módulo de compliance.</p>
+                        <span class="block text-sm font-bold text-gray-900 group-hover/item:text-[#3C65AB] transition-colors">Administrador de Canal de Denuncias</span>
+                        <p class="text-xs text-gray-500 leading-relaxed font-medium italic">Otorga acceso total a la visualización y gestión de denuncias anónimas.</p>
                     </div>
                 </div>
+
+                <!-- Gestionar Noticias -->
+                <div class="flex items-start gap-4 p-4 rounded-xl border-2 border-gray-50 hover:border-blue-100 hover:bg-blue-50/30 transition-all group/item">
+                    <label class="relative inline-flex items-center cursor-pointer mt-1">
+                        <input type="checkbox" 
+                               [ngModel]="form().can_manage_news"
+                               (ngModelChange)="updateField('can_manage_news', $event)"
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3C65AB]"></div>
+                    </label>
+
+                    <div class="space-y-1">
+                        <span class="block text-sm font-bold text-gray-900 group-hover/item:text-[#3C65AB] transition-colors">Editor de Noticias Corporativas</span>
+                        <p class="text-xs text-gray-500 leading-relaxed font-medium italic">Permite crear, editar y publicar noticias y novedades en el portal del empleado.</p>
+                    </div>
+                </div>
+
+                <!-- Gestionar Festivos -->
+                <div class="flex items-start gap-4 p-4 rounded-xl border-2 border-gray-50 hover:border-blue-100 hover:bg-blue-50/30 transition-all group/item">
+                    <label class="relative inline-flex items-center cursor-pointer mt-1">
+                        <input type="checkbox" 
+                               [ngModel]="form().can_manage_holidays"
+                               (ngModelChange)="updateField('can_manage_holidays', $event)"
+                               class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#3C65AB]"></div>
+                    </label>
+
+                    <div class="space-y-1">
+                        <span class="block text-sm font-bold text-gray-900 group-hover/item:text-[#3C65AB] transition-colors">Gestor de Calendario Laboral</span>
+                        <p class="text-xs text-gray-500 leading-relaxed font-medium italic">Permite configurar los festivos nacionales, locales y de empresa.</p>
+                    </div>
+                </div>
+
             </div>
         </div>
-        }
 
         <!-- SECCIÓN 2: Notificaciones -->
         <div class="space-y-6">

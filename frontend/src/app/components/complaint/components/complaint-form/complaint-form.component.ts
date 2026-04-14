@@ -49,10 +49,20 @@ export class ComplaintFormComponent {
     loading = signal(false);
     submitted = signal(false);
     error = signal('');
+    // Touched states for validation feedback
+    titleTouched = signal(false);
+    descriptionTouched = signal(false);
+    emailTouched = signal(false);
+
     // Form State & Validation (Signal-based)
     isTitleValid = computed(() => this.title().trim().length >= 5);
     isDescriptionValid = computed(() => this.description().trim().length >= 20);
-    isFormValid = computed(() => this.isTitleValid() && this.isDescriptionValid() && !this.loading());
+    isEmailValid = computed(() => {
+        const email = this.optionalEmail().trim();
+        if (!email) return true;
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    });
+    isFormValid = computed(() => this.isTitleValid() && this.isDescriptionValid() && this.isEmailValid() && !this.loading());
 
     // Success State
     complaintCode = signal('');

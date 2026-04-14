@@ -24,11 +24,11 @@ async def create_holiday_endpoint(
     session: Annotated[AsyncSession, Depends(get_session)],
     holiday_data: HolidayCreate
 ):
-    """Create a new holiday (RRHH or SUPERADMIN)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    """Create a new holiday (RRHH or SUPERADMIN or user with permission)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_holidays:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH or Superadmin can create holidays"
+            detail="No tienes permiso para crear festivos"
         )
     
     holiday = await create_holiday(session, holiday_data, str(current_user.id), ip_address=request.client.host)
@@ -72,11 +72,11 @@ async def delete_holiday_endpoint(
     session: Annotated[AsyncSession, Depends(get_session)],
     holiday_id: str
 ):
-    """Delete a holiday (RRHH or SUPERADMIN)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    """Delete a holiday (RRHH or SUPERADMIN or user with permission)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_holidays:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH or Superadmin can delete holidays"
+            detail="No tienes permiso para eliminar festivos"
         )
     
     deleted = await delete_holiday(session, holiday_id, user_id=str(current_user.id), ip_address=request.client.host)
@@ -104,11 +104,11 @@ async def update_holiday_endpoint(
     holiday_id: str,
     holiday_data: HolidayUpdate
 ):
-    """Update a holiday (RRHH or SUPERADMIN)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    """Update a holiday (RRHH or SUPERADMIN or user with permission)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_holidays:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH or Superadmin can update holidays"
+            detail="No tienes permiso para actualizar festivos"
         )
     
     holiday = await update_holiday(session, holiday_id, holiday_data, user_id=str(current_user.id), ip_address=request.client.host)

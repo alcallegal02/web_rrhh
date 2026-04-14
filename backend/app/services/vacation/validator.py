@@ -1,10 +1,12 @@
-from datetime import datetime
+import json
+from datetime import datetime, date as date_type
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from app.models.policy import DurationUnit, PermissionPolicy
+from app.models.user import User
 from app.models.vacation import (
     RequestStatus,
     RequestType,
@@ -22,13 +24,23 @@ class VacationValidator:
     def __init__(self, session: AsyncSession, user_id: str):
         self.session = session
         self.user_id = user_id
-        # Cache balance to avoid multiple DB hits if validated multiple times in same flow
         self._balance = None
+        self._user: User | None = None
 
     async def get_balance(self):
         if not self._balance:
             self._balance = await get_vacation_balance(self.session, self.user_id)
         return self._balance
+
+    async def get_user(self) -> User | None:
+        """Load user once and cache for reuse within the same validation flow."""
+        if not self._user:
+            from uuid import UUID
+            result = await self.session.execute(
+                select(User).where(User.id == UUID(str(self.user_id)))
+            )
+            self._user = result.scalar_one_or_none()
+        return self._user
 
     async def validate_create_request(self, request_data: VacationRequestCreate, final_days: float):
         """Validate all rules for creating a request"""
@@ -141,10 +153,96 @@ class VacationValidator:
                 # Usually we warn or blocking happens at 'Approval' stage.
                 pass
             
-            # D. Child Age Limit (Logic would go here if we had Child DOB in User profile)
-            if policy.limit_age_child is not None:
-                # Todo: Fetch user children info and validate
-                pass
+            # D. Advance Notice Check
+            if policy.min_advance_notice_days > 0:
+                from datetime import date
+                today = date.today()
+                start_date = data.start_date.date() if isinstance(data.start_date, datetime) else data.start_date
+                days_notice = (start_date - today).days
+                if days_notice < policy.min_advance_notice_days:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Debe solicitar este permiso con al menos {policy.min_advance_notice_days} días de antelación."
+                    )
+
+            # E. Consecutive Days Check
+            if policy.min_consecutive_days and final_days < policy.min_consecutive_days:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"La duración mínima para este permiso es de {policy.min_consecutive_days} días."
+                )
+            if policy.max_consecutive_days and final_days > policy.max_consecutive_days:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"La duración máxima para este permiso es de {policy.max_consecutive_days} días."
+                )
+
+            # F. Mandatory Attachment check (for non-DRAFTS)
+            if policy.requires_attachment and data.status != RequestStatus.BORRADOR:
+                if not data.attachments or len(data.attachments) == 0:
+                     raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Es obligatorio adjuntar un justificante para este tipo de ausencia."
+                    )
+
+            # G. Antigüedad mínima
+            if policy.min_seniority_months and policy.min_seniority_months > 0:
+                user = await self.get_user()
+                if user and user.contract_start_date:
+                    from dateutil.relativedelta import relativedelta
+                    today = date_type.today()
+                    contract_date = user.contract_start_date.date() if isinstance(user.contract_start_date, datetime) else user.contract_start_date
+                    months_worked = (today.year - contract_date.year) * 12 + (today.month - contract_date.month)
+                    if months_worked < policy.min_seniority_months:
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=(
+                                f"Este permiso requiere al menos {policy.min_seniority_months} meses de antigüedad. "
+                                f"Actualmente llevas {months_worked} mes(es) en la empresa."
+                            )
+                        )
+
+            # H. Vinculación a fecha causal (ej: Matrimonio, Fallecimiento)
+            if policy.max_days_from_event and policy.max_days_from_event > 0:
+                if not data.causal_date:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"Este permiso requiere indicar la fecha del evento al que está vinculado."
+                    )
+                start = data.start_date.date() if isinstance(data.start_date, datetime) else data.start_date
+                diff = abs((start - data.causal_date).days)
+                if diff > policy.max_days_from_event:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=(
+                            f"La fecha de inicio de la ausencia debe estar dentro de los "
+                            f"{policy.max_days_from_event} días siguientes al evento (fecha del evento: {data.causal_date})."
+                        )
+                    )
+
+            # I. Campos obligatorios dinámicos definidos en la política
+            if policy.mandatory_request_fields:
+                try:
+                    required_fields: list[str] = json.loads(policy.mandatory_request_fields)
+                except (json.JSONDecodeError, TypeError):
+                    required_fields = []
+
+                FIELD_LABELS = {
+                    "causal_date": "Fecha del Evento",
+                    "description": "Descripción / Motivo",
+                    "child_name": "Nombre del Hijo/a",
+                    "child_birthdate": "Fecha de Nacimiento del Hijo/a",
+                    "telework_percentage": "Porcentaje de Teletrabajo",
+                }
+
+                for field in required_fields:
+                    value = getattr(data, field, None)
+                    if value is None or value == "":
+                        label = FIELD_LABELS.get(field, field)
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"El campo '{label}' es obligatorio para este tipo de ausencia."
+                        )
 
     async def _validate_balance_availability(self, data: VacationRequestCreate, final_days: float):
         """Check if user has enough days in balance"""

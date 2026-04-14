@@ -41,7 +41,7 @@
                 <div class="text-center text-[10px] font-bold text-gray-300 p-1">{{ dayName }}</div>
                 }
                 @for (day of month.days; track day.date) {
-                <div (click)="openDayModal(day)" [class]="getDayClass(day)"
+                <div (mousedown)="onMouseDown(day)" (mouseenter)="onMouseEnter(day)" [class]="getDayClass(day)"
                     class="relative aspect-square flex items-center justify-center text-xs font-bold rounded-lg cursor-pointer group transition-transform hover:scale-110 hover:z-10"
                     [title]="day.holiday?.name || day.request?.request_type || ''">
                     {{ day.day || '' }}

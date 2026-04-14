@@ -1,13 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Request
 from sqlmodel import select
 
 from app.models.user import User, UserRrhhLink
 from app.models.vacation import RequestStatus, VacationRequest
 from app.services.audit import log_action
 from app.utils.email import send_vacation_status_notification, send_vacation_notification
+from app.services.notification import create_notification, NotificationType
 
 
 async def get_pending_manager_requests(
@@ -56,7 +58,8 @@ async def approve_by_manager(
     session: AsyncSession,
     request_id: str,
     manager_id: str,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    fastapi_request: Request | None = None
 ) -> VacationRequest | None:
     """Approve a vacation request by manager"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
@@ -75,7 +78,7 @@ async def approve_by_manager(
     old_status = request.status
     request.status = RequestStatus.APPROVED_MANAGER
     request.manager_approved_by = manager_uuid
-    request.manager_approved_at = datetime.utcnow()
+    request.manager_approved_at = datetime.now(timezone.utc)
     
     # Check if RRHH has already approved
     if request.rrhh_approved_by:
@@ -107,7 +110,19 @@ async def approve_by_manager(
             await send_vacation_status_notification(
                 email_to=employee.email,
                 status=status_text,
-                manager_name=f"{manager.first_name} {manager.last_name}"
+                manager_name=f"{manager.first_name} {manager.last_name}",
+                request=fastapi_request
+            )
+            
+            # In-App Notification
+            await create_notification(
+                session=session,
+                user_id=request.user_id,
+                title="Solicitud Actualizada",
+                message=f"Tu solicitud de {request.request_type} ha sido {status_text.lower()}.",
+                notif_type=NotificationType.VACATION_APPROVED,
+                link=f"/vacations?id={request.id}",
+                metadata_payload={"request_id": str(request.id), "status": request.status}
             )
             if request.status == RequestStatus.APPROVED_MANAGER:
                 rrhh_email = None
@@ -125,7 +140,8 @@ async def approve_by_manager(
                         start_date=request.start_date.strftime("%d/%m/%Y"),
                         end_date=request.end_date.strftime("%d/%m/%Y") if request.end_date else None,
                         days=request.days_requested,
-                        type=request.request_type
+                        type=request.request_type,
+                        request=fastapi_request
                     )
     except Exception:
         pass
@@ -138,7 +154,8 @@ async def reject_by_manager(
     request_id: str,
     manager_id: str,
     reason: str,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    fastapi_request: Request | None = None
 ) -> VacationRequest | None:
     """Reject a vacation request by manager"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
@@ -157,7 +174,7 @@ async def reject_by_manager(
     old_status = request.status
     request.status = RequestStatus.REJECTED
     request.manager_approved_by = manager_uuid
-    request.manager_approved_at = datetime.utcnow()
+    request.manager_approved_at = datetime.now(timezone.utc)
     request.rejection_reason = reason
     
     # Audit Log
@@ -187,7 +204,19 @@ async def reject_by_manager(
                 email_to=employee.email,
                 status="Rechazada",
                 manager_name=f"{manager.first_name} {manager.last_name}",
-                reason=reason
+                reason=reason,
+                request=fastapi_request
+            )
+            
+            # In-App Notification
+            await create_notification(
+                session=session,
+                user_id=request.user_id,
+                title="Solicitud Rechazada",
+                message=f"Tu solicitud de {request.request_type} ha sido rechazada por tu responsable.",
+                notif_type=NotificationType.VACATION_REJECTED,
+                link=f"/vacations?id={request.id}",
+                metadata_payload={"request_id": str(request.id), "reason": reason}
             )
     except Exception:
         pass
@@ -199,7 +228,8 @@ async def approve_by_rrhh(
     session: AsyncSession,
     request_id: str,
     rrhh_id: str,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    fastapi_request: Request | None = None
 ) -> VacationRequest | None:
     """Approve a vacation request by RRHH (final approval)"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
@@ -234,7 +264,7 @@ async def approve_by_rrhh(
     old_status = request.status
     request.status = RequestStatus.APPROVED_RRHH
     request.rrhh_approved_by = rrhh_uuid
-    request.rrhh_approved_at = datetime.utcnow()
+    request.rrhh_approved_at = datetime.now(timezone.utc)
     
     if request.manager_approved_by:
         request.status = RequestStatus.ACCEPTED
@@ -265,7 +295,8 @@ async def approve_by_rrhh(
             await send_vacation_status_notification(
                 email_to=employee.email,
                 status=status_text,
-                manager_name=f"{rrhh.first_name} {rrhh.last_name}"
+                manager_name=f"{rrhh.first_name} {rrhh.last_name}",
+                request=fastapi_request
             )
     except Exception:
         pass
@@ -278,7 +309,8 @@ async def reject_by_rrhh(
     request_id: str,
     rrhh_id: str,
     reason: str,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    fastapi_request: Request | None = None
 ) -> VacationRequest | None:
     """Reject a vacation request by RRHH"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
@@ -313,7 +345,7 @@ async def reject_by_rrhh(
     old_status = request.status
     request.status = RequestStatus.REJECTED
     request.rrhh_approved_by = rrhh_uuid
-    request.rrhh_approved_at = datetime.utcnow()
+    request.rrhh_approved_at = datetime.now(timezone.utc)
     request.rejection_reason = reason
     
     # Audit Log
@@ -343,7 +375,8 @@ async def reject_by_rrhh(
                 email_to=employee.email,
                 status="Rechazada",
                 manager_name=f"{rrhh.first_name} {rrhh.last_name}",
-                reason=reason
+                reason=reason,
+                request=fastapi_request
             )
     except Exception:
         pass

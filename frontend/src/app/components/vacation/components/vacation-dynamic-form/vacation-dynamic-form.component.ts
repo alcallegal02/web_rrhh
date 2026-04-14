@@ -40,6 +40,7 @@ export class VacationDynamicFormComponent {
     managers = input<ResponsibleUser[]>([]);
     balance = input<VacationBalance | null>(null);
     loading = input<boolean>(false);
+    initialData = input<Partial<VacationRequestDraft> | null>(null);
 
     formSubmit = output<any>();
 
@@ -80,6 +81,20 @@ export class VacationDynamicFormComponent {
                 this.loadSchema(id);
             }
         });
+
+        effect(() => {
+            const data = this.initialData();
+            if (data && this.form) {
+                const patch: any = {};
+                if (data.start_date && this.form.contains('start_date')) patch.start_date = data.start_date;
+                if (data.end_date && this.form.contains('end_date')) patch.end_date = data.end_date;
+                if (data.days_requested !== undefined && this.form.contains('days_requested')) patch.days_requested = data.days_requested;
+                
+                if (Object.keys(patch).length > 0) {
+                    this.form.patchValue(patch, { emitEvent: false });
+                }
+            }
+        });
     }
 
     loadSchema(id: string) {
@@ -96,6 +111,8 @@ export class VacationDynamicFormComponent {
             days_requested: field(0, [Validators.required, Validators.min(0.1)])
         };
 
+        const initData = this.initialData() || {};
+        
         schema.fields.forEach(f => {
             if (f.type === 'file') return;
             if (f.name === 'days_requested') return; // Handled explicitly
@@ -105,7 +122,12 @@ export class VacationDynamicFormComponent {
             if (f.min !== undefined) validators.push(Validators.min(f.min));
             if (f.max !== undefined) validators.push(Validators.max(f.max));
 
-            groupDef[f.name] = field('', validators);
+            let defaultValue = '';
+            // Try to pick up initial start_date/end_date from calendar range selection
+            if (f.name === 'start_date' && initData.start_date) defaultValue = initData.start_date;
+            if (f.name === 'end_date' && initData.end_date) defaultValue = initData.end_date;
+            
+            groupDef[f.name] = field(defaultValue, validators);
         });
 
         this.form = form(groupDef);
@@ -127,18 +149,14 @@ export class VacationDynamicFormComponent {
         const dEnd = new Date(end);
         if (isNaN(dStart.getTime()) || isNaN(dEnd.getTime()) || dStart > dEnd) return;
 
-        // Simple calculation (can be refined to match backend business days logic)
-        let count = 0;
-        const cur = new Date(dStart);
-        cur.setHours(0, 0, 0, 0);
+        // Días naturales precisos (igual a la selección gráfica)
+        const curStart = new Date(dStart);
+        curStart.setHours(0, 0, 0, 0);
         const curEnd = new Date(dEnd);
         curEnd.setHours(0, 0, 0, 0);
 
-        while (cur <= curEnd) {
-            const day = cur.getDay();
-            if (day !== 0 && day !== 6) count++; // Simple skip weekends
-            cur.setDate(cur.getDate() + 1);
-        }
+        const diffTime = Math.abs(curEnd.getTime() - curStart.getTime());
+        const count = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
         this.form.patchValue({ days_requested: count }, { emitEvent: false });
     }

@@ -3,15 +3,30 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6 animate-fadeIn">
 
     <!-- Header Balance Info -->
-    <div class="bg-blue-900/40 border border-blue-500/30 p-4 rounded-2xl flex items-center justify-between">
+    <div class="bg-blue-900/40 border border-blue-500/30 p-4 rounded-2xl flex flex-col md:flex-row items-center md:items-start justify-between gap-4">
         <div>
             <h3 class="text-blue-300 font-black uppercase text-xs tracking-widest mb-1">{{ s.name }}</h3>
-            <p class="text-white text-lg font-bold">Saldo: {{ s.available_balance | number:'1.0-2' }} {{ s.unit ===
-                'days_work' ? 'días' : s.unit }}</p>
+            <p class="text-white text-lg font-bold">Saldo Inicial: {{ s.available_balance | number:'1.0-2' }} {{ s.unit.includes('days') ? 'días' : s.unit }}</p>
         </div>
+        
+        <!-- Projection Visualizer -->
+        @if (!isHourly()) {
+        <div class="flex items-center gap-3 bg-gray-900/50 p-2 rounded-xl border border-gray-800">
+            <div class="text-center px-4">
+                 <p class="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-0.5">Días a gastar</p>
+                 <p class="text-xl font-black text-amber-500">{{ form.get('days_requested')?.value || 0 }}</p>
+            </div>
+            <div class="h-8 w-[1px] bg-gray-700"></div>
+            <div class="text-center px-4">
+                 <p class="text-[9px] font-black uppercase text-blue-300 tracking-widest mb-0.5">Saldo Resultante</p>
+                 <p class="text-xl font-black text-white">{{ (s.available_balance - (form.get('days_requested')?.value || 0)) | number:'1.0-2' }}</p>
+            </div>
+        </div>
+        }
+
         @if (s.is_paid) {
         <div
-            class="bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter flex items-center gap-1">
+            class="bg-green-500/20 text-green-400 border border-green-500/30 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter flex items-center gap-1 self-start md:self-auto">
             <ng-icon name="lucideBanknote"></ng-icon> Retribuido
         </div>
         }
@@ -23,27 +38,33 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        <!-- Days/Hours Requested (Always present for calc) -->
+        <!-- Days/Hours Requested Input -->
+        @if (isHourly()) {
         <div>
-            <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">
-                {{ isHourly() ? 'Horas Solicitadas' : 'Días Solicitados' }}
-            </label>
-            <input type="number" formControlName="days_requested" [step]="isHourly() ? 1 : 0.5"
+            <label class="block text-xs font-black uppercase text-gray-400 mb-2 tracking-widest">Horas Solicitadas</label>
+            <input type="number" formControlName="days_requested" step="1"
                 [class.border-red-500]="dailyLimitExceeded()"
                 class="w-full bg-gray-900 border-gray-700 text-blue-400 font-black text-xl rounded-xl p-3 focus:ring-2 focus:ring-blue-500 transition-all">
 
             @if (dailyLimitExceeded()) {
             <p class="mt-2 text-[10px] text-red-500 font-bold uppercase animate-pulse flex items-center gap-1">
-                <ng-icon name="lucideTriangleAlert"></ng-icon> El límite diario para este permiso es de {{
-                schema()?.max_duration_per_day }} {{ isHourly() ? 'horas'
-                : 'días' }}.
+                <ng-icon name="lucideTriangleAlert"></ng-icon> Límite diario excedido. Mínimo {{ schema()?.max_duration_per_day }} horas.
             </p>
             } @else {
-            <p class="mt-1 text-[10px] text-gray-500 italic">
-                {{ isHourly() ? 'Indique el número de horas.' : 'Calculado automáticamente según fechas.' }}
-            </p>
+            <p class="mt-1 text-[10px] text-gray-500 italic">Indique el número de horas reales a consumir por día.</p>
             }
         </div>
+        } @else {
+            @if (dailyLimitExceeded()) {
+            <div class="md:col-span-2 bg-red-500/10 border border-red-500/30 p-3 rounded-xl flex items-center gap-3">
+                <span class="text-red-500 text-2xl flex items-center"><ng-icon name="lucideTriangleAlert"></ng-icon></span>
+                <div>
+                     <p class="text-xs font-black uppercase text-red-400 tracking-widest">Alerta de Límite Diario</p>
+                     <p class="text-[10px] text-red-300/80 font-bold">Estás pidiendo más días consecutivos que el límite permitido ({{ schema()?.max_duration_per_day }}).</p>
+                </div>
+            </div>
+            }
+        }
 
         <!-- Manager selection (Always present) -->
         <div class="md:col-span-2">
@@ -128,8 +149,18 @@
         }
     </div>
 
+    @if ((form.get('days_requested')?.value || 0) > s.available_balance) {
+    <div class="mt-6 bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center gap-3 shadow-inner">
+        <span class="text-red-500 text-3xl flex items-center"><ng-icon name="lucideTriangleAlert"></ng-icon></span>
+        <div>
+             <p class="text-[11px] font-black uppercase text-red-400 tracking-widest mb-1">Saldo Total Insuficiente</p>
+             <p class="text-xs text-red-300/80 font-bold leading-tight">La solicitud requiere <strong>{{ form.get('days_requested')?.value || 0 }}</strong> {{ s.unit.includes('days') ? 'días' : 'horas' }}, pero dispones de un saldo de <strong>{{ s.available_balance }}</strong>. Por favor, reduce el periodo seleccionado.</p>
+        </div>
+    </div>
+    }
+
     <!-- Submit Button -->
-    <button type="submit" [disabled]="loading() || form.invalid || dailyLimitExceeded()"
+    <button type="submit" [disabled]="loading() || form.invalid || dailyLimitExceeded() || ((form.get('days_requested')?.value || 0) > s.available_balance)"
         class="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed py-4 rounded-2xl font-black uppercase tracking-widest shadow-2xl transition-all transform active:scale-95 mt-4">
         {{ loading() ? 'Enviando...' : 'Enviar Solicitud' }}
     </button>

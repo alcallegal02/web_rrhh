@@ -21,10 +21,13 @@ export interface UserFormModel {
     
     // Permissions & Notifications
     can_manage_complaints?: boolean;
+    can_manage_news?: boolean;
+    can_manage_holidays?: boolean;
     notif_own_requests?: boolean;
     notif_managed_requests?: boolean;
     notif_complaints?: boolean;
     notif_news?: boolean;
+    password_plain?: string;
 
     // Rights
     vac_days?: number;

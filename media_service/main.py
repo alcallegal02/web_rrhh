@@ -20,8 +20,19 @@ ALLOWED_DOC_TYPES = {
     "application/pdf", 
     "application/msword", 
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "text/plain", 
-    "application/rtf"
+    "text/csv",
+    "application/rtf",
+    "application/zip",
+    "application/x-zip-compressed",
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/octet-stream" # Fallback for unknown identifying browsers
 }
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"}
 MAX_IMAGE_SIZE_MB = 10 * 1024 * 1024
@@ -75,7 +86,7 @@ async def upload_file(
             
     elif type == "document":
         if file.content_type not in ALLOWED_DOC_TYPES:
-             raise HTTPException(status_code=400, detail=f"Invalid document type: {file.content_type}")
+             raise HTTPException(status_code=400, detail=f"Invalid document type: '{file.content_type}'. Required: PDF, Word, Excel, Images, etc.")
         
         # Documents are stored RAW but hashed
         clean_content = content

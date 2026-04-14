@@ -54,7 +54,7 @@ router = APIRouter(tags=["complaint"])
 limiter = Limiter(key_func=get_remote_address)
 logger = logging.getLogger(__name__)
 
-@router.post("/", response_model=ComplaintCreateResponse)
+@router.post("", response_model=ComplaintCreateResponse)
 @limiter.limit("5/minute")
 async def create_complaint_endpoint(
     request: Request,
@@ -110,24 +110,21 @@ async def create_complaint_endpoint(
 
         # 4. If email is provided, send credentials (non-blocking)
         if email:
-            background_tasks.add_task(send_credentials_email, email, complaint.code, complaint.access_token)
+            background_tasks.add_task(send_credentials_email, email, complaint.code, complaint.access_token, request)
 
-        # 5. Notify Admins/RRHH with notification preference active
+        # 5. Notify Admins/RRHH/Managers with notification preference active
         from app.utils.email import send_complaint_notification
         from sqlmodel import select, or_, and_
         
         # Get users to notify: 
-        # (Is Superadmin OR (Is RRHH AND can_manage_complaints)) AND notif_complaints is True
+        # (Is Superadmin OR has can_manage_complaints permission) AND notif_complaints is True
         stmt = select(User).where(
             and_(
                 User.is_active == True,
                 User.notif_complaints == True,
                 or_(
                     User.role == UserRole.SUPERADMIN.value,
-                    and_(
-                        User.role == UserRole.RRHH.value,
-                        User.can_manage_complaints == True
-                    )
+                    User.can_manage_complaints == True
                 )
             )
         )
@@ -135,7 +132,7 @@ async def create_complaint_endpoint(
         users_to_notify = result.scalars().all()
         
         for admin_user in users_to_notify:
-            background_tasks.add_task(send_complaint_notification, admin_user.email, complaint.code, complaint.title)
+            background_tasks.add_task(send_complaint_notification, admin_user.email, complaint.code, complaint.title, request)
 
         # Broadcast create event
         from app.websocket.manager import websocket_manager
@@ -203,6 +200,7 @@ async def get_complaint(
 @limiter.limit("5/minute")
 async def add_public_comment(
     request: Request,
+    background_tasks: BackgroundTasks,
     session: Annotated[AsyncSession, Depends(get_session)],
     code: str,
     token: Annotated[str, Query(description="Access token/Security key")],
@@ -238,6 +236,16 @@ async def add_public_comment(
         attachments=attachments
     )
     
+    # Notify Admins about public comment
+    await _notify_admins_new_comment(
+        session=session,
+        background_tasks=background_tasks,
+        complaint=complaint,
+        author_name="El Denunciante",
+        exclude_user_id=None,
+        request=request
+    )
+    
     # Broadcast event
     from app.websocket.manager import websocket_manager
     await websocket_manager.broadcast({
@@ -253,13 +261,13 @@ async def add_public_comment(
 
 
 def _ensure_complaint_admin(user: User):
-    """Checks if the user has permission to manage complaints (Superadmin or RRHH with permission)"""
+    """Checks if the user has permission to manage complaints (Superadmin or anyone with explicit permission)"""
     # Usamos comparaciones directas de strings para mayor fiabilidad con SQLModel/FastAPI
     role = user.role.lower() if user.role else ""
     
     if role == UserRole.SUPERADMIN.value:
         return
-    if role == UserRole.RRHH.value and user.can_manage_complaints:
+    if user.can_manage_complaints:
         return
     
     raise HTTPException(
@@ -333,6 +341,7 @@ async def update_status_endpoint(
 @router.post("/admin/{complaint_id}/comments", response_model=CommentResponse)
 async def add_admin_comment(
     request: Request,
+    background_tasks: BackgroundTasks,
     current_user: Annotated[User, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
     complaint_id: UUID,
@@ -345,6 +354,12 @@ async def add_admin_comment(
     
     from app.services.complaint.crud import process_and_save_complaint_files, create_complaint_comment
     
+    # 1. Get complaint for notification details
+    from app.services.complaint import get_complaint_by_id
+    complaint_obj = await get_complaint_by_id(session, complaint_id)
+    if not complaint_obj:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+
     # Process files
     attachments = []
     if files:
@@ -367,6 +382,17 @@ async def add_admin_comment(
     if not comment:
         raise HTTPException(status_code=404, detail="Complaint not found")
     
+    # Notify other Admins about admin comment
+    author_name = f"{current_user.first_name} {current_user.last_name}" if current_user.first_name else current_user.email
+    await _notify_admins_new_comment(
+        session=session,
+        background_tasks=background_tasks,
+        complaint=complaint_obj,
+        author_name=author_name,
+        exclude_user_id=current_user.id,
+        request=request
+    )
+    
     # Set user name for response
     comment_resp = CommentResponse.model_validate(comment)
     comment_resp.user_name = f"{current_user.first_name} {current_user.last_name}" if current_user.first_name else current_user.email
@@ -383,6 +409,45 @@ async def add_admin_comment(
     })
     
     return comment_resp
+
+
+async def _notify_admins_new_comment(
+    session: AsyncSession,
+    background_tasks: BackgroundTasks,
+    complaint: Complaint,
+    author_name: str,
+    exclude_user_id: uuid.UUID | None,
+    request: Request
+):
+    """Helper to notify all authorized admins about a new comment"""
+    from app.utils.email import send_complaint_comment_notification
+    from sqlmodel import select, or_, and_
+    
+    stmt = select(User).where(
+        and_(
+            User.is_active == True,
+            User.notif_complaints == True,
+            or_(
+                User.role == UserRole.SUPERADMIN.value,
+                User.can_manage_complaints == True
+            )
+        )
+    )
+    if exclude_user_id:
+        stmt = stmt.where(User.id != exclude_user_id)
+        
+    result = await session.execute(stmt)
+    users_to_notify = result.scalars().all()
+    
+    for admin_user in users_to_notify:
+        background_tasks.add_task(
+            send_complaint_comment_notification, 
+            admin_user.email, 
+            complaint.code, 
+            complaint.title, 
+            author_name, 
+            request
+        )
 
 
 @router.delete("/admin/{complaint_id}")

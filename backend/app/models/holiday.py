@@ -1,10 +1,11 @@
 from datetime import date as DateType
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from uuid import UUID, uuid4
 
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
+from sqlalchemy import DateTime
 
 
 class HolidayType(str, Enum):
@@ -24,8 +25,8 @@ class Holiday(SQLModel, table=True):
     description: str | None = None
     holiday_type: str = Field(index=True)
     created_by: UUID = Field(foreign_key="users.id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
 
 
 class HolidayCreate(SQLModel):

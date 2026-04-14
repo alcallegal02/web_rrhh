@@ -1,11 +1,16 @@
 # Environment
 .env
-.env.local
-.env.dev
-.env.prod
-.env*.local
+.env.*
+!.env.example
+!.env.dev.example
+!.env.prod.example
 
-# Python
+# Database & Data
+data/
+*.db
+*.sqlite
+
+# Python Caches
 __pycache__/
 *.py[cod]
 *$py.class
@@ -15,6 +20,9 @@ env/
 venv/
 ENV/
 .venv
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
 *.egg-info/
 dist/
 build/

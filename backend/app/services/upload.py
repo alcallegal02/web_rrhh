@@ -1,6 +1,8 @@
+import logging
 import os
-
 import httpx
+
+logger = logging.getLogger(__name__)
 from fastapi import HTTPException, UploadFile, status
 
 from app.config import settings
@@ -48,16 +50,27 @@ class UploadService:
     @staticmethod
     async def validate_document(file: UploadFile) -> tuple[bytes, str]:
         """Validate document file (Pre-flight check)"""
+        
         allowed = [
             'application/pdf', 'application/msword', 
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'text/plain', 'application/rtf'
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain', 'text/csv', 'application/rtf',
+            'application/zip', 'application/x-zip-compressed',
+            'image/jpeg', 'image/png', 'image/webp',
+            'application/octet-stream' # Fallback for unknown identifying browsers
         ]
         
+        logger.info(f"Validating document: {file.filename}, type={file.content_type}")
+        
         if file.content_type not in allowed:
+            logger.error(f"REJECTED: MIME type '{file.content_type}' not in allowed list for {file.filename}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid file type. Allowed: PDF, DOC, DOCX, TXT, RTF"
+                detail=f"Tipo de archivo '{file.content_type}' no permitido. Permitidos: PDF, Word, Excel, PowerPoint, TXT, CSV, RTF, ZIP e Imágenes."
             )
 
         # Basic pre-flight validation to save bandwidth
@@ -68,10 +81,10 @@ class UploadService:
         if len(content) > settings.MAX_DOCUMENT_SIZE:
              raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"File too large. Max: {settings.MAX_DOCUMENT_SIZE_MB}MB"
+                detail=f"El archivo es demasiado grande. Máximo permitido: {settings.MAX_DOCUMENT_SIZE_MB}MB"
             )
         
-        return content, "dat" # Extension handled by media service
+        return content, "dat"
 
     @classmethod
     async def process_upload(
@@ -86,9 +99,7 @@ class UploadService:
         anonymous: bool = False
     ):
         """Generic upload processing pipeline"""
-        import logging
         import traceback
-        logger = logging.getLogger(__name__)
         
         try:
             logger.info(f"Processing upload: file={file.filename}, module={module}, type={upload_type}, entity_id={entity_id}")

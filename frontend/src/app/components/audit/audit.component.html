@@ -25,18 +25,14 @@
                 </div>
             </div>
         } @else {
-            <app-data-table 
-                [columns]="tableColumns" 
-                [data]="logs()"
-                [hasActions]="true">
-                
-                <ng-template #rowActions let-row>
-                    <button (click)="onItemSelected(row)"
-                        class="p-2 text-gray-400 hover:text-inespasa hover:bg-blue-50 rounded-lg transition-all">
-                        <ng-icon name="lucideSearch" class="text-lg"></ng-icon>
-                    </button>
-                </ng-template>
-            </app-data-table>
+            <app-audit-list 
+                [logs]="logs()" 
+                [loading]="loading()"
+                [currentPage]="currentPage()"
+                [pageSize]="pageSize"
+                (itemSelected)="onItemSelected($event)"
+                (pageChange)="onPageChange($event)">
+            </app-audit-list>
         }
     </div>
 </div>

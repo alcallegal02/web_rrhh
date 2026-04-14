@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from '../config/environment';
 import { StoreService } from './store.service';
 import { Complaint, ComplaintComment } from '../models/app.models';
+import { AuthService } from './auth.service';
 
 
 export interface ComplaintCreateResponse {
@@ -30,6 +31,7 @@ export class ComplaintService {
     private readonly store = inject(StoreService);
     private readonly wsService = inject(WebSocketService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly authService = inject(AuthService);
     private readonly apiUrl = `${environment.apiUrl}/complaint`;
 
     // Expose signal from store
@@ -40,9 +42,15 @@ export class ComplaintService {
         this.wsService.messages$.pipe(
             takeUntilDestroyed(this.destroyRef)
         ).subscribe(msg => {
-            if ((msg.type === 'db_update' && msg.data.table === 'complaints') ||
-                msg.type === 'complaint_comment_added') {
-                this.getAllComplaints().subscribe();
+            // Solo intentamos refrescar el listado global si somos un usuario autenticado (Staff/Admin)
+            // Los denunciantes públicos NO tienen acceso a este endpoint y generarían un 401.
+            if (this.authService.isAuthenticated()) {
+                if ((msg.type === 'db_update' && msg.data.table === 'complaints') ||
+                    msg.type === 'COMPLAINT_COMMENT_ADDED' ||
+                    msg.type === 'COMPLAINT_UPDATED' ||
+                    msg.type === 'COMPLAINT_CREATED') {
+                    this.getAllComplaints().subscribe();
+                }
             }
         });
     }

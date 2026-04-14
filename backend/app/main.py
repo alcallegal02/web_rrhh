@@ -28,6 +28,7 @@ from app.routers import (
     holiday,
     leave_types,
     news,
+    notifications,
     orgchart,
     policies,
     upload,
@@ -141,6 +142,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(vacation.router, prefix="/api/vacation", tags=["vacation"])
 app.include_router(news.router, prefix="/api/news", tags=["news"])
 app.include_router(complaint.router, prefix="/api/complaint", tags=["complaint"])
+app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 app.include_router(holiday.router, prefix="/api/holidays", tags=["holiday"])
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(upload.router, prefix="/api/upload", tags=["upload"])

@@ -15,12 +15,16 @@ class Settings(BaseSettings):
     
     # Security
     SECRET_KEY: str
+    ENCRYPTION_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS
-    CORS_ORIGINS: str = "http://localhost,https://localhost"
+    CORS_ORIGINS: str = "*"
     ALLOWED_HOSTS: str = "*" # Comma separated hosts
+    
+    # Frontend URL (for emails and redirects)
+    FRONTEND_URL: str | None = None
 
     
     # Environment
@@ -35,6 +39,7 @@ class Settings(BaseSettings):
     ADMIN_FULL_NAME: str = "Admin RRHH"
     ADMIN_ROLE: str = "superadmin"
     ADMIN_AUTO_CREATE: bool = True
+    SEED_TEST_DATA: bool = False
     
     # Auth/System SMTP Configuration
     SMTP_AUTH_HOST: str | None = None
@@ -75,7 +80,7 @@ class Settings(BaseSettings):
     # Brute-force Protection
     BRUTE_FORCE_MAX_ATTEMPTS: int = 3
     BRUTE_FORCE_BLOCK_MINUTES: int = 15
-    BRUTE_FORCE_REDIRECT_URL: str = "https://www.inespasa.com/"
+    BRUTE_FORCE_REDIRECT_URL: str = "/"
     
     # File uploads
     UPLOAD_DIR: str = "media_data"
@@ -83,7 +88,7 @@ class Settings(BaseSettings):
     # Upload size limits (in MB, converted to bytes)
     # These defaults are overridden by environment variables (MAX_IMAGE_SIZE_MB, etc.)
     MAX_IMAGE_SIZE_MB: int = 10
-    MAX_DOCUMENT_SIZE_MB: int = 10
+    MAX_DOCUMENT_SIZE_MB: int = 50
     MAX_COMPLAINT_PAYLOAD_MB: int = 20
     MAX_NEWS_PAYLOAD_MB: int = 30
     DAILY_UPLOAD_QUOTA_MB: int = 50

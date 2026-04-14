@@ -341,30 +341,170 @@
                             </div>
                         </div>
 
-                        <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                            <div class="flex items-center gap-3 mb-2">
-                                <ng-icon name="lucideBaby" class="text-emerald-600"></ng-icon>
-                                <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Cuidado
-                                    de Hijos</span>
-                                <div class="group relative flex items-center ml-auto">
-                                    <ng-icon name="lucideHelpCircle"
-                                        class="text-inespasa hover:text-inespasa-dark transition-colors cursor-help"></ng-icon>
-                                    <div
-                                        class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
-                                        Configuración específica para ausencias vinculadas a la edad del hijo (ej.
-                                        lactancia).
-                                    </div>
+                            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <ng-icon name="lucideBaby" class="text-emerald-600"></ng-icon>
+                                    <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Cuidado de Hijos</span>
                                 </div>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <span class="text-xs font-bold text-emerald-800/70">Límite edad:</span>
-                                <input formControlName="limit_age_child" type="number"
-                                    class="bg-white border-emerald-200 text-emerald-900 rounded-lg px-3 py-1.5 w-20 font-black shadow-sm outline-none focus:ring-2 focus:ring-emerald-400/50">
+                                <div class="flex items-center gap-4">
+                                    <span class="text-xs font-bold text-emerald-800/70">Límite edad:</span>
+                                    <input formControlName="limit_age_child" type="number"
+                                        class="bg-white border-emerald-200 text-emerald-900 rounded-lg px-3 py-1.5 w-20 font-black shadow-sm outline-none focus:ring-2 focus:ring-emerald-400/50">
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <!-- NEW: Advanced Validation Constraints -->
+                <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 lg:col-span-12">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-1.5 h-6 bg-blue-400 rounded-full"></div>
+                        <h3 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Restricciones Avanzadas de Solicitud</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="space-y-4">
+                            <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                                    <span>Antelación Mínima (Días)</span>
+                                </label>
+                                <div class="relative">
+                                    <input formControlName="min_advance_notice_days" type="number"
+                                        class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-blue-400/20 transition-all outline-none border">
+                                    <ng-icon name="lucideClock" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300"></ng-icon>
+                                </div>
+                                <p class="text-[9px] text-gray-400 font-bold uppercase mt-1 px-1">Días naturales antes de la fecha de inicio</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Mín. Días Seguidos</label>
+                                    <input formControlName="min_consecutive_days" type="number"
+                                        class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-blue-400/20 transition-all outline-none border">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Máx. Días Seguidos</label>
+                                    <input formControlName="max_consecutive_days" type="number"
+                                        class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-blue-400/20 transition-all outline-none border">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-6 bg-amber-50 rounded-[24px] border border-amber-100">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                                        <ng-icon name="lucideFileText" class="text-xl"></ng-icon>
+                                    </div>
+                                    <div>
+                                        <span class="text-xs font-black text-gray-800 uppercase tracking-wider block">Adjunto Obligatorio</span>
+                                        <span class="text-[9px] text-amber-600 font-bold">Bloquea envío sin archivo</span>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" formControlName="requires_attachment" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                                </label>
+                            </div>
+                            <div class="space-y-2 pt-2">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1">Ints. de Documento (opcional)</label>
+                                <input formControlName="attachment_type_label" type="text" placeholder="Ej: P10, Libro de Familia..."
+                                    class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-medium text-sm focus:ring-4 focus:ring-amber-400/20 transition-all outline-none border">
+                            </div>
+                        </div>
+
+                        <!-- Nueva fila: Casuísticas Específicas -->
+                        <div class="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 mt-4 pt-8 border-t border-gray-100">
+                             <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                                    <span>Antigüedad Mínima (Meses)</span>
+                                    <div class="group relative flex items-center">
+                                         <ng-icon name="lucideHelpCircle" class="text-inespasa hover:text-blue-500 transition-colors cursor-help"></ng-icon>
+                                         <div class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                             Meses que debe llevar el empleado en la empresa para poder solicitar este permiso.
+                                         </div>
+                                     </div>
+                                </label>
+                                <input formControlName="min_seniority_months" type="number"
+                                    class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-blue-400/20 transition-all outline-none border">
+                            </div>
+
+                             <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                                    <span>Vínculo Causal Máx (Días)</span>
+                                    <div class="group relative flex items-center">
+                                         <ng-icon name="lucideHelpCircle" class="text-inespasa hover:text-blue-500 transition-colors cursor-help"></ng-icon>
+                                         <div class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                             Distancia máxima permitida entre el evento (ej: nacimiento) y el inicio del permiso. Se requiere marcar Fecha Causal obligatoria abajo.
+                                         </div>
+                                     </div>
+                                </label>
+                                <input formControlName="max_days_from_event" type="number"
+                                    class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-blue-400/20 transition-all outline-none border">
+                            </div>
+
+                             <div class="space-y-2">
+                                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest px-1 flex items-center justify-between">
+                                    <span>Plazo de Justificación (Días)</span>
+                                    <div class="group relative flex items-center">
+                                         <ng-icon name="lucideHelpCircle" class="text-inespasa hover:text-blue-500 transition-colors cursor-help"></ng-icon>
+                                         <div class="absolute right-0 bottom-full mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 font-medium normal-case tracking-normal">
+                                             Margen de días que tiene el empleado tras la ausencia para subir el justificante.
+                                         </div>
+                                     </div>
+                                </label>
+                                <input formControlName="justification_deadline_days" type="number"
+                                    class="w-full bg-gray-50 border-gray-100 text-gray-900 rounded-2xl p-4 font-black focus:ring-4 focus:ring-blue-400/20 transition-all outline-none border">
+                            </div>
+                        </div>
+
+                        <!-- Configuración de Formulario (Campos Obligatorios de Empleado) -->
+                        <div class="md:col-span-3 space-y-4 mt-4 pt-8 border-t border-gray-100">
+                            <label class="block text-[12px] font-black text-inespasa uppercase tracking-widest px-1 mb-4">Información Requerida al Empleado</label>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <!-- Option 1: Descripción -->
+                                <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-md transition-all">
+                                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+                                        <input type="checkbox" [checked]="hasMandatoryField('description')" (change)="toggleMandatoryField('description', $event)" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
+                                    <div>
+                                        <span class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider">Observaciones / Motivo</span>
+                                        <span class="text-[10px] text-gray-500 font-medium">Hace obligatorio el campo de texto libre para explicar la ausencia.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Option 2: Fecha Causal -->
+                                <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-md transition-all">
+                                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+                                        <input type="checkbox" [checked]="hasMandatoryField('causal_date')" (change)="toggleMandatoryField('causal_date', $event)" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
+                                    <div>
+                                        <span class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider">Fecha del Hecho</span>
+                                        <span class="text-[10px] text-gray-500 font-medium">Obliga a especificar exactamente cuándo ocurre el evento motivador.</span>
+                                    </div>
+                                </div>
+
+                                <!-- Option 3: Datos del hijo -->
+                                <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-md transition-all">
+                                    <label class="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+                                        <input type="checkbox" [checked]="hasMandatoryField('child_name')" (change)="toggleMandatoryField('child_data', $event)" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
+                                    <div>
+                                        <span class="block text-[11px] font-bold text-gray-800 uppercase tracking-wider">Datos del Menor</span>
+                                        <span class="text-[10px] text-gray-500 font-medium">Requiere el nombre y la fecha de nacimiento.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             <!-- Action Buttons -->
             <div

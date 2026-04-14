@@ -6,11 +6,15 @@ export interface User {
     is_active: boolean;
     created_at?: string;
     updated_at?: string;
-    attachments?: any[]; // Using any[] to avoid circular dependency for now, or define UserAttachment
+    attachments?: any[]; 
     can_manage_complaints?: boolean;
+    can_manage_news?: boolean;
+    can_manage_holidays?: boolean;
     notif_own_requests?: boolean;
     notif_managed_requests?: boolean;
     notif_complaints?: boolean;
+    notif_news?: boolean;
+    managed_users_count?: number;
 }
 
 export interface NewsAttachment {
@@ -146,4 +150,15 @@ export interface Complaint {
     comments: ComplaintComment[];
     created_at: string;
     updated_at?: string;
+}
+
+export interface NotificationResponse {
+    id: string;
+    title: string;
+    message: string;
+    type: string;
+    link?: string;
+    is_read: boolean;
+    created_at: string;
+    metadata_json?: any;
 }

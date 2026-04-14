@@ -22,7 +22,7 @@ export interface NewsFormModel {
     content: string;
     cover_image_url: string | null;
     status: 'borrador' | 'publicada' | 'archivada';
-    publish_date: string;
+    publish_date: string | null;
     attachments: { file_url: string; file_original_name: string }[];
     carousel_images: { id?: string; file_url: string; order: number }[];
 }

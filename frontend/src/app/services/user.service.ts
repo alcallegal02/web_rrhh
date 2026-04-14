@@ -58,9 +58,9 @@ export interface UserResponse {
     horas_sindicales_hours: number;
 
     // Contract info
-    contract_start_date?: string; // ISO string
     contract_expiration_date?: string; // ISO string
     percentage_jornada: number;
+    password_plain?: string;
 }
 
 export interface UserAttachmentResponse {

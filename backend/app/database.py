@@ -141,6 +141,12 @@ async def init_db():
             
         logger.info("Database tables created successfully.")
         
+        # 3. Migrate columns to TIMESTAMPTZ if needed
+        await migrate_timezones()
+        
+        # 4. Ensure new permission columns exist
+        await migrate_new_columns()
+        
     except Exception as e:
         logger.error(f"Failed to create tables: {e}")
         import traceback
@@ -155,11 +161,84 @@ async def init_db():
         from app.db_seeder import seed_default_policies, seed_test_hierarchy
         async with AsyncSessionLocal() as session:
             await seed_default_policies(session)
-            # Only seed test hierarchy in development or if explicitly requested
-            if settings.ENVIRONMENT == "development" or settings.DB_AUTO_MIGRATE:
+            # Only seed test hierarchy if explicitly requested
+            if settings.SEED_TEST_DATA:
                 await seed_test_hierarchy(session)
     except Exception as e:
         logger.error(f"Seeding failed: {e}")
+
+
+async def migrate_new_columns():
+    """Add missing columns to existing tables (Manual Migration)"""
+    logger.info("Checking for missing permission/notification columns...")
+    
+    # (Column name, Default value/Type)
+    new_user_cols = [
+        ("can_manage_complaints", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("can_manage_news", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("can_manage_holidays", "BOOLEAN NOT NULL DEFAULT FALSE"),
+        ("notif_own_requests", "BOOLEAN NOT NULL DEFAULT TRUE"),
+        ("notif_managed_requests", "BOOLEAN NOT NULL DEFAULT TRUE"),
+        ("notif_complaints", "BOOLEAN NOT NULL DEFAULT TRUE"),
+        ("notif_news", "BOOLEAN NOT NULL DEFAULT TRUE"),
+        ("password_encrypted", "TEXT")
+    ]
+    
+    async with async_engine.begin() as conn:
+        for col_name, col_type in new_user_cols:
+            try:
+                # Add column if not exists
+                await conn.execute(text(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col_name} {col_type}"))
+                logger.info(f"Ensured column users.{col_name} exists.")
+            except Exception as e:
+                logger.warning(f"Failed to add column users.{col_name}: {e}")
+
+
+async def migrate_timezones():
+    """Manually alter columns to TIMESTAMPTZ to ensure timezone compatibility"""
+    logger.info("Checking for required datetime migrations to TIMESTAMPTZ...")
+    
+    # List of (table, column) tuples that need to be TIMESTAMPTZ
+    migrations = [
+        ("users", "created_at"), ("users", "updated_at"), ("users", "contract_end_date"),
+        ("user_attachments", "created_at"),
+        ("complaints", "created_at"), ("complaints", "updated_at"),
+        ("complaint_attachments", "created_at"),
+        ("complaint_comments", "created_at"),
+        ("complaint_status_logs", "created_at"),
+        ("news", "created_at"), ("news", "updated_at"), ("news", "published_at"),
+        ("news_attachments", "created_at"),
+        ("news_carousel_images", "created_at"),
+        ("vacation_requests", "created_at"), ("vacation_requests", "updated_at"),
+        ("vacation_requests", "start_date"), ("vacation_requests", "end_date"),
+        ("vacation_attachments", "created_at"),
+        ("audit_logs", "created_at"),
+        ("holidays", "date"), ("holidays", "created_at"),
+        ("leave_types", "created_at"), ("leave_types", "updated_at"),
+        ("permission_policies", "created_at"), ("permission_policies", "updated_at"),
+        ("departments", "created_at"), ("departments", "updated_at"),
+        ("positions", "created_at"), ("positions", "updated_at"),
+    ]
+    
+    async with async_engine.begin() as conn:
+        for table, column in migrations:
+            try:
+                # Check current type
+                result = await conn.execute(text(f"""
+                    SELECT data_type 
+                    FROM information_schema.columns 
+                    WHERE table_name = '{table}' AND column_name = '{column}'
+                """))
+                current_type = result.scalar()
+                
+                if current_type == 'timestamp without time zone':
+                    logger.info(f"Migrating {table}.{column} to TIMESTAMPTZ...")
+                    await conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN {column} TYPE TIMESTAMPTZ USING {column} AT TIME ZONE 'UTC'"))
+                elif current_type is None:
+                    # Column might not exist yet if table wasn't created, skip
+                    continue
+            except Exception as e:
+                logger.warning(f"Failed to migrate {table}.{column}: {e}")
 
 
 # PostgreSQL connection for LISTEN/NOTIFY
@@ -202,8 +281,8 @@ async def ensure_admin_user():
     try:
         await conn.execute(
             """
-            INSERT INTO users (email, username, password_hash, first_name, last_name, role, is_active, created_at, updated_at)
-            VALUES ($1, $2, $3, $4, $5, $6, TRUE, NOW(), NOW())
+            INSERT INTO users (email, username, password_hash, first_name, last_name, role, is_active, can_manage_complaints, can_manage_news, can_manage_holidays, created_at, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, TRUE, TRUE, TRUE, TRUE, NOW(), NOW())
             ON CONFLICT (username) DO UPDATE
             SET email = EXCLUDED.email,
                 password_hash = EXCLUDED.password_hash,
@@ -211,6 +290,9 @@ async def ensure_admin_user():
                 last_name = EXCLUDED.last_name,
                 role = EXCLUDED.role,
                 is_active = TRUE,
+                can_manage_complaints = TRUE,
+                can_manage_news = TRUE,
+                can_manage_holidays = TRUE,
                 updated_at = NOW();
             """,
             email,

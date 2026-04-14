@@ -56,7 +56,15 @@ export interface User {
   bolsa_horas_hours: number;
   horas_sindicales_days: number;
   horas_sindicales_hours: number;
+  managed_users_count?: number;
   attachments?: UserAttachment[];
+  can_manage_complaints?: boolean;
+  can_manage_news?: boolean;
+  can_manage_holidays?: boolean;
+  notif_own_requests?: boolean;
+  notif_managed_requests?: boolean;
+  notif_complaints?: boolean;
+  notif_news?: boolean;
 }
 
 @Injectable({
@@ -81,6 +89,37 @@ export class AuthService {
   isAuthenticated = computed(() => {
     const token = this._token();
     return token !== null && this._user() !== null && !this.isTokenExpired(token);
+  });
+
+  // Permissions Helpers
+  canManageComplaints = computed(() => {
+    const u = this._user();
+    if (!u) return false;
+    return u.role === 'superadmin' || !!u.can_manage_complaints;
+  });
+
+  canManageNews = computed(() => {
+    const u = this._user();
+    if (!u) return false;
+    return u.role === 'superadmin' || u.role === 'rrhh' || !!u.can_manage_news;
+  });
+
+  canManageHolidays = computed(() => {
+    const u = this._user();
+    if (!u) return false;
+    return u.role === 'superadmin' || u.role === 'rrhh' || !!u.can_manage_holidays;
+  });
+
+  canManageUsers = computed(() => {
+    const u = this._user();
+    if (!u) return false;
+    return u.role === 'superadmin' || u.role === 'rrhh';
+  });
+
+  // Section visibility helper
+  hasAdminAccess = computed(() => {
+    return this.isRRHH() || this.isSuperadmin() || 
+           this.canManageComplaints() || this.canManageNews() || this.canManageHolidays();
   });
 
   login(credentials: LoginRequest): Observable<User> {

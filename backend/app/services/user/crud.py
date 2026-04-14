@@ -23,6 +23,7 @@ from app.services.user.common import (
     extract_allowance_fields,
     map_to_response,
 )
+from app.utils.security import encrypt_password
 from app.services.user.query import get_user_with_relations
 from app.utils.file_ops import delete_file_from_disk
 
@@ -103,6 +104,7 @@ async def create_user(session: AsyncSession, payload: UserCreate, current_user: 
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No se pueden crear usuarios superadmin")
 
     password_hash = get_password_hash(payload.password)
+    password_encrypted = encrypt_password(payload.password)
 
     user_kwargs = dict(
         email=payload.email,
@@ -123,6 +125,7 @@ async def create_user(session: AsyncSession, payload: UserCreate, current_user: 
         notif_managed_requests=payload.notif_managed_requests,
         notif_complaints=payload.notif_complaints,
         notif_news=payload.notif_news,
+        password_encrypted=password_encrypted,
         # Allowances
         **extract_allowance_fields(payload)
     )
@@ -140,6 +143,33 @@ async def create_user(session: AsyncSession, payload: UserCreate, current_user: 
     # Attachments
     if payload.attachments:
         await _update_attachments_create(session, user, payload.attachments)
+
+    # 3. Auto-allocate Featured Policies Quotas
+    # We fetch featured policies and map their duration to user allowance fields if slugs match
+    from app.models.policy import PermissionPolicy
+    res_policies = await session.execute(select(PermissionPolicy).where(PermissionPolicy.is_featured == True, PermissionPolicy.is_active == True))
+    featured_policies = res_policies.scalars().all()
+    
+    # Map from slug to user field
+    slug_to_field = {
+        "vacaciones": "vac_days",
+        "asuntos_propios": "asuntos_propios_days",
+        "medico_general": "med_gral_days",
+        "medico_especialista": "med_esp_hours",
+        "dias_compensados": "dias_comp_days",
+        "licencia_retribuida": "lic_retrib_days",
+        "bolsa_horas": "bolsa_horas_hours",
+        "horas_sindicales": "horas_sindicales_hours",
+        "maternidad_paternidad": "mat_pat_weeks"
+    }
+    
+    for p in featured_policies:
+        field_name = slug_to_field.get(p.slug)
+        if field_name:
+            # Check if payload provided 0 or None, then use policy default
+            payload_value = getattr(payload, field_name, 0)
+            if not payload_value: # If 0 or None
+                setattr(user, field_name, p.duration_value)
 
     await session.commit()
     await session.refresh(user)
@@ -164,7 +194,7 @@ async def create_user(session: AsyncSession, payload: UserCreate, current_user: 
     )
 
     # Responses need mapped fields
-    resp = map_to_response(user)
+    resp = map_to_response(user, include_password=True)
     resp.created_by_name = current_user.full_name
     resp.updated_by_name = current_user.full_name
     return resp
@@ -197,7 +227,9 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
     if payload.username is not None: target.username = payload.username
     if payload.first_name is not None: target.first_name = payload.first_name
     if payload.last_name is not None: target.last_name = payload.last_name
-    if payload.password: target.password_hash = get_password_hash(payload.password)
+    if payload.password: 
+        target.password_hash = get_password_hash(payload.password)
+        target.password_encrypted = encrypt_password(payload.password)
     if payload.role: target.role = payload.role.value
     if payload.is_active is not None: target.is_active = payload.is_active
     if payload.department_id is not None: target.department_uuid = payload.department_id
@@ -228,7 +260,7 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
         target.contract_expiration_date = new_date
         
         # Auto-activate logic
-        if target.contract_expiration_date is None or target.contract_expiration_date > datetime.utcnow():
+        if target.contract_expiration_date is None or target.contract_expiration_date > datetime.now(timezone.utc):
             target.is_active = True
 
     # Allowances
@@ -278,7 +310,7 @@ async def update_user(session: AsyncSession, user_id: str, payload: UserUpdate, 
     
     # Refresh
     target = await get_user_with_relations(session, target.id)
-    return map_to_response(target)
+    return map_to_response(target, include_password=True)
 
 
 async def delete_user(session: AsyncSession, user_id: str, current_user: User, ip_address: str | None = None):

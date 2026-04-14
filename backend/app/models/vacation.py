@@ -1,9 +1,10 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from enum import Enum
 from uuid import UUID, uuid4
 
 from pydantic import ConfigDict
 from sqlmodel import Field, SQLModel
+from sqlalchemy import DateTime
 
 
 class RequestType(str, Enum):
@@ -56,7 +57,7 @@ class VacationAttachment(SQLModel, table=True):
     request_id: UUID = Field(foreign_key="vacation_requests.id")
     file_url: str
     file_original_name: str | None = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
     # request: "VacationRequest" = Relationship(back_populates="attachments")
 
@@ -69,15 +70,15 @@ class VacationRequest(SQLModel, table=True):
     request_type: str = Field(index=True)
     leave_type_id: UUID | None = Field(default=None, foreign_key="leave_types.id") # Deprecated
     policy_id: UUID | None = Field(default=None, foreign_key="permission_policies.id", index=True) # New FK
-    start_date: datetime = Field(index=True)
-    end_date: datetime | None
+    start_date: datetime = Field(index=True, sa_type=DateTime(timezone=True))
+    end_date: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     days_requested: float
     status: str = Field(default="borrador", index=True)
     assigned_manager_id: UUID | None = Field(default=None, foreign_key="users.id")
     assigned_rrhh_id: UUID | None = Field(default=None, foreign_key="users.id")
-    manager_approved_at: datetime | None = None
+    manager_approved_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     manager_approved_by: UUID | None = Field(default=None, foreign_key="users.id")
-    rrhh_approved_at: datetime | None = None
+    rrhh_approved_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))
     rrhh_approved_by: UUID | None = Field(default=None, foreign_key="users.id")
     rejection_reason: str | None = None
     description: str | None = None
@@ -88,8 +89,8 @@ class VacationRequest(SQLModel, table=True):
     child_birthdate: date | None = None
     telework_percentage: float | None = None # For mixta modality
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
 
     # Relationships for Eager Loading
     # user: "User" = Relationship(sa_relationship_kwargs={"primaryjoin": "VacationRequest.user_id==User.id", "lazy": "selectin"})

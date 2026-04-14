@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
+from sqlalchemy import DateTime
 
 
 class DurationUnit(str, Enum):
@@ -65,6 +66,19 @@ class PermissionPolicy(SQLModel, table=True):
     travel_extension_days: float = Field(default=0.0)
     requires_document_type: str | None = None
     
+    # Advanced Constraints
+    min_advance_notice_days: int = Field(default=0)
+    requires_attachment: bool = Field(default=False)
+    min_consecutive_days: float | None = Field(default=None)
+    max_consecutive_days: float | None = Field(default=None)
+
+    # Casuísticas Avanzadas
+    min_seniority_months: int = Field(default=0)               # Meses de antigüedad mínima requerida
+    max_days_from_event: int | None = Field(default=None)      # Días máx. desde la fecha causal para iniciar
+    justification_deadline_days: int = Field(default=0)        # Días para aportar justificante tras la ausencia
+    attachment_type_label: str | None = Field(default=None)    # Instrucción sobre qué documento adjuntar
+    mandatory_request_fields: str | None = Field(default=None) # JSON: ["causal_date","child_name",...]
+    
     # visual
     color: str | None = "#3B82F6"
     icon: str | None = None
@@ -75,8 +89,8 @@ class PermissionPolicy(SQLModel, table=True):
     is_featured: bool = Field(default=False)
     is_system_default: bool = Field(default=False)
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), sa_type=DateTime(timezone=True))
     
 class PermissionPolicyCreate(SQLModel):
     slug: str
@@ -106,6 +120,18 @@ class PermissionPolicyCreate(SQLModel):
     
     travel_extension_days: float = 0.0
     requires_document_type: str | None = None
+    
+    min_advance_notice_days: int = 0
+    requires_attachment: bool = False
+    min_consecutive_days: float | None = None
+    max_consecutive_days: float | None = None
+
+    # Casuísticas Avanzadas
+    min_seniority_months: int = 0
+    max_days_from_event: int | None = None
+    justification_deadline_days: int = 0
+    attachment_type_label: str | None = None
+    mandatory_request_fields: str | None = None
     
     color: str | None = "#3B82F6"
     icon: str | None = None
@@ -139,6 +165,18 @@ class PermissionPolicyUpdate(SQLModel):
     
     travel_extension_days: float | None = None
     requires_document_type: str | None = None
+    
+    min_advance_notice_days: int | None = None
+    requires_attachment: bool | None = None
+    min_consecutive_days: float | None = None
+    max_consecutive_days: float | None = None
+
+    # Casuísticas Avanzadas
+    min_seniority_months: int | None = None
+    max_days_from_event: int | None = None
+    justification_deadline_days: int | None = None
+    attachment_type_label: str | None = None
+    mandatory_request_fields: str | None = None
     
     color: str | None = None
     icon: str | None = None

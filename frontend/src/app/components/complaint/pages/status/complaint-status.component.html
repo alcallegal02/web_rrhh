@@ -91,10 +91,9 @@
                     </div>
                     @let status = complaint()!.status;
                     <div class="flex flex-col items-end gap-2">
-                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Estado de la
-                            Denuncia</span>
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Estado</span>
                         <app-status-badge [variant]="getStatusVariant(status)" [icon]="getStatusIcon(status)" 
-                            class="text-sm font-black uppercase tracking-widest border-2 shadow-sm px-4 py-1">
+                            class="text-xs font-black uppercase tracking-widest">
                             {{ getStatusLabel(status) }}
                         </app-status-badge>
                     </div>
@@ -243,11 +242,11 @@
                             
                             <!-- Status at time of comment -->
                             <div class="flex flex-col items-end gap-1">
-                                <span class="text-[8px] font-black uppercase tracking-widest text-gray-400">Estado en ese momento</span>
-                                <span [class]="getStatusClass(comment.complaint_status)"
-                                    class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-sm">
+                                <span class="text-[8px] font-black uppercase tracking-widest text-gray-400">Estado</span>
+                                <app-status-badge [variant]="getStatusVariant(comment.complaint_status)" [icon]="getStatusIcon(comment.complaint_status)"
+                                    class="text-[9px] font-black uppercase tracking-widest">
                                     {{ getStatusLabel(comment.complaint_status) }}
-                                </span>
+                                </app-status-badge>
                             </div>
                         </div>
 

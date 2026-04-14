@@ -120,7 +120,7 @@ export class ComplaintManagementComponent {
     const id = this.selectedComplaintId();
     if (!id) return null;
     return this.complaints().find(c => c.id === id) || null;
-  }, { equal: (prev, curr) => prev?.id === curr?.id && prev?.updated_at === curr?.updated_at });
+  });
 
   readonly loading = computed(() => this.complaintsResource.isLoading());
   readonly submitting = signal(false);

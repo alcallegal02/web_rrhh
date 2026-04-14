@@ -47,7 +47,7 @@ async def get_current_user(
         
     # User Life Cycle Check: Contract Expiration
     if user.is_active and user.contract_expiration_date:
-        if user.contract_expiration_date < datetime.utcnow():
+        if user.contract_expiration_date < datetime.now(timezone.utc):
             # Auto-deactivate
             user.is_active = False
             session.add(user)

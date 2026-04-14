@@ -1,6 +1,8 @@
+from datetime import date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
@@ -11,6 +13,7 @@ from app.models.user import (
     UserRole,
 )
 from app.models.vacation import (
+    RequestStatus,
     VacationRequest,
     VacationRequestCreate,
     VacationRequestResponse,
@@ -20,6 +23,7 @@ from app.services.vacation import (
     approve_by_manager,
     approve_by_rrhh,
     create_vacation_request,
+    delete_vacation_request,
     get_available_responsibles_for_user,
     get_pending_manager_requests,
     get_pending_rrhh_requests,
@@ -82,8 +86,57 @@ async def create_request(
     request_data: VacationRequestCreate
     ):
     """Create a new vacation request (as draft)"""
-    new_request = await create_vacation_request(session, str(current_user.id), request_data, ip_address=request.client.host)
+    new_request = await create_vacation_request(session, str(current_user.id), request_data, ip_address=request.client.host, fastapi_request=request)
     return _map_request_response(new_request)
+
+
+@router.get("/managed", response_model=list[VacationRequestResponse])
+async def get_managed_requests(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    status_filter: RequestStatus | None = None
+):
+    """Get vacation requests that require the current user's approval"""
+    stmt = select(VacationRequest).where(
+        or_(
+            VacationRequest.assigned_manager_id == current_user.id,
+            VacationRequest.assigned_rrhh_id == current_user.id
+        )
+    )
+    if status_filter:
+        stmt = stmt.where(VacationRequest.status == status_filter)
+    else:
+        stmt = stmt.where(VacationRequest.status != RequestStatus.BORRADOR)
+        
+    stmt = stmt.order_by(VacationRequest.created_at.desc())
+    result = await session.execute(stmt)
+    requests = result.scalars().all()
+    
+    return [_map_request_response(r) for r in requests]
+
+
+@router.get("/stats/managed")
+async def get_managed_stats(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)]
+):
+    """Get statistics for requests managed by the current user"""
+    stmt = select(VacationRequest).where(
+        or_(
+            VacationRequest.assigned_manager_id == current_user.id,
+            VacationRequest.assigned_rrhh_id == current_user.id
+        )
+    )
+    result = await session.execute(stmt)
+    requests = result.scalars().all()
+    
+    stats = {
+        "total": len(requests),
+        "pending": len([r for r in requests if r.status == RequestStatus.PENDIENTE]),
+        "approved": len([r for r in requests if r.status == RequestStatus.APROBADO]),
+        "rejected": len([r for r in requests if r.status == RequestStatus.RECHAZADO]),
+    }
+    return stats
 
 
 @router.put("/{request_id}", response_model=VacationRequestResponse)
@@ -107,7 +160,7 @@ async def submit_request(
     request_id: str
 ):
     """Submit a vacation request (change status from borrador to pending)"""
-    result = await submit_vacation_request(session, request_id, ip_address=request.client.host)
+    result = await submit_vacation_request(session, request_id, ip_address=request.client.host, fastapi_request=request)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -154,7 +207,7 @@ async def approve_request_manager(
     request_id: str
 ):
     """Approve a vacation request as manager"""
-    result = await approve_by_manager(session, request_id, str(current_user.id), ip_address=request.client.host)
+    result = await approve_by_manager(session, request_id, str(current_user.id), ip_address=request.client.host, fastapi_request=request)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -172,7 +225,7 @@ async def reject_request_manager(
     reason: Annotated[str, Form()]
 ):
     """Reject a vacation request as manager"""
-    result = await reject_by_manager(session, request_id, str(current_user.id), reason, ip_address=request.client.host)
+    result = await reject_by_manager(session, request_id, str(current_user.id), reason, ip_address=request.client.host, fastapi_request=request)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -187,7 +240,7 @@ async def get_pending_for_rrhh(
     session: Annotated[AsyncSession, Depends(get_session)]
 ):
     """Get pending requests for RRHH approval"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_holidays:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only RRHH/superadmin can access this endpoint"
@@ -205,13 +258,13 @@ async def approve_request_rrhh(
     request_id: str
 ):
     """Approve a vacation request as RRHH (final approval)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_holidays:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only RRHH/superadmin can approve requests"
         )
     
-    result = await approve_by_rrhh(session, request_id, str(current_user.id), ip_address=request.client.host)
+    result = await approve_by_rrhh(session, request_id, str(current_user.id), ip_address=request.client.host, fastapi_request=request)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -229,13 +282,13 @@ async def reject_request_rrhh(
     reason: Annotated[str, Form()]
 ):
     """Reject a vacation request as RRHH"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_holidays:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only RRHH/superadmin can reject requests"
         )
     
-    result = await reject_by_rrhh(session, request_id, str(current_user.id), reason, ip_address=request.client.host)
+    result = await reject_by_rrhh(session, request_id, str(current_user.id), reason, ip_address=request.client.host, fastapi_request=request)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

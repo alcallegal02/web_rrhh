@@ -29,16 +29,16 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         @let config = getModuleConfig(log.module);
-                        <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-md border text-[9px] font-black uppercase tracking-wider inline-flex"
+                        <div class="px-2 py-1 rounded-lg border text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1.5 shadow-sm"
                             [class]="config.color">
-                            <ng-icon [name]="config.icon" class="text-xs"></ng-icon>
+                            <ng-icon [name]="config.icon" class="text-[13px]"></ng-icon>
                             {{ config.label }}
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1"
+                        <div class="px-2.5 py-1 rounded-full border text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 shadow-sm"
                             [class]="getActionClass(log.action)">
-                            <ng-icon [name]="getActionIcon(log.action)" class="text-xs"></ng-icon>
+                            <ng-icon [name]="getActionIcon(log.action)" class="text-[13px]"></ng-icon>
                             {{ log.action }}
                         </div>
                     </td>

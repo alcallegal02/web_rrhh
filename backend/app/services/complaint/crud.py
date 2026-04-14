@@ -1,7 +1,7 @@
 import re
 import secrets
 import string
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -186,6 +186,10 @@ async def create_complaint_comment(
         complaint_status=complaint.status
     )
     
+    # Actualizar la fecha de la denuncia para disparar cambios en el frontend
+    complaint.updated_at = datetime.now(timezone.utc)
+    session.add(complaint)
+    
     session.add(comment)
     await session.flush()  # Get comment ID
     
@@ -242,7 +246,7 @@ async def update_complaint_status(
         await sync_images_from_content(complaint.admin_response, admin_notes)
         complaint.admin_response = admin_notes
     
-    complaint.updated_at = datetime.utcnow()
+    complaint.updated_at = datetime.now(timezone.utc)
     
     # Record in log (DB ComplaintStatusLog - Application Logic)
     status_log = ComplaintStatusLog(

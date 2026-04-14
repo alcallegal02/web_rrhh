@@ -41,6 +41,19 @@ export interface PermissionPolicy {
     travel_extension_days: number;
     requires_document_type?: string;
 
+    // Advanced Constraints
+    min_advance_notice_days: number;
+    requires_attachment: boolean;
+    min_consecutive_days?: number;
+    max_consecutive_days?: number;
+
+    // Casuísticas Avanzadas
+    min_seniority_months: number;
+    max_days_from_event?: number;
+    justification_deadline_days: number;
+    attachment_type_label?: string;
+    mandatory_request_fields?: string; // JSON Array representation
+
     color?: string;
     icon?: string;
     is_public_dashboard?: boolean;

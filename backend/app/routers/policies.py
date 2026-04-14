@@ -234,6 +234,10 @@ async def get_policy_form_schema(
         "available_balance": balance["available"],
         "unit": policy.duration_unit,
         "max_duration_per_day": policy.max_duration_per_day,
+        "justification_deadline_days": policy.justification_deadline_days,
+        "max_days_from_event": policy.max_days_from_event,
+        "attachment_type_label": policy.attachment_type_label,
+        "mandatory_request_fields": policy.mandatory_request_fields,
         "fields": []
     }
 
@@ -253,37 +257,48 @@ async def get_policy_form_schema(
             "required": True # Adjust if some are optional
         })
 
+    # Parse required fields
+    import json
+    required_fields = []
+    if policy.mandatory_request_fields:
+        try:
+            required_fields = json.loads(policy.mandatory_request_fields)
+        except Exception:
+            pass
+
     # Dynamic fields based on policy
     if policy.requires_justification:
+        help_text = policy.attachment_type_label or "Debe adjuntar un documento que justifique la ausencia."
         schema["fields"].append({
             "name": "attachments",
             "type": "file",
             "label": "Justificante Requerido",
             "required": True,
-            "helpText": "Debe adjuntar un documento que justifique la ausencia."
+            "helpText": help_text
         })
 
-    if policy.reset_type == PolicyResetType.POR_EVENTO:
+    # Causal Date is requested if reset_type is POR_EVENTO OR if it's explicitly marked as mandatory
+    if policy.reset_type == PolicyResetType.POR_EVENTO or "causal_date" in required_fields:
         schema["fields"].append({
             "name": "causal_date",
             "type": "date",
             "label": "Fecha del hecho causante",
-            "required": True,
+            "required": "causal_date" in required_fields or policy.reset_type == PolicyResetType.POR_EVENTO,
             "helpText": f"Fecha en la que se produjo el evento ({policy.name})."
         })
 
-    if policy.limit_age_child is not None:
+    if policy.limit_age_child is not None or "child_name" in required_fields or "child_birthdate" in required_fields:
         schema["fields"].append({
             "name": "child_name",
             "type": "text",
             "label": "Nombre del menor",
-            "required": True
+            "required": "child_name" in required_fields or policy.limit_age_child is not None
         })
         schema["fields"].append({
             "name": "child_birthdate",
             "type": "date",
             "label": "Fecha de nacimiento del menor",
-            "required": True
+            "required": "child_birthdate" in required_fields or policy.limit_age_child is not None
         })
 
     if policy.modality == Modality.MIXTO:
@@ -297,11 +312,12 @@ async def get_policy_form_schema(
             "helpText": "Indique qué porcentaje del tiempo será en remoto."
         })
 
+    # Description is always shown, but its required status depends on mandatory_request_fields
     schema["fields"].append({
         "name": "description",
         "type": "textarea",
-        "label": "Observaciones",
-        "required": False
+        "label": "Observaciones / Motivo",
+        "required": "description" in required_fields
     })
 
     return schema

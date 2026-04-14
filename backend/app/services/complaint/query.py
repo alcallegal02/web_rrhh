@@ -1,3 +1,4 @@
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlmodel import desc, select
@@ -54,3 +55,19 @@ async def get_all_complaints(
         .order_by(desc(Complaint.created_at))
     )
     return list(result.scalars().all())
+
+
+async def get_complaint_by_id(
+    session: AsyncSession,
+    complaint_id: UUID
+) -> Complaint | None:
+    """Get a complaint by its database ID (internal/admin)"""
+    result = await session.execute(
+        select(Complaint)
+        .where(Complaint.id == complaint_id)
+        .options(
+            selectinload(Complaint.attachments),
+            selectinload(Complaint.comments).selectinload(Complaint.comments.property.mapper.class_.attachments)
+        )
+    )
+    return result.scalar_one_or_none()

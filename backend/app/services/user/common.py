@@ -34,7 +34,9 @@ def extract_allowance_fields(payload) -> dict:
             data[f] = val
     return data
 
-def map_to_response(user: User, audit_names: dict[UUID, str] = None) -> UserResponse:
+from app.utils.security import decrypt_password
+
+def map_to_response(user: User, audit_names: dict[UUID, str] = None, include_password: bool = False) -> UserResponse:
     resp = UserResponse.model_validate(user, from_attributes=True)
     
     # Ensure full_name is populated (property might not be caught by model_validate in some versions)
@@ -57,8 +59,13 @@ def map_to_response(user: User, audit_names: dict[UUID, str] = None) -> UserResp
             full_name=user.parent.full_name
         )
     
+    # Reversible Password (for HR)
+    if include_password:
+        resp.password_plain = decrypt_password(user.password_encrypted)
+    else:
+        resp.password_plain = None
+
     # Audit names resolution
-    
     if audit_names:
         if user.created_by: resp.created_by_name = audit_names.get(user.created_by)
         if user.updated_by: resp.updated_by_name = audit_names.get(user.updated_by)

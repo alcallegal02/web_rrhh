@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
@@ -20,9 +20,10 @@ from app.services.vacation.balance import get_vacation_balance
 from app.services.vacation.validator import VacationValidator
 from app.utils.business_days import get_business_days_count
 from app.utils.duration import parse_duration
+from app.services.notification import create_notification, NotificationType
 
 
-async def _notify_new_request(session: AsyncSession, request: VacationRequest):
+async def _notify_new_request(session: AsyncSession, request: VacationRequest, fastapi_request: Request | None = None):
     """Notify manager and/or RRHH about a new vacation request"""
     try:
         employee = await session.get(User, request.user_id)
@@ -50,8 +51,35 @@ async def _notify_new_request(session: AsyncSession, request: VacationRequest):
                 start_date=request.start_date.strftime("%d/%m/%Y"),
                 end_date=request.end_date.strftime("%d/%m/%Y") if request.end_date else None,
                 days=request.days_requested,
-                type=request.request_type
+                type=request.request_type,
+                request=fastapi_request
             )
+        
+        # In-App Notifications
+        notif_msg = f"{employee.full_name} ha solicitado un permiso de {request.request_type} para el {request.start_date.strftime('%d/%m/%Y')}."
+        # Notify Manager
+        if request.assigned_manager_id:
+             await create_notification(
+                 session=session,
+                 user_id=request.assigned_manager_id,
+                 title="Nueva Solicitud de Ausencia",
+                 message=notif_msg,
+                 notif_type=NotificationType.VACATION_REQUEST,
+                 link=f"/vacations?id={request.id}",
+                 metadata_payload={"request_id": str(request.id)}
+             )
+        # Notify RRHH
+        if request.assigned_rrhh_id:
+             await create_notification(
+                 session=session,
+                 user_id=request.assigned_rrhh_id,
+                 title="Nueva Solicitud de Ausencia",
+                 message=notif_msg,
+                 notif_type=NotificationType.VACATION_REQUEST,
+                 link=f"/vacations?id={request.id}",
+                 metadata_payload={"request_id": str(request.id)}
+             )
+
     except Exception:
         import logging
         logging.getLogger(__name__).error("Failed to send vacation notification", exc_info=True)
@@ -118,7 +146,8 @@ async def create_vacation_request(
     session: AsyncSession,
     user_id: str,
     request_data: VacationRequestCreate,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    fastapi_request: Request | None = None
 ) -> VacationRequest:
     """Create a new vacation request"""
     user_uuid = UUID(user_id) if isinstance(user_id, str) else user_id
@@ -134,15 +163,31 @@ async def create_vacation_request(
     assigned_manager_uuid = UUID(request_data.assigned_manager_id) if request_data.assigned_manager_id else None
     assigned_rrhh_uuid = UUID(request_data.assigned_rrhh_id) if request_data.assigned_rrhh_id else None
     
-    # Resolve Request Type from Policy if missing or provided as policy_id
+    # NEW: Logic to determine request_type from policy
+    from app.models.permission_policy import PermissionPolicy
+    policy_uuid = UUID(request_data.policy_id) if request_data.policy_id else None
+    policy = await session.get(PermissionPolicy, policy_uuid) if policy_uuid else None
+    
     effective_req_type = request_data.request_type
-    policy_uuid = None
-    if request_data.policy_id:
-        from app.models.policy import PermissionPolicy
-        policy_uuid = UUID(request_data.policy_id)
-        policy = await session.get(PermissionPolicy, policy_uuid)
-        if policy:
-            effective_req_type = policy.slug
+    if policy:
+        effective_req_type = policy.slug
+
+    # Auto-resolve Validators if not provided
+    if not assigned_manager_uuid or not assigned_rrhh_uuid:
+        from app.models.user import User, UserManagerLink, UserRrhhLink
+        employee = await session.get(User, user_uuid)
+        if employee:
+            if not assigned_manager_uuid:
+                # Try Managers Link first
+                stmt = select(User).join(UserManagerLink, User.id == UserManagerLink.manager_id).where(UserManagerLink.user_id == user_uuid)
+                m = (await session.execute(stmt)).scalars().first()
+                if m: assigned_manager_uuid = m.id
+                elif employee.parent_id: assigned_manager_uuid = employee.parent_id
+            
+            if not assigned_rrhh_uuid:
+                stmt = select(User).join(UserRrhhLink, User.id == UserRrhhLink.rrhh_id).where(UserRrhhLink.user_id == user_uuid)
+                r = (await session.execute(stmt)).scalars().first()
+                if r: assigned_rrhh_uuid = r.id
 
     request = VacationRequest(
         user_id=user_uuid,
@@ -193,7 +238,7 @@ async def create_vacation_request(
     
     # 6. Email Notification
     if request.status == RequestStatus.PENDING:
-        await _notify_new_request(session, request)
+        await _notify_new_request(session, request, fastapi_request)
 
     return request
 
@@ -302,7 +347,8 @@ async def update_vacation_request(
 async def submit_vacation_request(
     session: AsyncSession,
     request_id: str,
-    ip_address: str | None = None
+    ip_address: str | None = None,
+    fastapi_request: Request | None = None
 ) -> VacationRequest | None:
     """Submit a vacation request (change status from borrador to pending)"""
     request_uuid = UUID(request_id) if isinstance(request_id, str) else request_id
@@ -355,7 +401,7 @@ async def submit_vacation_request(
     )
     
     # Email Notification
-    await _notify_new_request(session, request)
+    await _notify_new_request(session, request, fastapi_request)
 
     return request
 async def delete_vacation_request(

@@ -36,6 +36,9 @@ async def list_users(session: AsyncSession, actor_role: UserRole) -> list[UserRe
     if actor_role == UserRole.RRHH:
         query = query.where(User.role.in_([UserRole.RRHH.value, UserRole.EMPLEADO.value]))
     
+    # Always hide SUPERADMIN from the list to avoid clutter and accidental changes to master accounts
+    query = query.where(User.role != UserRole.SUPERADMIN.value)
+    
     query = query.order_by(User.created_at.desc())
     users = (await session.execute(query)).scalars().all()
 
@@ -52,8 +55,9 @@ async def list_users(session: AsyncSession, actor_role: UserRole) -> list[UserRe
             audit_names[row.id] = f"{row.first_name} {row.last_name}"
 
     response = []
+    include_pw = actor_role in [UserRole.RRHH, UserRole.SUPERADMIN]
     for u in users:
-        u_response = map_to_response(u, audit_names)
+        u_response = map_to_response(u, audit_names, include_password=include_pw)
         response.append(u_response)
         
     return response

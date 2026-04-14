@@ -18,7 +18,7 @@ router = APIRouter(tags=["upload"])
 limiter = Limiter(key_func=get_remote_address)
 
 @router.post("/image")
-@limiter.limit("5/minute")
+@limiter.limit("60/minute")
 async def upload_image(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],
@@ -46,7 +46,7 @@ async def upload_image(
     )
 
 @router.post("/image-anonymous")
-@limiter.limit("5/minute")
+@limiter.limit("60/minute")
 async def upload_image_anonymous(
     request: Request,
     session: Annotated[AsyncSession, Depends(get_session)],
@@ -67,7 +67,7 @@ async def upload_image_anonymous(
     )
 
 @router.post("/document")
-@limiter.limit("5/minute")
+@limiter.limit("60/minute")
 async def upload_document(
     request: Request,
     current_user: Annotated[User, Depends(get_current_user)],

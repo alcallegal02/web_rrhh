@@ -1,9 +1,8 @@
 import { Component, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { HttpClient } from '@angular/common/http';
 import { AuditService, AuditLog } from '../../services/audit.service';
 import { catchError, of, switchMap } from 'rxjs';
-import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { provideIcons } from '@ng-icons/core';
 import { lucideShieldCheck } from '@ng-icons/lucide';
 
 import { AuditFiltersComponent } from './components/audit-filters/audit-filters.component';
@@ -11,11 +10,10 @@ import { AuditListComponent } from './components/audit-list/audit-list.component
 import { AuditDetailsComponent } from './components/audit-details/audit-details.component';
 
 import { AppPageHeaderComponent, PageAction } from '../../shared/components/page-header/page-header.component';
-import { AppDataTableComponent, ColumnDef } from '../../shared/components/data-table/data-table.component';
 
 @Component({
     selector: 'app-audit',
-    imports: [AuditFiltersComponent, AuditDetailsComponent, NgIconComponent, AppPageHeaderComponent, AppDataTableComponent],
+    imports: [AuditFiltersComponent, AuditDetailsComponent, AppPageHeaderComponent, AuditListComponent],
     templateUrl: './audit.component.html',
     providers: [
         provideIcons({ lucideShieldCheck })
@@ -30,13 +28,6 @@ export class AuditComponent {
       { id: 'refresh', label: 'Refrescar', icon: 'lucideShieldCheck', variant: 'secondary' }
     ];
 
-    // Configuración de Tabla
-    readonly tableColumns: ColumnDef[] = [
-      { key: 'created_at', label: 'Fecha y Hora', type: 'date' },
-      { key: 'module', label: 'Módulo', type: 'text' },
-      { key: 'action', label: 'Acción', type: 'text' },
-      { key: 'ip_address', label: 'IP Origen', type: 'text' }
-    ];
 
     // Filters as signals
     readonly filterModule = signal<string[]>([]);

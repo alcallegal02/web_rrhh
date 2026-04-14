@@ -1,5 +1,5 @@
 import { Injectable, inject, computed, DestroyRef } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { environment } from '../config/environment';
@@ -157,6 +157,18 @@ export class VacationService {
                 this.store.setVacations(updated);
             })
         );
+    }
+
+    getManagedRequests(status?: string): Observable<VacationRequest[]> {
+        let params = new HttpParams();
+        if (status) {
+            params = params.set('status_filter', status);
+        }
+        return this.http.get<VacationRequest[]>(`${this.apiUrl}/managed`, { params });
+    }
+
+    getManagedStats(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/stats/managed`);
     }
 }
 

@@ -34,14 +34,14 @@ async def create_news_item(
     background_tasks: BackgroundTasks,
     news_data: NewsCreate
 ):
-    """Create a new news item (RRHH/admin/superadmin)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    """Create a new news item (RRHH/admin/superadmin or user with permission)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_news:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH/superadmin can create news"
+            detail="No tienes permiso para crear noticias"
         )
     
-    news = await create_news(session, str(current_user.id), news_data, background_tasks=background_tasks, ip_address=request.client.host)
+    news = await create_news(session, str(current_user.id), news_data, background_tasks=background_tasks, ip_address=request.client.host, request=request)
     return NewsResponse.model_validate(news)
 
 
@@ -91,11 +91,11 @@ async def update_news_status_endpoint(
     news_id: str,
     new_status: Annotated[str, Query(description="New status: borrador, publicada, archivada")]
 ):
-    """Update news status (RRHH/superadmin)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    """Update news status (RRHH/superadmin or user with permission)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_news:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH/superadmin can update news status"
+            detail="No tienes permiso para actualizar el estado de las noticias"
         )
     
     if new_status not in ['borrador', 'publicada', 'archivada']:
@@ -104,7 +104,7 @@ async def update_news_status_endpoint(
             detail="Invalid status. Must be one of: borrador, publicada, archivada"
         )
     
-    news = await update_news_status(session, news_id, new_status, user_id=str(current_user.id), background_tasks=background_tasks, ip_address=request.client.host)
+    news = await update_news_status(session, news_id, new_status, user_id=str(current_user.id), background_tasks=background_tasks, ip_address=request.client.host, request=request)
     if not news:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -121,11 +121,11 @@ async def delete_news_item(
     session: Annotated[AsyncSession, Depends(get_session)],
     news_id: str
 ):
-    """Delete a news item (RRHH/superadmin)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    """Delete a news item (RRHH/superadmin or user with permission)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_news:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH/superadmin can delete news"
+            detail="No tienes permiso para eliminar noticias"
         )
     
     success = await delete_news(session, news_id, user_id=str(current_user.id), ip_address=request.client.host)
@@ -148,11 +148,11 @@ async def update_news_item(
     news_id: str,
     news_data: NewsUpdate
 ):
-    """Update a news item (RRHH/superadmin)"""
-    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN]:
+    """Update a news item (RRHH/superadmin or user with permission)"""
+    if current_user.role_enum not in [UserRole.RRHH, UserRole.SUPERADMIN] and not current_user.can_manage_news:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only RRHH/superadmin can update news"
+            detail="No tienes permiso para actualizar noticias"
         )
     
     # Check if news exists (optional optimization: service checks it too, but we need 404 here if service returns None)
@@ -162,7 +162,7 @@ async def update_news_item(
     # Convert Pydantic model to dict, excluding None values
     update_data = news_data.model_dump(exclude_unset=True)
     
-    news = await update_news(session, news_id, update_data, str(current_user.id), background_tasks=background_tasks, ip_address=request.client.host)
+    news = await update_news(session, news_id, update_data, str(current_user.id), background_tasks=background_tasks, ip_address=request.client.host, request=request)
     
     if not news:
         raise HTTPException(
